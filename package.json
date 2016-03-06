@@ -7,7 +7,7 @@
   "repository": "https://github.com/Avaq/fluture.git",
   "scripts": {
     "check-security": "nsp check",
-    "check-version": "node scripts/check-version 5.7.0",
+    "check-version": "node scripts/check-version 5.0.0",
     "clean": "rimraf npm-debug.log coverage",
     "lint": "eslint fluture.js test",
     "post-merge": "npm run check-version && npm install && npm dedupe && npm run check-security && npm outdated --long",
@@ -18,6 +18,9 @@
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
   "license": "MIT",
+  "engines": {
+    "node": "^5.0.0"
+  },
   "dependencies": {
     "fantasy-land": "^0.2.1"
   },
