@@ -33,7 +33,7 @@
     : x.toString()
     : String(x);
 
-  const isFuture = x => x && typeof x.fork === 'function' && x.fork.length === 2;
+  const isFuture = x => x && typeof x.fork === 'function';
 
   //Assert that throws TypeError.
   function youBrokeIt(yes, error, show){
