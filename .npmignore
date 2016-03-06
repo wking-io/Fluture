@@ -1,0 +1,5 @@
+coverage/
+scripts/
+test/
+.babelrc
+.eslintrc.json
