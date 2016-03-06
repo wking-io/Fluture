@@ -236,6 +236,9 @@
     };
   };
 
+  //Create a Future which rejects witth the given value.
+  Future.reject = x => Future(rej => rej(x));
+
   //Create a Future which resolves after the given time with the given value.
   Future.after = uncurry(2, n => x => Future(function Future$after$fork(rej, res){
     setTimeout(res, n, x);
