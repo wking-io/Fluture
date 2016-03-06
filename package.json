@@ -1,0 +1,33 @@
+{
+  "name": "fluture",
+  "version": "0.1.0",
+  "description": "A complete Fantasy Land compatible Future library",
+  "main": "src/index.js",
+  "jsnext:main": "fluture.js",
+  "repository": "https://github.com/Avaq/fluture.git",
+  "scripts": {
+    "check-security": "nsp check",
+    "check-version": "node scripts/check-version 5.7.0",
+    "clean": "rimraf npm-debug.log coverage",
+    "lint": "eslint fluture.js test",
+    "post-merge": "npm run check-version && npm install && npm dedupe && npm run check-security && npm outdated --long",
+    "pre-push": "npm test",
+    "setup": "npm run post-merge && cp scripts/hooks/* .git/hooks && git config push.followTags true",
+    "test": "npm run check-version && npm run clean && npm run lint && npm run test:unit",
+    "test:unit": "echo \"No tests yet\""
+  },
+  "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
+  "license": "MIT",
+  "dependencies": {
+    "fantasy-land": "^0.2.1"
+  },
+  "devDependencies": {
+    "chai": "^3.4.0",
+    "eslint": "^2.2.0",
+    "glob": "^7.0.0",
+    "isparta": "^4.0.0",
+    "mocha": "^2.3.3",
+    "nsp": "^2.2.0",
+    "rimraf": "^2.4.3"
+  }
+}
