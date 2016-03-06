@@ -13,13 +13,15 @@ A complete Fantasy Land compatible Future library.
 
 ## Road map
 
-[ ] Write tests
-[ ] Write benchmarks
-[ ] Implement Traversable
-[ ] Implement Future.cache
-[ ] Implement Future.and
-[ ] Implement Future.or
-[ ] Implement Future.race
+* [x] Implement Future Monad
+* [x] Write tests
+* [ ] Write benchmarks
+* [ ] Implement Traversable
+* [ ] Implement Future.cache
+* [ ] Implement Future.and
+* [ ] Implement Future.or
+* [ ] Implement Future.race
+* [ ] Add test coverage
 
 ## The name
 
