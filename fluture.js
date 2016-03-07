@@ -101,60 +101,6 @@
     ));
   }
 
-  //Create a fork method.
-  function createFork(fork){
-    return function Future$fork(rej, res){
-      check$fork$rej(rej);
-      check$fork$res(res);
-      fork(rej, res);
-    };
-  }
-
-  //Create a chain method.
-  function createChain(fork){
-    return function Future$chain(f){
-      check$chain(f);
-      return Future(function Future$chain$fork(rej, res){
-        fork(rej, function Future$chain$res(x){
-          const m = f(x);
-          check$chain$f(m, f, x);
-          m.fork(rej, res);
-        });
-      });
-    };
-  }
-
-  //Create a map method.
-  function createMap(chain){
-    return function Future$map(f){
-      check$map(f);
-      return chain(function Future$map$chain(x){
-        return Future$of(f(x));
-      });
-    };
-  }
-
-  //Create an ap method.
-  function createAp(fork){
-    return function Future$ap(m){
-      check$ap(m);
-      return Future(function Future$ap$fork(g, h){
-        let _f, _x, ok1 = false, ok2 = false, ko = false;
-        const rej = x => ko || (ko = true, g(x));
-        fork(rej, function Future$ap$resThis(f){
-          if(!ok2) return void (ok1 = true, _f = f);
-          check$ap$f(f);
-          h(f(_x));
-        });
-        m.fork(rej, function Future$ap$resThat(x){
-          if(!ok1) return void (ok2 = true, _x = x)
-          check$ap$f(_f);
-          h(_f(x));
-        });
-      });
-    };
-  }
-
   //The of method.
   function Future$of(x){
     return Future(function Future$of$fork(rej, res){
@@ -168,19 +114,67 @@
   function Future(f){
     check$Future(f);
     if(!(this instanceof Future)) return new Future(f);
-    this.fork = createFork(f);
-    this[FL.chain] = createChain(this.fork);
-    this[FL.map] = createMap(this[FL.chain]);
-    this[FL.ap] = createAp(this.fork);
-    this.toString = function Future$toString(){
-      return `Future(${toString(f)})`;
-    };
+    this._f = f;
     return this;
   }
 
   //Give Future a prototype.
   //`of` Is allowed in the prototype because it's static.
-  Future.prototype = {[FL.of]: Future$of};
+  Future.prototype = {
+
+    _f: null,
+
+    fork: function Future$fork(rej, res){
+      check$fork$rej(rej);
+      check$fork$res(res);
+      this._f(rej, res);
+    },
+
+    [FL.of]: Future$of,
+
+    [FL.chain]: function Future$chain(f){
+      check$chain(f);
+      const _this = this;
+      return Future(function Future$chain$fork(rej, res){
+        _this.fork(rej, function Future$chain$res(x){
+          const m = f(x);
+          check$chain$f(m, f, x);
+          m.fork(rej, res);
+        });
+      });
+    },
+
+    [FL.map]: function Future$map(f){
+      check$map(f);
+      return this.chain(function Future$map$chain(x){
+        return Future$of(f(x));
+      });
+    },
+
+    [FL.ap]: function Future$ap(m){
+      check$ap(m);
+      const _this = this;
+      return Future(function Future$ap$fork(g, h){
+        let _f, _x, ok1, ok2, ko;
+        const rej = x => ko || (ko = 1, g(x));
+        _this.fork(rej, function Future$ap$resThis(f){
+          if(!ok2) return void (ok1 = 1, _f = f);
+          check$ap$f(f);
+          h(f(_x));
+        });
+        m.fork(rej, function Future$ap$resThat(x){
+          if(!ok1) return void (ok2 = 1, _x = x)
+          check$ap$f(_f);
+          h(_f(x));
+        });
+      });
+    },
+
+    toString: function Future$toString(){
+      return `Future(${toString(this._f)})`;
+    }
+
+  };
 
   //Expose `of` statically as well.
   Future[FL.of] = Future$of;
