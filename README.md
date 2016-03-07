@@ -34,8 +34,8 @@ A complete Fantasy Land compatible Future library.
 Simply run `node ./bench/<file>` to see how a specific method compares to
 implementations in `data.task`, `ramda-fantasy.Future` and `Promise`*.
 
-* Promise is not included in all benchmarks because it tends to make the process
-  run out of memory.
+\* Promise is not included in all benchmarks because it tends to make the
+  process run out of memory.
 
 ## The name
 
