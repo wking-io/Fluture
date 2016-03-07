@@ -35,82 +35,72 @@
 
   const isFuture = x => x && typeof x.fork === 'function';
 
-  //Assert that throws TypeError.
-  function youBrokeIt(yes, error, show){
-    if(yes) return;
-    throw new TypeError(`${error}\n  Actual: ${show()}`);
+  function error(message, actual){
+    return message + '\n  Actual: ' + actual;
   }
 
   //Check input to Future.
   function check$Future(fork){
-    youBrokeIt(
-      typeof fork === 'function',
+    if(typeof fork !== 'function') throw new TypeError(error(
       'Future expects its argument to be a function',
-      toString.bind(null, fork)
-    );
+      toString(fork)
+    ));
   }
 
   //Check input to Future#fork.
   function check$fork$rej(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#fork expects its first argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check input to Future#fork.
   function check$fork$res(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#fork expects its second argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check input to Future#chain.
   function check$chain(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#chain expects its argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check output from the function passed to Future#chain.
   function check$chain$f(m, f, x){
-    youBrokeIt(
-      isFuture(m),
+    if(!isFuture(m)) throw new TypeError(error(
       'Future#chain expects the function its given to return a Future',
-      () => `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
-    );
+      `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+    ));
   }
 
   //Check input to Future#map.
   function check$map(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#map expects its argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check input to Future#ap.
   function check$ap(m){
-    youBrokeIt(
-      m && typeof m.fork === 'function',
+    if(!m || typeof m.fork !== 'function') throw new TypeError(error(
       'Future#ap expects its argument to be a Future',
-      toString.bind(null, m)
-    );
+      toString(m)
+    ));
   }
 
   //Check resolution value of the Future on which #ap was called.
   function check$ap$f(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#ap was called on something other than Future<Function>',
-      () => `Future.of(${toString(f)})`
-    );
+      `Future.of(${toString(f)})`
+    ));
   }
 
   //Create a fork method.
