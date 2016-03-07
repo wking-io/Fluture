@@ -111,12 +111,12 @@
 
   //Constructor.
   function FutureClass(f){
-    check$Future(f);
     this._f = f;
   }
 
   //A createFuture function which pretends to be Future.
   function Future(f){
+    check$Future(f);
     return new FutureClass(f);
   }
 
