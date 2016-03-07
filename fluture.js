@@ -104,24 +104,24 @@
 
   //The of method.
   function Future$of(x){
-    return new Future(function Future$of$fork(rej, res){
+    return new FutureClass(function Future$of$fork(rej, res){
       res(x)
     });
   }
 
   //Constructor.
-  function Future(f){
+  function FutureClass(f){
     check$Future(f);
     this._f = f;
   }
 
   //A createFuture function which pretends to be Future.
-  function createFuture(f){
-    return new Future(f);
+  function Future(f){
+    return new FutureClass(f);
   }
 
   //Give Future a prototype.
-  Future.prototype = createFuture.prototype = {
+  FutureClass.prototype = Future.prototype = {
 
     _f: null,
 
@@ -136,7 +136,7 @@
     [FL.chain]: function Future$chain(f){
       check$chain(f);
       const _this = this;
-      return new Future(function Future$chain$fork(rej, res){
+      return new FutureClass(function Future$chain$fork(rej, res){
         _this.fork(rej, function Future$chain$res(x){
           const m = f(x);
           check$chain$f(m, f, x);
@@ -148,7 +148,7 @@
     [FL.map]: function Future$map(f){
       check$map(f);
       const _this = this;
-      return new Future(function Future$map$fork(rej, res){
+      return new FutureClass(function Future$map$fork(rej, res){
         _this.fork(rej, function Future$map$res(x){
           res(f(x));
         });
@@ -158,7 +158,7 @@
     [FL.ap]: function Future$ap(m){
       check$ap(m);
       const _this = this;
-      return new Future(function Future$ap$fork(g, h){
+      return new FutureClass(function Future$ap$fork(g, h){
         let _f, _x, ok1, ok2, ko;
         const rej = x => ko || (ko = 1, g(x));
         _this.fork(rej, function Future$ap$resThis(f){
@@ -181,16 +181,27 @@
   };
 
   //Expose `of` statically as well.
-  Future[FL.of] = createFuture[FL.of] = Future$of;
+  Future[FL.of] = Future[FL.of] = Future$of;
 
   //Expose Future statically for ease of destructuring.
-  createFuture.Future = Future;
+  Future.Future = Future;
 
-  //Turn a continuation-passing-style function into a function which returns a Future.
-  createFuture.liftNode = function Future$liftNode(f){
+  /**
+   * Turn a node continuation-passing-style function into a function which returns a Future.
+   *
+   * Takes a function which uses a node-style callback for continuation and
+   * returns a function which returns a Future for continuation.
+   *
+   * @sig liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future[a, b]
+   *
+   * @param {Function} f The node function to wrap.
+   *
+   * @return {Function} A function which returns a Future.
+   */
+  Future.liftNode = function Future$liftNode(f){
     return function Future$liftNode$lifted(){
       const xs = arguments;
-      return new Future(function Future$liftNode$fork(rej, res){
+      return new FutureClass(function Future$liftNode$fork(rej, res){
         return f(...xs, function Future$liftNode$callback(err, result){
           err ? rej(err) : res(result);
         });
@@ -198,34 +209,42 @@
     };
   };
 
-  //Turn a function which returns a Promise into a function which returns a Future.
-  createFuture.liftPromise = function Future$liftPromise(f){
+  /**
+   * Turn a function which returns a Promise into a function which returns a Future.
+   *
+   * @sig liftPromise :: (x... -> a) -> x... -> Future[Error, a]
+   *
+   * @param {Function} f The function to wrap.
+   *
+   * @return {Function} A function which returns a Future.
+   */
+  Future.liftPromise = function Future$liftPromise(f){
     return function Future$liftPromise$lifted(){
       const xs = arguments;
-      return new Future(function Future$liftPromise$fork(rej, res){
+      return new FutureClass(function Future$liftPromise$fork(rej, res){
         return f(...xs).then(res, rej);
       });
     };
   };
 
   //Create a Future which rejects witth the given value.
-  createFuture.reject = function Future$reject(x){
-    return new Future(function Future$reject$fork(rej){
+  Future.reject = function Future$reject(x){
+    return new FutureClass(function Future$reject$fork(rej){
       rej(x);
     });
   };
 
   //Create a Future which resolves after the given time with the given value.
-  createFuture.after = curry(function Future$after(n, x){
-    return new Future(function Future$after$fork(rej, res){
+  Future.after = curry(function Future$after(n, x){
+    return new FutureClass(function Future$after$fork(rej, res){
       setTimeout(res, n, x);
     })
   });
 
   //Create a Future which resolves with the return value of the given function,
   //or rejects with the exception thrown by the given function.
-  createFuture.try = function Future$try(f){
-    return new Future(function Future$try$fork(rej, res){
+  Future.try = function Future$try(f){
+    return new FutureClass(function Future$try$fork(rej, res){
       try{
         res(f());
       }
@@ -236,6 +255,6 @@
   };
 
   //Export Future factory.
-  return createFuture;
+  return Future;
 
 }));
