@@ -150,8 +150,11 @@
 
     [FL.map]: function Future$map(f){
       check$map(f);
-      return this.chain(function Future$map$chain(x){
-        return Future$of(f(x));
+      const _this = this;
+      return new Future(function Future$map$fork(rej, res){
+        _this.fork(rej, function Future$map$res(x){
+          res(f(x));
+        });
       });
     },
 
