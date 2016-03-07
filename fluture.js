@@ -159,20 +159,17 @@
   //Create the new Future.
   //Uses `createFn` factories to allow for inlining and function naming.
   //Uses `Object.create` to generate the right inheritance tree.
-  //Uses `Object.assign` instead of prototype to avoid using `this`.
   const Future = f => {
     check$Future(f);
-    const fork = createFork(f);
-    const chain = createChain(fork);
-    const map = createMap(chain);
-    const ap = createAp(fork);
-    return Object.assign(Object.create(Future.prototype), {
-      fork,
-      [FL.chain]: chain,
-      [FL.map]: map,
-      [FL.ap]: ap,
-      toString: () => `Future(${toString(f)})`
-    });
+    const future = Object.create(Future.prototype);
+    future.fork = createFork(f);
+    future[FL.chain] = createChain(future.fork);
+    future[FL.map] = createMap(future[FL.chain]);
+    future[FL.ap] = createAp(future.fork);
+    future.toString = function Future$toString(){
+      return `Future(${toString(f)})`;
+    };
+    return future;
   };
 
   //Give Future a prototype.
