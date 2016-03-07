@@ -11,7 +11,7 @@ A complete Fantasy Land compatible Future library.
 * Easier debugging than `f(...).fork is not a function`.
 * Working `instanceof` checks.
 * Passing around instance methods higher-order-style without having to bind.
-* Speed.
+* Still maintain decent speed.
 
 ## Road map
 
@@ -23,6 +23,7 @@ A complete Fantasy Land compatible Future library.
 * [ ] Implement Future.and
 * [ ] Implement Future.or
 * [ ] Implement Future.race
+* [ ] Implement Future.parallel
 * [ ] Create documentation
 * [ ] Add test coverage
 * [ ] A transpiled ES5 version if demand arises
