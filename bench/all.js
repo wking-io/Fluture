@@ -1,0 +1,34 @@
+const benchmark = require('benchmark');
+const suite = new benchmark.Suite();
+const DataTask = require('data.task');
+const RamdaFuture = require('ramda-fantasy').Future;
+const Fluture = require('..');
+
+const noop = () => {};
+
+suite.add('Fluture', () => {
+  Fluture.of(1)
+  .map(x => x + 1)
+  .chain(x => Fluture.of(f => f(x + 1)))
+  .ap(Fluture.of(x => x + 1))
+  .fork(noop, noop);
+});
+
+suite.add('data.task', () => {
+  DataTask.of(1)
+  .map(x => x + 1)
+  .chain(x => DataTask.of(f => f(x + 1)))
+  .ap(DataTask.of(x => x + 1))
+  .fork(noop, noop);
+});
+
+suite.add('Ramda Fantasy', () => {
+  RamdaFuture.of(1)
+  .map(x => x + 1)
+  .chain(x => RamdaFuture.of(f => f(x + 1)))
+  .ap(RamdaFuture.of(x => x + 1))
+  .fork(noop, noop);
+});
+
+suite.on('complete', require('./_print'))
+suite.run()
