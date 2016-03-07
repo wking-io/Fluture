@@ -269,6 +269,12 @@ describe('Utilities', () => {
     const nodeCallbackRes = f => f(null, 'It worked');
     const nodeCallbackErr = f => f(error);
 
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.liftNode(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
     it('returns a function that returns a Future', () => {
       const f = Future.liftNode(noop);
       expect(f).to.be.a('function');
@@ -292,6 +298,18 @@ describe('Utilities', () => {
     const promiseRes = () => new Promise(res => res('It worked'));
     const promiseRej = () => new Promise((res, rej) => rej(error));
 
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.liftPromise(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError the function does not return Promise', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.liftPromise(() => x).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
     it('returns a function that returns a Future', () => {
       const f = Future.liftPromise(noop);
       expect(f).to.be.a('function');
@@ -312,6 +330,12 @@ describe('Utilities', () => {
 
   describe('.try()', () => {
 
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.try(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
     it('returns a Future which resolves with the return value of the function', () => {
       const actual = Future.try(() => 1);
       return assertResolved(actual, 1);
@@ -327,6 +351,12 @@ describe('Utilities', () => {
   });
 
   describe('.node()', () => {
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.node(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
 
     it('returns a Future which rejects when the callback is called with (err)', () => {
       const f = done => done(error);
@@ -344,6 +374,12 @@ describe('Utilities', () => {
 
     it('is curried', () => {
       expect(Future.after(20)).to.be.a('function');
+    });
+
+    it('throws TypeError when not given a number as first argument', () => {
+      const xs = [{}, [], 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.after(x, 1));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('returns a Future which eventually resolves with the given value', () => {

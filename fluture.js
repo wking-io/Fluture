@@ -102,6 +102,48 @@
     ));
   }
 
+  function check$liftNode(f){
+    if(typeof f !== 'function') throw new TypeError(error(
+      'Future.liftNode expects its first argument to be a function',
+      toString(f)
+    ));
+  }
+
+  function check$liftPromise(f){
+    if(typeof f !== 'function') throw new TypeError(error(
+      'Future.liftPromise expects its first argument to be a function',
+      toString(f)
+    ));
+  }
+
+  function check$liftPromise$f(m, f, x){
+    if(!m || typeof m.then !== 'function') throw new TypeError(error(
+      'Future.liftPromise expects the function its given to return a Promise',
+      `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+    ));
+  }
+
+  function check$after(n){
+    if(typeof n !== 'number') throw new TypeError(error(
+      'Future.after expects its first argument to be a number',
+      toString(n)
+    ));
+  }
+
+  function check$try(f){
+    if(typeof f !== 'function') throw new TypeError(error(
+      'Future.try expects its first argument to be a function',
+      toString(f)
+    ));
+  }
+
+  function check$node(f){
+    if(typeof f !== 'function') throw new TypeError(error(
+      'Future.node expects its first argument to be a function',
+      toString(f)
+    ));
+  }
+
   function check$race$m1(m){
     if(!(m instanceof FutureClass)) throw new TypeError(error(
       'Future.race expects its first argument to be a Future',
@@ -213,6 +255,7 @@
    * @return {Function} A function which returns a Future.
    */
   Future.liftNode = function Future$liftNode(f){
+    check$liftNode(f);
     return function Future$liftNode$lifted(){
       const xs = arguments;
       return new FutureClass(function Future$liftNode$fork(rej, res){
@@ -233,10 +276,13 @@
    * @return {Function} A function which returns a Future.
    */
   Future.liftPromise = function Future$liftPromise(f){
+    check$liftPromise(f);
     return function Future$liftPromise$lifted(){
       const xs = arguments;
       return new FutureClass(function Future$liftPromise$fork(rej, res){
-        return f(...xs).then(res, rej);
+        const m = f(...xs);
+        check$liftPromise$f(m, f, xs);
+        return m.then(res, rej);
       });
     };
   };
@@ -250,6 +296,7 @@
 
   //Create a Future which resolves after the given time with the given value.
   Future.after = curry(function Future$after(n, x){
+    check$after(n);
     return new FutureClass(function Future$after$fork(rej, res){
       setTimeout(res, n, x);
     })
@@ -258,6 +305,7 @@
   //Create a Future which resolves with the return value of the given function,
   //or rejects with the exception thrown by the given function.
   Future.try = function Future$try(f){
+    check$try(f);
     return new FutureClass(function Future$try$fork(rej, res){
       try{
         res(f());
@@ -278,6 +326,7 @@
    * @return {[type]} [description]
    */
   Future.node = function Future$node(f){
+    check$node(f);
     return new FutureClass(function Future$node$fork(rej, res){
       f((a, b) => a ? rej(a) : res(b));
     });
