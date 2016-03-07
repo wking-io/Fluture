@@ -104,7 +104,7 @@
 
   //The of method.
   function Future$of(x){
-    return Future(function Future$of$fork(rej, res){
+    return new Future(function Future$of$fork(rej, res){
       res(x)
     });
   }
@@ -136,7 +136,7 @@
     [FL.chain]: function Future$chain(f){
       check$chain(f);
       const _this = this;
-      return Future(function Future$chain$fork(rej, res){
+      return new Future(function Future$chain$fork(rej, res){
         _this.fork(rej, function Future$chain$res(x){
           const m = f(x);
           check$chain$f(m, f, x);
@@ -155,7 +155,7 @@
     [FL.ap]: function Future$ap(m){
       check$ap(m);
       const _this = this;
-      return Future(function Future$ap$fork(g, h){
+      return new Future(function Future$ap$fork(g, h){
         let _f, _x, ok1, ok2, ko;
         const rej = x => ko || (ko = 1, g(x));
         _this.fork(rej, function Future$ap$resThis(f){
@@ -187,7 +187,7 @@
   Future.liftNode = function Future$liftNode(f){
     return function Future$liftNode$lifted(){
       const xs = arguments;
-      return Future(function Future$liftNode$fork(rej, res){
+      return new Future(function Future$liftNode$fork(rej, res){
         return f(...xs, function Future$liftNode$callback(err, result){
           err ? rej(err) : res(result);
         });
@@ -199,7 +199,7 @@
   Future.liftPromise = function Future$liftPromise(f){
     return function Future$liftPromise$lifted(){
       const xs = arguments;
-      return Future(function Future$liftPromise$fork(rej, res){
+      return new Future(function Future$liftPromise$fork(rej, res){
         return f(...xs).then(res, rej);
       });
     };
@@ -207,28 +207,30 @@
 
   //Create a Future which rejects witth the given value.
   Future.reject = function Future$reject(x){
-    return Future(function Future$reject$fork(rej){
+    return new Future(function Future$reject$fork(rej){
       rej(x);
     });
   };
 
   //Create a Future which resolves after the given time with the given value.
   Future.after = curry(function Future$after(n, x){
-    return Future(function Future$after$fork(rej, res){
+    return new Future(function Future$after$fork(rej, res){
       setTimeout(res, n, x);
     })
   });
 
   //Create a Future which resolves with the return value of the given function,
   //or rejects with the exception thrown by the given function.
-  Future.try = f => Future(function Future$try$fork(rej, res){
-    try{
-      res(f());
-    }
-    catch(err){
-      rej(err);
-    }
-  });
+  Future.try = function Future$try(f){
+    return new Future(function Future$try$fork(rej, res){
+      try{
+        res(f());
+      }
+      catch(err){
+        rej(err);
+      }
+    });
+  };
 
   //Export Future.
   return Future;
