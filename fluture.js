@@ -33,8 +33,6 @@
     : x.toString()
     : String(x);
 
-  const isFuture = x => x && typeof x.fork === 'function';
-
   function error(message, actual){
     return message + '\n  Actual: ' + actual;
   }
@@ -73,7 +71,7 @@
 
   //Check output from the function passed to Future#chain.
   function check$chain$f(m, f, x){
-    if(!isFuture(m)) throw new TypeError(error(
+    if(!m || typeof m.fork !== 'function') throw new TypeError(error(
       'Future#chain expects the function its given to return a Future',
       `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
     ));
@@ -169,15 +167,15 @@
   //Uses `Object.create` to generate the right inheritance tree.
   function Future(f){
     check$Future(f);
-    const future = Object.create(Future.prototype);
-    future.fork = createFork(f);
-    future[FL.chain] = createChain(future.fork);
-    future[FL.map] = createMap(future[FL.chain]);
-    future[FL.ap] = createAp(future.fork);
-    future.toString = function Future$toString(){
+    if(!(this instanceof Future)) return new Future(f);
+    this.fork = createFork(f);
+    this[FL.chain] = createChain(this.fork);
+    this[FL.map] = createMap(this[FL.chain]);
+    this[FL.ap] = createAp(this.fork);
+    this.toString = function Future$toString(){
       return `Future(${toString(f)})`;
     };
-    return future;
+    return this;
   }
 
   //Give Future a prototype.
