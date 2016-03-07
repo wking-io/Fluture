@@ -104,62 +104,70 @@
   }
 
   //Create a fork method.
-  const createFork = fork => function Future$fork(rej, res){
-    check$fork$rej(rej);
-    check$fork$res(res);
-    fork(rej, res);
-  };
+  function createFork(fork){
+    return function Future$fork(rej, res){
+      check$fork$rej(rej);
+      check$fork$res(res);
+      fork(rej, res);
+    };
+  }
 
   //Create a chain method.
-  const createChain = fork => function Future$chain(f){
-    check$chain(f);
-    return Future(function Future$chain$fork(rej, res){
-      fork(rej, function Future$chain$res(x){
-        const m = f(x);
-        check$chain$f(m, f, x);
-        m.fork(rej, res);
+  function createChain(fork){
+    return function Future$chain(f){
+      check$chain(f);
+      return Future(function Future$chain$fork(rej, res){
+        fork(rej, function Future$chain$res(x){
+          const m = f(x);
+          check$chain$f(m, f, x);
+          m.fork(rej, res);
+        });
       });
-    });
-  };
+    };
+  }
 
   //Create a map method.
-  const createMap = chain => function Future$map(f){
-    check$map(f);
-    return chain(function Future$map$chain(x){
-      return of(f(x));
-    });
-  };
+  function createMap(chain){
+    return function Future$map(f){
+      check$map(f);
+      return chain(function Future$map$chain(x){
+        return Future$of(f(x));
+      });
+    };
+  }
 
   //Create an ap method.
-  const createAp = fork => function Future$ap(m){
-    check$ap(m);
-    return Future(function Future$ap$fork(g, h){
-      let _f, _x, ok1 = false, ok2 = false, ko = false;
-      const rej = x => ko || (ko = true, g(x));
-      fork(rej, function Future$ap$resThis(f){
-        if(!ok2) return void (ok1 = true, _f = f);
-        check$ap$f(f);
-        h(f(_x));
+  function createAp(fork){
+    return function Future$ap(m){
+      check$ap(m);
+      return Future(function Future$ap$fork(g, h){
+        let _f, _x, ok1 = false, ok2 = false, ko = false;
+        const rej = x => ko || (ko = true, g(x));
+        fork(rej, function Future$ap$resThis(f){
+          if(!ok2) return void (ok1 = true, _f = f);
+          check$ap$f(f);
+          h(f(_x));
+        });
+        m.fork(rej, function Future$ap$resThat(x){
+          if(!ok1) return void (ok2 = true, _x = x)
+          check$ap$f(_f);
+          h(_f(x));
+        });
       });
-      m.fork(rej, function Future$ap$resThat(x){
-        if(!ok1) return void (ok2 = true, _x = x)
-        check$ap$f(_f);
-        h(_f(x));
-      });
-    });
-  };
+    };
+  }
 
   //The of method.
-  const of = function Future$of(x){
+  function Future$of(x){
     return Future(function Future$of$fork(rej, res){
       res(x)
     });
-  };
+  }
 
   //Create the new Future.
   //Uses `createFn` factories to allow for inlining and function naming.
   //Uses `Object.create` to generate the right inheritance tree.
-  const Future = f => {
+  function Future(f){
     check$Future(f);
     const future = Object.create(Future.prototype);
     future.fork = createFork(f);
@@ -170,14 +178,14 @@
       return `Future(${toString(f)})`;
     };
     return future;
-  };
+  }
 
   //Give Future a prototype.
   //`of` Is allowed in the prototype because it's static.
-  Future.prototype = {[FL.of]: of};
+  Future.prototype = {[FL.of]: Future$of};
 
   //Expose `of` statically as well.
-  Future[FL.of] = of;
+  Future[FL.of] = Future$of;
 
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
@@ -191,7 +199,6 @@
         case 0: return uncurry(n, f);
         case 1: return n > 1 ? uncurry(n - 1, f(xs[0])) : f(xs[0]);
         case 2: return n > 2 ? uncurry(n - 2, f(xs[0])(xs[1])) : f(xs[0])(xs[1]);
-        case 3: return n > 3 ? uncurry(n - 3, f(xs[0])(xs[1])(xs[2])) : f(xs[0])(xs[1])(xs[2]);
         default:
           for(let i = 0; i < l && n > 0; i++, n--){
             f = f(xs[i])
