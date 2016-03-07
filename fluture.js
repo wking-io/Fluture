@@ -1,23 +1,24 @@
 /*global define*/
 /*global FantasyLand*/
+/*global _*/
 (function(global, f){
 
   'use strict';
 
   /* istanbul ignore else */
   if(typeof module !== 'undefined'){
-    module.exports = f(require('fantasy-land'));
+    module.exports = f(require('fantasy-land'), require('lodash.curry'));
   }
 
   else if(typeof define === 'function' && define.amd){
-    define(['fantasy-land'], f);
+    define(['fantasy-land', 'lodash.curry'], f);
   }
 
   else{
-    global.Fluture = f(FantasyLand);
+    global.Fluture = f(FantasyLand, _.curry);
   }
 
-}(global || window || this, function(FL){
+}(global || window || this, function(FL, curry){
 
   'use strict';
 
@@ -103,24 +104,24 @@
 
   //The of method.
   function Future$of(x){
-    return Future(function Future$of$fork(rej, res){
+    return new Future(function Future$of$fork(rej, res){
       res(x)
     });
   }
 
-  //Create the new Future.
-  //Uses `createFn` factories to allow for inlining and function naming.
-  //Uses `Object.create` to generate the right inheritance tree.
+  //Constructor.
   function Future(f){
     check$Future(f);
-    if(!(this instanceof Future)) return new Future(f);
     this._f = f;
-    return this;
+  }
+
+  //A createFuture function which pretends to be Future.
+  function createFuture(f){
+    return new Future(f);
   }
 
   //Give Future a prototype.
-  //`of` Is allowed in the prototype because it's static.
-  Future.prototype = {
+  Future.prototype = createFuture.prototype = {
 
     _f: null,
 
@@ -135,7 +136,7 @@
     [FL.chain]: function Future$chain(f){
       check$chain(f);
       const _this = this;
-      return Future(function Future$chain$fork(rej, res){
+      return new Future(function Future$chain$fork(rej, res){
         _this.fork(rej, function Future$chain$res(x){
           const m = f(x);
           check$chain$f(m, f, x);
@@ -146,15 +147,18 @@
 
     [FL.map]: function Future$map(f){
       check$map(f);
-      return this.chain(function Future$map$chain(x){
-        return Future$of(f(x));
+      const _this = this;
+      return new Future(function Future$map$fork(rej, res){
+        _this.fork(rej, function Future$map$res(x){
+          res(f(x));
+        });
       });
     },
 
     [FL.ap]: function Future$ap(m){
       check$ap(m);
       const _this = this;
-      return Future(function Future$ap$fork(g, h){
+      return new Future(function Future$ap$fork(g, h){
         let _f, _x, ok1, ok2, ko;
         const rej = x => ko || (ko = 1, g(x));
         _this.fork(rej, function Future$ap$resThis(f){
@@ -177,34 +181,16 @@
   };
 
   //Expose `of` statically as well.
-  Future[FL.of] = Future$of;
+  Future[FL.of] = createFuture[FL.of] = Future$of;
 
   //Expose Future statically for ease of destructuring.
-  Future.Future = Future;
-
-  //Turn a curried function into a function which may also accept multiple arguments at once.
-  const uncurry = (n, f) => {
-    return function uncurry$uncurried(){
-      const xs = arguments;
-      const l = xs.length;
-      switch(l){
-        case 0: return uncurry(n, f);
-        case 1: return n > 1 ? uncurry(n - 1, f(xs[0])) : f(xs[0]);
-        case 2: return n > 2 ? uncurry(n - 2, f(xs[0])(xs[1])) : f(xs[0])(xs[1]);
-        default:
-          for(let i = 0; i < l && n > 0; i++, n--){
-            f = f(xs[i])
-          }
-          return n < 1 ? f : uncurry(n, f);
-      }
-    };
-  };
+  createFuture.Future = Future;
 
   //Turn a continuation-passing-style function into a function which returns a Future.
-  Future.liftNode = function Future$liftNode(f){
+  createFuture.liftNode = function Future$liftNode(f){
     return function Future$liftNode$lifted(){
       const xs = arguments;
-      return Future(function Future$liftNode$fork(rej, res){
+      return new Future(function Future$liftNode$fork(rej, res){
         return f(...xs, function Future$liftNode$callback(err, result){
           err ? rej(err) : res(result);
         });
@@ -213,39 +199,43 @@
   };
 
   //Turn a function which returns a Promise into a function which returns a Future.
-  Future.liftPromise = function Future$liftPromise(f){
+  createFuture.liftPromise = function Future$liftPromise(f){
     return function Future$liftPromise$lifted(){
       const xs = arguments;
-      return Future(function Future$liftPromise$fork(rej, res){
+      return new Future(function Future$liftPromise$fork(rej, res){
         return f(...xs).then(res, rej);
       });
     };
   };
 
   //Create a Future which rejects witth the given value.
-  Future.reject = function Future$reject(x){
-    return Future(function Future$reject$fork(rej){
+  createFuture.reject = function Future$reject(x){
+    return new Future(function Future$reject$fork(rej){
       rej(x);
     });
   };
 
   //Create a Future which resolves after the given time with the given value.
-  Future.after = uncurry(2, n => x => Future(function Future$after$fork(rej, res){
-    setTimeout(res, n, x);
-  }));
+  createFuture.after = curry(function Future$after(n, x){
+    return new Future(function Future$after$fork(rej, res){
+      setTimeout(res, n, x);
+    })
+  });
 
   //Create a Future which resolves with the return value of the given function,
   //or rejects with the exception thrown by the given function.
-  Future.try = f => Future(function Future$try$fork(rej, res){
-    try{
-      res(f());
-    }
-    catch(err){
-      rej(err);
-    }
-  });
+  createFuture.try = function Future$try(f){
+    return new Future(function Future$try$fork(rej, res){
+      try{
+        res(f());
+      }
+      catch(err){
+        rej(err);
+      }
+    });
+  };
 
-  //Export Future.
-  return Future;
+  //Export Future factory.
+  return createFuture;
 
 }));

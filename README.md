@@ -9,7 +9,6 @@ A complete Fantasy Land compatible Future library.
 * A stand-alone Fantasy Future package.
 * Async control utilities included.
 * Easier debugging than `f(...).fork is not a function`.
-* Working `instanceof` checks.
 * Still maintain decent speed.
 
 ## Road map
@@ -19,6 +18,9 @@ A complete Fantasy Land compatible Future library.
 * [x] Write benchmarks
 * [ ] Implement Traversable?
 * [ ] Implement Future.cache
+* [ ] Implement Future.mapRej
+* [ ] Implement Future.chainRej
+* [ ] Implement Future.swap
 * [ ] Implement Future.and
 * [ ] Implement Future.or
 * [ ] Implement Future.race

@@ -1,6 +1,6 @@
 {
   "name": "fluture",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A complete Fantasy Land compatible Future library",
   "main": "fluture.js",
   "repository": "https://github.com/Avaq/fluture.git",
@@ -21,7 +21,8 @@
     "node": "^5.0.0"
   },
   "dependencies": {
-    "fantasy-land": "^0.2.1"
+    "fantasy-land": "^0.2.1",
+    "lodash.curry": "^4.0.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",
