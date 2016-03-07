@@ -23,7 +23,7 @@ A complete Fantasy Land compatible Future library.
 * [ ] Implement Future.swap
 * [ ] Implement Future.and
 * [ ] Implement Future.or
-* [ ] Implement Future.race
+* [x] Implement Future.race
 * [ ] Implement Future.parallel
 * [ ] Create documentation
 * [ ] Add test coverage

@@ -353,4 +353,36 @@ describe('Utilities', () => {
 
   });
 
+  describe('.race()', () => {
+
+    it('is curried', () => {
+      expect(Future.race(Future.of(1))).to.be.a('function');
+    });
+
+    it('throw TypeError when not given a Future as first argument', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.race(x, Future.of(1)));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throw TypeError when not given a Future as second argument', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.race(Future.of(1), x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which rejects when the first one rejects', () => {
+      const m1 = Future((rej, res) => setTimeout(res, 15, 1));
+      const m2 = Future(rej => setTimeout(rej, 5, error));
+      return assertRejected(Future.race(m1, m2), error);
+    });
+
+    it('returns a Future which resolves when the first one resolves', () => {
+      const m1 = Future((rej, res) => setTimeout(res, 5, 1));
+      const m2 = Future(rej => setTimeout(rej, 15, error));
+      return assertResolved(Future.race(m1, m2), 1);
+    });
+
+  });
+
 });

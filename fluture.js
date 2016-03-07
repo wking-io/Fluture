@@ -102,6 +102,20 @@
     ));
   }
 
+  function check$race$m1(m){
+    if(!(m instanceof FutureClass)) throw new TypeError(error(
+      'Future.race expects its first argument to be a Future',
+      toString(m)
+    ));
+  }
+
+  function check$race$m2(m){
+    if(!(m instanceof FutureClass)) throw new TypeError(error(
+      'Future.race expects its second argument to be a Future',
+      toString(m)
+    ));
+  }
+
   //The of method.
   function Future$of(x){
     return new FutureClass(function Future$of$fork(rej, res){
@@ -268,6 +282,36 @@
       f((a, b) => a ? rej(a) : res(b));
     });
   };
+
+  /**
+   * Race two Futures against eachother.
+   *
+   * Creates a new Future which resolves or rejects with the resolution or
+   * rejection value of the first Future to settle.
+   *
+   * @param {Future} m1 The first Future.
+   * @param {Future} m2 The second Future.
+   *
+   * @return {Future}
+   *
+   * @example
+   *
+   *     race(
+   *       Future(rej => setTimeout(rej, 8000, new Error('Request timed out'))),
+   *       fromNode(done => request('http://example.com', done))
+   *     )
+   *
+   */
+  Future.race = curry(function Future$race(m1, m2){
+    check$race$m1(m1);
+    check$race$m2(m2);
+    return new FutureClass(function Future$race$fork(rej, res){
+      let settled = false;
+      const once = f => a => settled || (settled = true, f(a));
+      m1._f(once(rej), once(res));
+      m2._f(once(rej), once(res));
+    });
+  });
 
   //Export Future factory.
   return Future;
