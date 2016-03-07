@@ -33,164 +33,151 @@
     : x.toString()
     : String(x);
 
-  const isFuture = x => x && typeof x.fork === 'function';
-
-  //Assert that throws TypeError.
-  function youBrokeIt(yes, error, show){
-    if(yes) return;
-    throw new TypeError(`${error}\n  Actual: ${show()}`);
+  function error(message, actual){
+    return message + '\n  Actual: ' + actual;
   }
 
   //Check input to Future.
   function check$Future(fork){
-    youBrokeIt(
-      typeof fork === 'function',
+    if(typeof fork !== 'function') throw new TypeError(error(
       'Future expects its argument to be a function',
-      toString.bind(null, fork)
-    );
+      toString(fork)
+    ));
   }
 
   //Check input to Future#fork.
   function check$fork$rej(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#fork expects its first argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check input to Future#fork.
   function check$fork$res(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#fork expects its second argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check input to Future#chain.
   function check$chain(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#chain expects its argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check output from the function passed to Future#chain.
   function check$chain$f(m, f, x){
-    youBrokeIt(
-      isFuture(m),
+    if(!m || typeof m.fork !== 'function') throw new TypeError(error(
       'Future#chain expects the function its given to return a Future',
-      () => `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
-    );
+      `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+    ));
   }
 
   //Check input to Future#map.
   function check$map(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#map expects its argument to be a function',
-      toString.bind(null, f)
-    );
+      toString(f)
+    ));
   }
 
   //Check input to Future#ap.
   function check$ap(m){
-    youBrokeIt(
-      m && typeof m.fork === 'function',
+    if(!m || typeof m.fork !== 'function') throw new TypeError(error(
       'Future#ap expects its argument to be a Future',
-      toString.bind(null, m)
-    );
+      toString(m)
+    ));
   }
 
   //Check resolution value of the Future on which #ap was called.
   function check$ap$f(f){
-    youBrokeIt(
-      typeof f === 'function',
+    if(typeof f !== 'function') throw new TypeError(error(
       'Future#ap was called on something other than Future<Function>',
-      () => `Future.of(${toString(f)})`
-    );
+      `Future.of(${toString(f)})`
+    ));
   }
 
-  //Create a fork method.
-  const createFork = fork => function Future$fork(rej, res){
-    check$fork$rej(rej);
-    check$fork$res(res);
-    fork(rej, res);
-  };
-
-  //Create a chain method.
-  const createChain = fork => function Future$chain(f){
-    check$chain(f);
-    return Future(function Future$chain$fork(rej, res){
-      fork(rej, function Future$chain$res(x){
-        const m = f(x);
-        check$chain$f(m, f, x);
-        m.fork(rej, res);
-      });
-    });
-  };
-
-  //Create a map method.
-  const createMap = chain => function Future$map(f){
-    check$map(f);
-    return chain(function Future$map$chain(x){
-      return of(f(x));
-    });
-  };
-
-  //Create an ap method.
-  const createAp = fork => function Future$ap(m){
-    check$ap(m);
-    return Future(function Future$ap$fork(g, h){
-      let _f, _x, ok1 = false, ok2 = false, ko = false;
-      const rej = x => ko || (ko = true, g(x));
-      fork(rej, function Future$ap$resThis(f){
-        if(!ok2) return void (ok1 = true, _f = f);
-        check$ap$f(f);
-        h(f(_x));
-      });
-      m.fork(rej, function Future$ap$resThat(x){
-        if(!ok1) return void (ok2 = true, _x = x)
-        check$ap$f(_f);
-        h(_f(x));
-      });
-    });
-  };
-
   //The of method.
-  const of = function Future$of(x){
+  function Future$of(x){
     return Future(function Future$of$fork(rej, res){
       res(x)
     });
-  };
+  }
 
   //Create the new Future.
   //Uses `createFn` factories to allow for inlining and function naming.
   //Uses `Object.create` to generate the right inheritance tree.
-  //Uses `Object.assign` instead of prototype to avoid using `this`.
-  const Future = f => {
+  function Future(f){
     check$Future(f);
-    const fork = createFork(f);
-    const chain = createChain(fork);
-    const map = createMap(chain);
-    const ap = createAp(fork);
-    return Object.assign(Object.create(Future.prototype), {
-      fork,
-      [FL.chain]: chain,
-      [FL.map]: map,
-      [FL.ap]: ap,
-      toString: () => `Future(${toString(f)})`
-    });
-  };
+    if(!(this instanceof Future)) return new Future(f);
+    this._f = f;
+    return this;
+  }
 
   //Give Future a prototype.
   //`of` Is allowed in the prototype because it's static.
-  Future.prototype = {[FL.of]: of};
+  Future.prototype = {
+
+    _f: null,
+
+    fork: function Future$fork(rej, res){
+      check$fork$rej(rej);
+      check$fork$res(res);
+      this._f(rej, res);
+    },
+
+    [FL.of]: Future$of,
+
+    [FL.chain]: function Future$chain(f){
+      check$chain(f);
+      const _this = this;
+      return Future(function Future$chain$fork(rej, res){
+        _this.fork(rej, function Future$chain$res(x){
+          const m = f(x);
+          check$chain$f(m, f, x);
+          m.fork(rej, res);
+        });
+      });
+    },
+
+    [FL.map]: function Future$map(f){
+      check$map(f);
+      return this.chain(function Future$map$chain(x){
+        return Future$of(f(x));
+      });
+    },
+
+    [FL.ap]: function Future$ap(m){
+      check$ap(m);
+      const _this = this;
+      return Future(function Future$ap$fork(g, h){
+        let _f, _x, ok1, ok2, ko;
+        const rej = x => ko || (ko = 1, g(x));
+        _this.fork(rej, function Future$ap$resThis(f){
+          if(!ok2) return void (ok1 = 1, _f = f);
+          check$ap$f(f);
+          h(f(_x));
+        });
+        m.fork(rej, function Future$ap$resThat(x){
+          if(!ok1) return void (ok2 = 1, _x = x)
+          check$ap$f(_f);
+          h(_f(x));
+        });
+      });
+    },
+
+    toString: function Future$toString(){
+      return `Future(${toString(this._f)})`;
+    }
+
+  };
 
   //Expose `of` statically as well.
-  Future[FL.of] = of;
+  Future[FL.of] = Future$of;
 
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
@@ -204,7 +191,6 @@
         case 0: return uncurry(n, f);
         case 1: return n > 1 ? uncurry(n - 1, f(xs[0])) : f(xs[0]);
         case 2: return n > 2 ? uncurry(n - 2, f(xs[0])(xs[1])) : f(xs[0])(xs[1]);
-        case 3: return n > 3 ? uncurry(n - 3, f(xs[0])(xs[1])(xs[2])) : f(xs[0])(xs[1])(xs[2]);
         default:
           for(let i = 0; i < l && n > 0; i++, n--){
             f = f(xs[i])
