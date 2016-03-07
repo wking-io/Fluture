@@ -16,22 +16,23 @@ const failRej = x => {
   throw new Error(`Invalidly entered rejection branch with value ${x}`);
 };
 
-const assertEqual = (a, b) => new Promise(done =>
-  a.fork(failRej, a => b.fork(failRej, b => (
-    expect(a).to.equal(b),
-    done()
-  )))
-);
+const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 
-const assertResolved = (m, x) => new Promise(done => m.fork(
-  failRej,
-  y => (expect(y).to.equal(x), done())
-));
+const assertEqual = (a, b) => new Promise(done => {
+  assertIsFuture(a);
+  assertIsFuture(b);
+  a.fork(failRej, a => b.fork(failRej, b => (expect(a).to.equal(b), done())));
+});
 
-const assertRejected = (m, x) => new Promise(done => m.fork(
-  y => (expect(y).to.equal(x), done()),
-  failRes
-));
+const assertResolved = (m, x) => new Promise(done => {
+  assertIsFuture(m);
+  m.fork(failRej, y => (expect(y).to.equal(x), done()));
+});
+
+const assertRejected = (m, x) => new Promise(done => {
+  assertIsFuture(m);
+  m.fork(y => (expect(y).to.equal(x), done()), failRes);
+});
 
 describe('Future', () => {
 
@@ -321,6 +322,20 @@ describe('Utilities', () => {
         throw error;
       });
       return assertRejected(actual, error);
+    });
+
+  });
+
+  describe('.node()', () => {
+
+    it('returns a Future which rejects when the callback is called with (err)', () => {
+      const f = done => done(error);
+      return assertRejected(Future.node(f), error);
+    });
+
+    it('returns a Future which resolves when the callback is called with (null, a)', () => {
+      const f = done => done(null, 'a');
+      return assertResolved(Future.node(f), 'a');
     });
 
   });

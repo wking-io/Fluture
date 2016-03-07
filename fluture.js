@@ -254,6 +254,21 @@
     });
   };
 
+  /**
+   * Allow one-off wrapping of a function that requires a node-style callback.
+   *
+   * @sig fromNode :: ((err, a) -> Void) -> Future[Error, a]
+   *
+   * @param {Function} f The operation expected to eventaully call the callback.
+   *
+   * @return {[type]} [description]
+   */
+  Future.node = function Future$node(f){
+    return new FutureClass(function Future$node$fork(rej, res){
+      f((a, b) => a ? rej(a) : res(b));
+    });
+  };
+
   //Export Future factory.
   return Future;
 
