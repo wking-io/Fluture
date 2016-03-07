@@ -29,6 +29,14 @@ A complete Fantasy Land compatible Future library.
 * [ ] Add test coverage
 * [ ] A transpiled ES5 version if demand arises
 
+## Benchmarks
+
+Simply run `node ./bench/<file>` to see how a specific method compares to
+implementations in `data.task`, `ramda-fantasy.Future` and `Promise`*.
+
+* Promise is not included in all benchmarks because it tends to make the process
+  run out of memory.
+
 ## The name
 
 A conjunction of the acronym to Fantasy Land (FL) and Future. Also "fluture"
