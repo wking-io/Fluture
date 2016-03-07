@@ -72,7 +72,7 @@
 
   //Check output from the function passed to Future#chain.
   function check$chain$f(m, f, x){
-    if(!m || typeof m.fork !== 'function') throw new TypeError(error(
+    if(!(m instanceof FutureClass)) throw new TypeError(error(
       'Future#chain expects the function its given to return a Future',
       `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
     ));
@@ -88,7 +88,7 @@
 
   //Check input to Future#ap.
   function check$ap(m){
-    if(!m || typeof m.fork !== 'function') throw new TypeError(error(
+    if(!(m instanceof FutureClass)) throw new TypeError(error(
       'Future#ap expects its argument to be a Future',
       toString(m)
     ));
@@ -137,10 +137,10 @@
       check$chain(f);
       const _this = this;
       return new FutureClass(function Future$chain$fork(rej, res){
-        _this.fork(rej, function Future$chain$res(x){
+        _this._f(rej, function Future$chain$res(x){
           const m = f(x);
           check$chain$f(m, f, x);
-          m.fork(rej, res);
+          m._f(rej, res);
         });
       });
     },
@@ -149,7 +149,7 @@
       check$map(f);
       const _this = this;
       return new FutureClass(function Future$map$fork(rej, res){
-        _this.fork(rej, function Future$map$res(x){
+        _this._f(rej, function Future$map$res(x){
           res(f(x));
         });
       });
@@ -161,12 +161,12 @@
       return new FutureClass(function Future$ap$fork(g, h){
         let _f, _x, ok1, ok2, ko;
         const rej = x => ko || (ko = 1, g(x));
-        _this.fork(rej, function Future$ap$resThis(f){
+        _this._f(rej, function Future$ap$resThis(f){
           if(!ok2) return void (ok1 = 1, _f = f);
           check$ap$f(f);
           h(f(_x));
         });
-        m.fork(rej, function Future$ap$resThat(x){
+        m._f(rej, function Future$ap$resThat(x){
           if(!ok1) return void (ok2 = 1, _x = x)
           check$ap$f(_f);
           h(_f(x));
