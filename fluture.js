@@ -114,14 +114,17 @@
   //Uses `Object.create` to generate the right inheritance tree.
   function Future(f){
     check$Future(f);
-    if(!(this instanceof Future)) return new Future(f);
     this._f = f;
     return this;
   }
 
+  //A createFuture function which pretends to be Future.
+  function createFuture(f){
+    return new Future(f);
+  }
+
   //Give Future a prototype.
-  //`of` Is allowed in the prototype because it's static.
-  Future.prototype = {
+  Future.prototype = createFuture.prototype = {
 
     _f: null,
 
@@ -178,13 +181,13 @@
   };
 
   //Expose `of` statically as well.
-  Future[FL.of] = Future$of;
+  Future[FL.of] = createFuture[FL.of] = Future$of;
 
   //Expose Future statically for ease of destructuring.
-  Future.Future = Future;
+  createFuture.Future = Future;
 
   //Turn a continuation-passing-style function into a function which returns a Future.
-  Future.liftNode = function Future$liftNode(f){
+  createFuture.liftNode = function Future$liftNode(f){
     return function Future$liftNode$lifted(){
       const xs = arguments;
       return new Future(function Future$liftNode$fork(rej, res){
@@ -196,7 +199,7 @@
   };
 
   //Turn a function which returns a Promise into a function which returns a Future.
-  Future.liftPromise = function Future$liftPromise(f){
+  createFuture.liftPromise = function Future$liftPromise(f){
     return function Future$liftPromise$lifted(){
       const xs = arguments;
       return new Future(function Future$liftPromise$fork(rej, res){
@@ -206,14 +209,14 @@
   };
 
   //Create a Future which rejects witth the given value.
-  Future.reject = function Future$reject(x){
+  createFuture.reject = function Future$reject(x){
     return new Future(function Future$reject$fork(rej){
       rej(x);
     });
   };
 
   //Create a Future which resolves after the given time with the given value.
-  Future.after = curry(function Future$after(n, x){
+  createFuture.after = curry(function Future$after(n, x){
     return new Future(function Future$after$fork(rej, res){
       setTimeout(res, n, x);
     })
@@ -221,7 +224,7 @@
 
   //Create a Future which resolves with the return value of the given function,
   //or rejects with the exception thrown by the given function.
-  Future.try = function Future$try(f){
+  createFuture.try = function Future$try(f){
     return new Future(function Future$try$fork(rej, res){
       try{
         res(f());
@@ -232,7 +235,7 @@
     });
   };
 
-  //Export Future.
-  return Future;
+  //Export Future factory.
+  return createFuture;
 
 }));
