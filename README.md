@@ -18,6 +18,9 @@ A complete Fantasy Land compatible Future library.
 * [x] Write benchmarks
 * [ ] Implement Traversable?
 * [ ] Implement Future.cache
+* [ ] Implement Future.mapRej
+* [ ] Implement Future.chainRej
+* [ ] Implement Future.swap
 * [ ] Implement Future.and
 * [ ] Implement Future.or
 * [ ] Implement Future.race

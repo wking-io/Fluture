@@ -109,13 +109,10 @@
     });
   }
 
-  //Create the new Future.
-  //Uses `createFn` factories to allow for inlining and function naming.
-  //Uses `Object.create` to generate the right inheritance tree.
+  //Constructor.
   function Future(f){
     check$Future(f);
     this._f = f;
-    return this;
   }
 
   //A createFuture function which pretends to be Future.
