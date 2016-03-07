@@ -1,23 +1,24 @@
 /*global define*/
 /*global FantasyLand*/
+/*global _*/
 (function(global, f){
 
   'use strict';
 
   /* istanbul ignore else */
   if(typeof module !== 'undefined'){
-    module.exports = f(require('fantasy-land'));
+    module.exports = f(require('fantasy-land'), require('lodash.curry'));
   }
 
   else if(typeof define === 'function' && define.amd){
-    define(['fantasy-land'], f);
+    define(['fantasy-land', 'lodash.curry'], f);
   }
 
   else{
-    global.Fluture = f(FantasyLand);
+    global.Fluture = f(FantasyLand, _.curry);
   }
 
-}(global || window || this, function(FL){
+}(global || window || this, function(FL, curry){
 
   'use strict';
 
@@ -182,24 +183,6 @@
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
 
-  //Turn a curried function into a function which may also accept multiple arguments at once.
-  const uncurry = (n, f) => {
-    return function uncurry$uncurried(){
-      const xs = arguments;
-      const l = xs.length;
-      switch(l){
-        case 0: return uncurry(n, f);
-        case 1: return n > 1 ? uncurry(n - 1, f(xs[0])) : f(xs[0]);
-        case 2: return n > 2 ? uncurry(n - 2, f(xs[0])(xs[1])) : f(xs[0])(xs[1]);
-        default:
-          for(let i = 0; i < l && n > 0; i++, n--){
-            f = f(xs[i])
-          }
-          return n < 1 ? f : uncurry(n, f);
-      }
-    };
-  };
-
   //Turn a continuation-passing-style function into a function which returns a Future.
   Future.liftNode = function Future$liftNode(f){
     return function Future$liftNode$lifted(){
@@ -230,9 +213,11 @@
   };
 
   //Create a Future which resolves after the given time with the given value.
-  Future.after = uncurry(2, n => x => Future(function Future$after$fork(rej, res){
-    setTimeout(res, n, x);
-  }));
+  Future.after = curry(function Future$after(n, x){
+    return Future(function Future$after$fork(rej, res){
+      setTimeout(res, n, x);
+    })
+  });
 
   //Create a Future which resolves with the return value of the given function,
   //or rejects with the exception thrown by the given function.
