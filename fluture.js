@@ -323,7 +323,13 @@
    *
    * @param {Function} f The operation expected to eventaully call the callback.
    *
-   * @return {[type]} [description]
+   * @return {Future}
+   *
+   * @example
+   *
+   *     node(done => MySql.connect(done))
+   *     .fork(console.error, console.log)
+   *
    */
   Future.node = function Future$node(f){
     check$node(f);
