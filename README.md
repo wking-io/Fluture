@@ -2,7 +2,8 @@
 
 A complete Fantasy Land compatible Future library.
 
-> `npm install --save fluture` <sup>Requires node 5.0.0 or later</sup>
+> `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
+  like modern browsers, transpilers or Node 5+</sup>
 
 
 ## Usage
@@ -173,11 +174,14 @@ Like liftNode, but for a function which returns a Promise.
 * [ ] Implement Future.cache
 * [ ] Implement Future.mapRej
 * [ ] Implement Future.chainRej
+* [ ] Implement dispatchers: chain, map, ap, fork
 * [ ] Implement Future.swap
 * [ ] Implement Future.and
 * [ ] Implement Future.or
 * [x] Implement Future.race
 * [ ] Implement Future.parallel
+* [ ] Implement Future.predicate
+* [ ] Implement Future.promise
 * [x] Create documentation
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
