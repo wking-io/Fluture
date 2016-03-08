@@ -87,6 +87,28 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 //> "{...}"
 ```
 
+#### `cache :: Future a b -> Future a b`
+
+Returns a Future which caches the resolution value of the given Future so that
+whenever it's forked, it can load the value from cache rather than reexecuting
+the chain.
+
+```js
+const eventualPackage = Future.cache(
+  Future.node(done => {
+    console.log('Reading some big data');
+    fs.readFile('package.json', 'utf8', done)
+  })
+);
+
+eventualPackage.fork(console.error, console.log);
+//> "Reading some big data"
+//> "{...}"
+
+eventualPackage.fork(console.error, console.log);
+//> "{...}"
+```
+
 ----
 
 #### `map :: Future a b ~> (b -> c) -> Future a c`
@@ -171,7 +193,7 @@ Like liftNode, but for a function which returns a Promise.
 * [x] Write tests
 * [x] Write benchmarks
 * [ ] Implement Traversable?
-* [ ] Implement Future.cache
+* [x] Implement Future.cache
 * [ ] Implement Future.mapRej
 * [ ] Implement Future.chainRej
 * [ ] Implement dispatchers: chain, map, ap, fork
@@ -182,6 +204,7 @@ Like liftNode, but for a function which returns a Promise.
 * [ ] Implement Future.parallel
 * [ ] Implement Future.predicate
 * [ ] Implement Future.promise
+* [ ] Implement Future.cast
 * [x] Create documentation
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise

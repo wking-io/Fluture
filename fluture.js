@@ -30,7 +30,7 @@
     ? `[${x.map(toString).join(', ')}]`
     : x && (typeof x.toString === 'function')
     ? x.toString === Object.prototype.toString
-    ? `{${Object.keys(x).reduce((o, k) => o.concat(`"${k}": ${toString(x[k])}`), []).join(', ')}}`
+    ? `{${Object.keys(x).reduce((o, k) => o.concat(`${toString(k)}: ${toString(x[k])}`), []).join(', ')}}`
     : x.toString()
     : String(x);
 
@@ -100,6 +100,23 @@
       'Future#ap was called on something other than Future<Function>',
       `Future.of(${toString(f)})`
     ));
+  }
+
+  function check$cache(m){
+    if(!(m instanceof FutureClass)) throw new TypeError(error(
+      'Future.cache expects its argument to be a Future',
+      toString(m)
+    ));
+  }
+
+  function check$cache$settle(oldState, newState, oldValue, newValue){
+    if(oldState > 1) throw new Error(
+      'Future.cache expects the Future it wraps to only resolve or reject once; '
+      + ' a cached Future tried to ' + (newState === 2 ? 'reject' : 'resolve') + ' a second time.'
+      + ' Please check your cached Future and make sure it does not call res or rej multiple times'
+      + '\n  It was ' + (oldState === 2 ? 'rejected' : 'resolved') + ' with: ' + toString(oldValue)
+      + '\n  It got ' + (newState === 2 ? 'rejected' : 'resolved') + ' with: ' + toString(newValue)
+    );
   }
 
   function check$liftNode(f){
@@ -247,6 +264,43 @@
 
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
+
+  /**
+   * Cache a Future
+   *
+   * Returns a Future which caches the resolution value of the given Future so
+   * that whenever it's forked, it can load the value from cache rather than
+   * reexecuting the chain.
+   *
+   * @param {Future} m The Future to be cached.
+   *
+   * @return {Future} The Future which does the caching.
+   */
+  Future.cache = function Future$cache(m){
+    check$cache(m);
+    let que = [];
+    let value, state;
+    const settleWith = newState => function Future$cache$settle(newValue){
+      check$cache$settle(state, newState, value, newValue);
+      value = newValue; state = newState;
+      for(let i = 0, l = que.length; i < l; i++){
+        que[i][state](value);
+        que[i] = undefined;
+      }
+      que = undefined;
+    };
+    return new FutureClass(function Future$cache$fork(rej, res){
+      switch(state){
+        case 1: que.push({2: rej, 3: res}); break;
+        case 2: rej(value); break;
+        case 3: res(value); break;
+        default:
+          state = 1;
+          que.push({2: rej, 3: res});
+          m.fork(settleWith(2), settleWith(3));
+      }
+    });
+  };
 
   /**
    * Turn a node continuation-passing-style function into a function which returns a Future.

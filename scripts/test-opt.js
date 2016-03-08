@@ -17,7 +17,7 @@ function printStatus(fn) {;
 const noop = () => {};
 const m = Future.of(1);
 
-console.log('---')
+console.log('--- map chain ap fork ---')
 
 Future.of(1)
 .map(x => x + 1)
@@ -48,3 +48,15 @@ printStatus(m.map);
 printStatus(m.chain);
 printStatus(m.ap);
 printStatus(m.fork);
+
+console.log('--- cache ---')
+
+Future.cache(Future.of(1));
+
+%OptimizeFunctionOnNextCall(Future.cache);
+
+printStatus(Future.cache);
+
+Future.cache(Future.of(1));
+
+printStatus(Future.cache);

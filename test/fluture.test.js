@@ -264,6 +264,67 @@ describe('Lawfullness', () => {
 
 describe('Utilities', () => {
 
+  describe('.cache()', () => {
+
+    const onceOrError = f => {
+      var called = false;
+      return function(){
+        if(called) throw new Error(`Function ${f} was called twice`);
+        called = true;
+        f(...arguments);
+      }
+    };
+
+    it('throws TypeError when not given Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.cache(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which resolves with the resolution value of the given Future', () => {
+      return assertResolved(Future.cache(Future.of(1)), 1);
+    });
+
+    it('returns a Future which rejects with the rejection reason of the given Future', () => {
+      return assertRejected(Future.cache(Future.reject(error)), error);
+    });
+
+    it('only forks its given Future once', () => {
+      const m = Future.cache(Future(onceOrError((rej, res) => res(1))));
+      m.fork(noop, noop);
+      m.fork(noop, noop);
+      return assertResolved(m, 1);
+    });
+
+    it('throws an error if the given Future resolves or rejects multiple times', () => {
+      const ms = [
+        Future((rej, res) => (res(1), res(1))),
+        Future((rej, res) => (res(1), rej(2))),
+        Future((rej) => (rej(2), rej(2))),
+        Future((rej, res) => (rej(2), res(1)))
+      ];
+      const fs = ms.map(m => () => Future.cache(m).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(Error, /Future/));
+    });
+
+    it('resolves all forks once a delayed resolution happens', () => {
+      const m = Future.cache(Future.after(20, 1));
+      const a = assertResolved(m, 1);
+      const b = assertResolved(m, 1);
+      const c = assertResolved(m, 1);
+      return Promise.all([a, b, c]);
+    });
+
+    it('rejects all forks once a delayed rejection happens', () => {
+      const m = Future.cache(Future(rej => setTimeout(rej, 20, error)));
+      const a = assertRejected(m, error);
+      const b = assertRejected(m, error);
+      const c = assertRejected(m, error);
+      return Promise.all([a, b, c]);
+    });
+
+  });
+
   describe('.liftNode()', () => {
 
     const nodeCallbackRes = f => f(null, 'It worked');
