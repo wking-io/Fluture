@@ -140,6 +140,30 @@ first([
 //> [Error nope]
 ```
 
+----
+
+#### `liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future a b`
+
+Turn a node continuation-passing-style function into a function which returns a Future.
+
+Takes a function which uses a node-style callback for continuation and returns a
+function which returns a Future for continuation.
+
+```js
+const readFile = Future.liftNode(fs.readFile);
+readFile('README.md', 'utf8')
+.map(text => text.split('\n'))
+.map(lines => lines[0])
+.fork(console.error, console.log);
+//> "# Fluture"
+```
+
+#### `liftPromise :: (x... -> Promise a b) -> x... -> Future a b`
+
+Turn a function which returns a Promise into a function which returns a Future.
+
+Like liftNode, but for a function which returns a Promise.
+
 ## Road map
 
 * [x] Implement Future Monad

@@ -269,7 +269,7 @@
   /**
    * Turn a function which returns a Promise into a function which returns a Future.
    *
-   * @sig liftPromise :: (x... -> a) -> x... -> Future[Error, a]
+   * @sig liftPromise :: (x... -> Promise a b) -> x... -> Future a b
    *
    * @param {Function} f The function to wrap.
    *
