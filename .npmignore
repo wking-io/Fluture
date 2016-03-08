@@ -4,4 +4,3 @@ test/
 bench/
 .babelrc
 .eslintrc.json
-test.js
