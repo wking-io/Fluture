@@ -158,13 +158,6 @@
     ));
   }
 
-  //The of method.
-  function Future$of(x){
-    return new FutureClass(function Future$of$fork(rej, res){
-      res(x)
-    });
-  }
-
   //Constructor.
   function FutureClass(f){
     this._f = f;
@@ -176,68 +169,81 @@
     return new FutureClass(f);
   }
 
+  //The of method.
+  function Future$of(x){
+    return new FutureClass(function Future$of$fork(rej, res){
+      res(x)
+    });
+  }
+
+  function Future$fork(rej, res){
+    check$fork$rej(rej);
+    check$fork$res(res);
+    this._f(rej, res);
+  }
+
+  function Future$chain(f){
+    check$chain(f);
+    const _this = this;
+    return new FutureClass(function Future$chain$fork(rej, res){
+      _this._f(rej, function Future$chain$res(x){
+        const m = f(x);
+        check$chain$f(m, f, x);
+        m._f(rej, res);
+      });
+    });
+  }
+
+  function Future$map(f){
+    check$map(f);
+    const _this = this;
+    return new FutureClass(function Future$map$fork(rej, res){
+      _this._f(rej, function Future$map$res(x){
+        res(f(x));
+      });
+    });
+  }
+
+  function Future$ap(m){
+    check$ap(m);
+    const _this = this;
+    return new FutureClass(function Future$ap$fork(g, h){
+      let _f, _x, ok1, ok2, ko;
+      const rej = x => ko || (ko = 1, g(x));
+      _this._f(rej, function Future$ap$resThis(f){
+        if(!ok2) return void (ok1 = 1, _f = f);
+        check$ap$f(f);
+        h(f(_x));
+      });
+      m._f(rej, function Future$ap$resThat(x){
+        if(!ok1) return void (ok2 = 1, _x = x)
+        check$ap$f(_f);
+        h(_f(x));
+      });
+    });
+  }
+
+  function Future$toString(){
+    return `Future(${toString(this._f)})`;
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
-
     _f: null,
-
-    fork: function Future$fork(rej, res){
-      check$fork$rej(rej);
-      check$fork$res(res);
-      this._f(rej, res);
-    },
-
+    fork: Future$fork,
     [FL.of]: Future$of,
-
-    [FL.chain]: function Future$chain(f){
-      check$chain(f);
-      const _this = this;
-      return new FutureClass(function Future$chain$fork(rej, res){
-        _this._f(rej, function Future$chain$res(x){
-          const m = f(x);
-          check$chain$f(m, f, x);
-          m._f(rej, res);
-        });
-      });
-    },
-
-    [FL.map]: function Future$map(f){
-      check$map(f);
-      const _this = this;
-      return new FutureClass(function Future$map$fork(rej, res){
-        _this._f(rej, function Future$map$res(x){
-          res(f(x));
-        });
-      });
-    },
-
-    [FL.ap]: function Future$ap(m){
-      check$ap(m);
-      const _this = this;
-      return new FutureClass(function Future$ap$fork(g, h){
-        let _f, _x, ok1, ok2, ko;
-        const rej = x => ko || (ko = 1, g(x));
-        _this._f(rej, function Future$ap$resThis(f){
-          if(!ok2) return void (ok1 = 1, _f = f);
-          check$ap$f(f);
-          h(f(_x));
-        });
-        m._f(rej, function Future$ap$resThat(x){
-          if(!ok1) return void (ok2 = 1, _x = x)
-          check$ap$f(_f);
-          h(_f(x));
-        });
-      });
-    },
-
-    toString: function Future$toString(){
-      return `Future(${toString(this._f)})`;
-    }
-
+    of: Future$of,
+    [FL.chain]: Future$chain,
+    chain: Future$chain,
+    [FL.map]: Future$map,
+    map: Future$map,
+    [FL.ap]: Future$ap,
+    ap: Future$ap,
+    toString: Future$toString
   };
 
   //Expose `of` statically as well.
-  Future[FL.of] = Future[FL.of] = Future$of;
+  Future[FL.of] = Future.of = Future$of;
 
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
