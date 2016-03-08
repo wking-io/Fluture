@@ -8,7 +8,7 @@ A complete Fantasy Land compatible Future library.
 ## Usage
 
 ```js
-Future.node(node => fs.readFile('package.json', 'utf8', done))
+Future.node(done => fs.readFile('package.json', 'utf8', done))
 .chain(x => Future.try(() => JSON.parse(x)))
 .map(x => x.name)
 .fork(console.error, console.log)
@@ -81,7 +81,7 @@ This is a convenience for NodeJS users who wish to easily obtain a Future from
 a node style callback API.
 
 ```js
-Future.node(node => fs.readFile('package.json', 'utf8', done))
+Future.node(done => fs.readFile('package.json', 'utf8', done))
 .fork(console.error, console.log)
 //> "{...}"
 ```
