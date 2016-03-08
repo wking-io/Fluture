@@ -72,7 +72,7 @@ Future.try(() => data.foo.bar.baz).fork(console.error, console.log)
 //> [TypeError: Cannot read property 'baz' of undefined]
 ```
 
-#### `node :: ((a, b -> Void) -> Void) -> Future[a, b]`
+#### `node :: ((a, b -> Void) -> Void) -> Future a b`
 
 A constructor that creates a Future which rejects with the first argument given
 to the function, or resolves with the second if the first is not present.
