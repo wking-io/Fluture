@@ -66,7 +66,7 @@ eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 A constructor that creates a Future which resolves with the result of calling
 the given function, or rejects with the error thrown by the given function.
 
-```
+```js
 const data = {foo: 'bar'}
 Future.try(() => data.foo.bar.baz).fork(console.error, console.log)
 //> [TypeError: Cannot read property 'baz' of undefined]
