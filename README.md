@@ -2,7 +2,8 @@
 
 A complete Fantasy Land compatible Future library.
 
-> `npm install --save fluture` <sup>Requires node 5.0.0 or later</sup>
+> `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
+  like modern browsers, transpilers or Node 5+</sup>
 
 
 ## Usage
@@ -86,6 +87,28 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 //> "{...}"
 ```
 
+#### `cache :: Future a b -> Future a b`
+
+Returns a Future which caches the resolution value of the given Future so that
+whenever it's forked, it can load the value from cache rather than reexecuting
+the chain.
+
+```js
+const eventualPackage = Future.cache(
+  Future.node(done => {
+    console.log('Reading some big data');
+    fs.readFile('package.json', 'utf8', done)
+  })
+);
+
+eventualPackage.fork(console.error, console.log);
+//> "Reading some big data"
+//> "{...}"
+
+eventualPackage.fork(console.error, console.log);
+//> "{...}"
+```
+
 ----
 
 #### `map :: Future a b ~> (b -> c) -> Future a c`
@@ -140,20 +163,48 @@ first([
 //> [Error nope]
 ```
 
+----
+
+#### `liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future a b`
+
+Turn a node continuation-passing-style function into a function which returns a Future.
+
+Takes a function which uses a node-style callback for continuation and returns a
+function which returns a Future for continuation.
+
+```js
+const readFile = Future.liftNode(fs.readFile);
+readFile('README.md', 'utf8')
+.map(text => text.split('\n'))
+.map(lines => lines[0])
+.fork(console.error, console.log);
+//> "# Fluture"
+```
+
+#### `liftPromise :: (x... -> Promise a b) -> x... -> Future a b`
+
+Turn a function which returns a Promise into a function which returns a Future.
+
+Like liftNode, but for a function which returns a Promise.
+
 ## Road map
 
 * [x] Implement Future Monad
 * [x] Write tests
 * [x] Write benchmarks
 * [ ] Implement Traversable?
-* [ ] Implement Future.cache
+* [x] Implement Future.cache
 * [ ] Implement Future.mapRej
 * [ ] Implement Future.chainRej
+* [ ] Implement dispatchers: chain, map, ap, fork
 * [ ] Implement Future.swap
 * [ ] Implement Future.and
 * [ ] Implement Future.or
 * [x] Implement Future.race
 * [ ] Implement Future.parallel
+* [ ] Implement Future.predicate
+* [ ] Implement Future.promise
+* [ ] Implement Future.cast
 * [x] Create documentation
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
@@ -172,3 +223,7 @@ implementations in `data.task`, `ramda-fantasy.Future` and `Promise`*.
 
 A conjunction of the acronym to Fantasy Land (FL) and Future. Also "fluture"
 means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
+
+----
+
+[MIT licensed](LICENSE)

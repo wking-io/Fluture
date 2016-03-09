@@ -30,7 +30,7 @@
     ? `[${x.map(toString).join(', ')}]`
     : x && (typeof x.toString === 'function')
     ? x.toString === Object.prototype.toString
-    ? `{${Object.keys(x).reduce((o, k) => o.concat(`"${k}": ${toString(x[k])}`), []).join(', ')}}`
+    ? `{${Object.keys(x).reduce((o, k) => o.concat(`${toString(k)}: ${toString(x[k])}`), []).join(', ')}}`
     : x.toString()
     : String(x);
 
@@ -102,6 +102,23 @@
     ));
   }
 
+  function check$cache(m){
+    if(!(m instanceof FutureClass)) throw new TypeError(error(
+      'Future.cache expects its argument to be a Future',
+      toString(m)
+    ));
+  }
+
+  function check$cache$settle(oldState, newState, oldValue, newValue){
+    if(oldState > 1) throw new Error(
+      'Future.cache expects the Future it wraps to only resolve or reject once; '
+      + ' a cached Future tried to ' + (newState === 2 ? 'reject' : 'resolve') + ' a second time.'
+      + ' Please check your cached Future and make sure it does not call res or rej multiple times'
+      + '\n  It was ' + (oldState === 2 ? 'rejected' : 'resolved') + ' with: ' + toString(oldValue)
+      + '\n  It got ' + (newState === 2 ? 'rejected' : 'resolved') + ' with: ' + toString(newValue)
+    );
+  }
+
   function check$liftNode(f){
     if(typeof f !== 'function') throw new TypeError(error(
       'Future.liftNode expects its first argument to be a function',
@@ -158,13 +175,6 @@
     ));
   }
 
-  //The of method.
-  function Future$of(x){
-    return new FutureClass(function Future$of$fork(rej, res){
-      res(x)
-    });
-  }
-
   //Constructor.
   function FutureClass(f){
     this._f = f;
@@ -176,71 +186,121 @@
     return new FutureClass(f);
   }
 
+  //The of method.
+  function Future$of(x){
+    return new FutureClass(function Future$of$fork(rej, res){
+      res(x)
+    });
+  }
+
+  function Future$fork(rej, res){
+    check$fork$rej(rej);
+    check$fork$res(res);
+    this._f(rej, res);
+  }
+
+  function Future$chain(f){
+    check$chain(f);
+    const _this = this;
+    return new FutureClass(function Future$chain$fork(rej, res){
+      _this._f(rej, function Future$chain$res(x){
+        const m = f(x);
+        check$chain$f(m, f, x);
+        m._f(rej, res);
+      });
+    });
+  }
+
+  function Future$map(f){
+    check$map(f);
+    const _this = this;
+    return new FutureClass(function Future$map$fork(rej, res){
+      _this._f(rej, function Future$map$res(x){
+        res(f(x));
+      });
+    });
+  }
+
+  function Future$ap(m){
+    check$ap(m);
+    const _this = this;
+    return new FutureClass(function Future$ap$fork(g, h){
+      let _f, _x, ok1, ok2, ko;
+      const rej = x => ko || (ko = 1, g(x));
+      _this._f(rej, function Future$ap$resThis(f){
+        if(!ok2) return void (ok1 = 1, _f = f);
+        check$ap$f(f);
+        h(f(_x));
+      });
+      m._f(rej, function Future$ap$resThat(x){
+        if(!ok1) return void (ok2 = 1, _x = x)
+        check$ap$f(_f);
+        h(_f(x));
+      });
+    });
+  }
+
+  function Future$toString(){
+    return `Future(${toString(this._f)})`;
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
-
     _f: null,
-
-    fork: function Future$fork(rej, res){
-      check$fork$rej(rej);
-      check$fork$res(res);
-      this._f(rej, res);
-    },
-
+    fork: Future$fork,
     [FL.of]: Future$of,
-
-    [FL.chain]: function Future$chain(f){
-      check$chain(f);
-      const _this = this;
-      return new FutureClass(function Future$chain$fork(rej, res){
-        _this._f(rej, function Future$chain$res(x){
-          const m = f(x);
-          check$chain$f(m, f, x);
-          m._f(rej, res);
-        });
-      });
-    },
-
-    [FL.map]: function Future$map(f){
-      check$map(f);
-      const _this = this;
-      return new FutureClass(function Future$map$fork(rej, res){
-        _this._f(rej, function Future$map$res(x){
-          res(f(x));
-        });
-      });
-    },
-
-    [FL.ap]: function Future$ap(m){
-      check$ap(m);
-      const _this = this;
-      return new FutureClass(function Future$ap$fork(g, h){
-        let _f, _x, ok1, ok2, ko;
-        const rej = x => ko || (ko = 1, g(x));
-        _this._f(rej, function Future$ap$resThis(f){
-          if(!ok2) return void (ok1 = 1, _f = f);
-          check$ap$f(f);
-          h(f(_x));
-        });
-        m._f(rej, function Future$ap$resThat(x){
-          if(!ok1) return void (ok2 = 1, _x = x)
-          check$ap$f(_f);
-          h(_f(x));
-        });
-      });
-    },
-
-    toString: function Future$toString(){
-      return `Future(${toString(this._f)})`;
-    }
-
+    of: Future$of,
+    [FL.chain]: Future$chain,
+    chain: Future$chain,
+    [FL.map]: Future$map,
+    map: Future$map,
+    [FL.ap]: Future$ap,
+    ap: Future$ap,
+    toString: Future$toString
   };
 
   //Expose `of` statically as well.
-  Future[FL.of] = Future[FL.of] = Future$of;
+  Future[FL.of] = Future.of = Future$of;
 
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
+
+  /**
+   * Cache a Future
+   *
+   * Returns a Future which caches the resolution value of the given Future so
+   * that whenever it's forked, it can load the value from cache rather than
+   * reexecuting the chain.
+   *
+   * @param {Future} m The Future to be cached.
+   *
+   * @return {Future} The Future which does the caching.
+   */
+  Future.cache = function Future$cache(m){
+    check$cache(m);
+    let que = [];
+    let value, state;
+    const settleWith = newState => function Future$cache$settle(newValue){
+      check$cache$settle(state, newState, value, newValue);
+      value = newValue; state = newState;
+      for(let i = 0, l = que.length; i < l; i++){
+        que[i][state](value);
+        que[i] = undefined;
+      }
+      que = undefined;
+    };
+    return new FutureClass(function Future$cache$fork(rej, res){
+      switch(state){
+        case 1: que.push({2: rej, 3: res}); break;
+        case 2: rej(value); break;
+        case 3: res(value); break;
+        default:
+          state = 1;
+          que.push({2: rej, 3: res});
+          m.fork(settleWith(2), settleWith(3));
+      }
+    });
+  };
 
   /**
    * Turn a node continuation-passing-style function into a function which returns a Future.
@@ -269,7 +329,7 @@
   /**
    * Turn a function which returns a Promise into a function which returns a Future.
    *
-   * @sig liftPromise :: (x... -> a) -> x... -> Future[Error, a]
+   * @sig liftPromise :: (x... -> Promise a b) -> x... -> Future a b
    *
    * @param {Function} f The function to wrap.
    *

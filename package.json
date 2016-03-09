@@ -1,6 +1,6 @@
 {
   "name": "fluture",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A complete Fantasy Land compatible Future library",
   "main": "fluture.js",
   "repository": "https://github.com/Avaq/fluture.git",
@@ -13,6 +13,7 @@
     "pre-push": "npm test",
     "setup": "npm run post-merge && cp scripts/hooks/* .git/hooks && git config push.followTags true",
     "test": "npm run check-version && npm run clean && npm run lint && npm run test:unit",
+    "test:opt": "node --allow-natives-syntax --trace-opt --trace-deopt --trace-inlining scripts/test-opt",
     "test:unit": "mocha --ui bdd --reporter spec --check-leaks --full-trace"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
