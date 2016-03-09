@@ -49,14 +49,17 @@ printStatus(m.chain);
 printStatus(m.ap);
 printStatus(m.fork);
 
-console.log('--- cache ---')
+console.log('--- cache fork ---')
 
-Future.cache(Future.of(1));
+Future.cache(Future.of(1)).fork(noop, noop);
 
 %OptimizeFunctionOnNextCall(Future.cache);
+%OptimizeFunctionOnNextCall(Future.prototype.fork);
 
 printStatus(Future.cache);
+printStatus(Future.prototype.fork);
 
-Future.cache(Future.of(1));
+Future.cache(Future.of(1)).fork(noop, noop);
 
 printStatus(Future.cache);
+printStatus(Future.prototype.fork);
