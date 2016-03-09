@@ -223,3 +223,7 @@ implementations in `data.task`, `ramda-fantasy.Future` and `Promise`*.
 
 A conjunction of the acronym to Fantasy Land (FL) and Future. Also "fluture"
 means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
+
+----
+
+[MIT licensed](LICENSE)
