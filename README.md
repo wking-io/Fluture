@@ -121,6 +121,28 @@ Future.of(1).map(x => x + 1).fork(console.error, console.log);
 //> 2
 ```
 
+#### `fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
+
+Execute the Future (which up until now was merely a container for its
+computation), and get at the result or error.
+
+It is the return from Fantasy Land to the real world. This function best shows
+the fundamental difference between Promises and Futures.
+
+```js
+Future.of('world').fork(
+  err => console.log(`Oh no! ${err.message}`),
+  thing => console.log(`Hello ${thing}!`)
+);
+//> "Hello world!"
+
+Future.reject(new Error('It broke!')).fork(
+  err => console.log(`Oh no! ${err.message}`),
+  thing => console.log(`Hello ${thing}!`)
+);
+//> "Oh no! It broke!"
+```
+
 #### `chain :: Future a b ~> (b -> Future a c) -> Future a c`
 
 FlatMap over the value inside the Future. If the Future is rejected, chaining is
