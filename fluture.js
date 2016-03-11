@@ -44,19 +44,28 @@
     );
   }
 
+  function error$invalidContext(it, actual){
+    throw new TypeError(
+      `${it} was invoked outside the context of a Future. You might want to use`
+      + ` a dispatcher instead\n  Called on: ${toString(actual)}`
+    )
+  }
+
   //Check input to Future.
   function check$Future(fork){
     if(typeof fork !== 'function') error$invalidArgument('Future', 0, 'a function', fork);
   }
 
   //Check input to Future#fork.
-  function check$fork(rej, res){
+  function check$fork(it, rej, res){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
     if(typeof rej !== 'function') error$invalidArgument('Future#fork', 0, 'a function', rej);
     if(typeof res !== 'function') error$invalidArgument('Future#fork', 1, 'a function', res);
   }
 
   //Check input to Future#chain.
-  function check$chain(f){
+  function check$chain(it, f){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
     if(typeof f !== 'function') error$invalidArgument('Future#chain', 0, 'a function', f);
   }
 
@@ -69,12 +78,14 @@
   }
 
   //Check input to Future#map.
-  function check$map(f){
+  function check$map(it, f){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
     if(typeof f !== 'function') error$invalidArgument('Future#map', 0, 'a function', f);
   }
 
   //Check input to Future#ap.
-  function check$ap(m){
+  function check$ap(it, m){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
     if(!(m instanceof FutureClass)) error$invalidArgument('Future#ap', 0, 'a Future', m);
   }
 
@@ -154,12 +165,12 @@
   }
 
   function Future$fork(rej, res){
-    check$fork(rej, res);
+    check$fork(this, rej, res);
     this._f(rej, res);
   }
 
   function Future$chain(f){
-    check$chain(f);
+    check$chain(this, f);
     const _this = this;
     return new FutureClass(function Future$chain$fork(rej, res){
       _this._f(rej, function Future$chain$res(x){
@@ -171,7 +182,7 @@
   }
 
   function Future$map(f){
-    check$map(f);
+    check$map(this, f);
     const _this = this;
     return new FutureClass(function Future$map$fork(rej, res){
       _this._f(rej, function Future$map$res(x){
@@ -181,7 +192,7 @@
   }
 
   function Future$ap(m){
-    check$ap(m);
+    check$ap(this, m);
     const _this = this;
     return new FutureClass(function Future$ap$fork(g, h){
       let _f, _x, ok1, ok2, ko;
