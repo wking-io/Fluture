@@ -222,11 +222,14 @@ Like liftNode, but for a function which returns a Promise.
 * [ ] Implement Future.swap
 * [ ] Implement Future.and
 * [ ] Implement Future.or
+* [ ] Implement Future#fold and dispatcher
 * [x] Implement Future.race
 * [ ] Implement Future.parallel
 * [ ] Implement Future.predicate
 * [ ] Implement Future.promise
 * [ ] Implement Future.cast
+* [ ] Implement Future.encase
+* [ ] Check `this` on instance methods
 * [x] Create documentation
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
