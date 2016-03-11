@@ -142,6 +142,22 @@
     if(!(m2 instanceof FutureClass)) error$invalidArgument('Future.race', 1, 'a function', m2);
   }
 
+  function check$dispatch$chain(m){
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.chain', 0, 'a function', m);
+  }
+
+  function check$dispatch$map(m){
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.map', 0, 'a function', m);
+  }
+
+  function check$dispatch$ap(m){
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.ap', 0, 'a function', m);
+  }
+
+  function check$dispatch$fork(m){
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.fork', 0, 'a function', m);
+  }
+
   ////////////
   // Future //
   ////////////
@@ -234,6 +250,34 @@
 
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
+
+  /////////////////
+  // Dispatchers //
+  /////////////////
+
+  //chain :: Chain m => (a -> m b) -> m a -> m b
+  Future.chain = curry(function chain(f, m){
+    check$dispatch$chain(m);
+    return m.chain(f);
+  });
+
+  //map :: Functor m => (a -> b) -> m a -> m b
+  Future.map = curry(function map(f, m){
+    check$dispatch$map(m);
+    return m.map(f);
+  });
+
+  //ap :: Apply m => m (a -> b) -> m a -> m b
+  Future.ap = curry(function ap(m1, m2){
+    check$dispatch$ap(m1);
+    return m1.ap(m2);
+  });
+
+  //fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void
+  Future.fork = curry(function(rej, res, m){
+    check$dispatch$fork(m);
+    return m.fork(rej, res);
+  });
 
   ///////////////
   // Utilities //

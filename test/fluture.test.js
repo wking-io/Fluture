@@ -262,6 +262,63 @@ describe('Lawfullness', () => {
 
 });
 
+describe('Dispatchers', () => {
+
+  describe('.map()', () => {
+
+    it('is curried', () => {
+      expect(Future.map).to.be.a('function');
+      expect(Future.map(noop)).to.be.a('function');
+    });
+
+    it('dispatches to #map', () => {
+      return assertResolved(Future.map(x => x + 1, Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.chain()', () => {
+
+    it('is curried', () => {
+      expect(Future.chain).to.be.a('function');
+      expect(Future.chain(noop)).to.be.a('function');
+    });
+
+    it('dispatches to #chain', () => {
+      return assertResolved(Future.chain(x => Future.of(x + 1), Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.ap()', () => {
+
+    it('is curried', () => {
+      expect(Future.ap).to.be.a('function');
+      expect(Future.ap(Future.of(1))).to.be.a('function');
+    });
+
+    it('dispatches to #ap', () => {
+      return assertResolved(Future.ap(Future.of(x => x + 1), Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.fork()', () => {
+
+    it('is curried', () => {
+      expect(Future.fork).to.be.a('function');
+      expect(Future.fork(noop)).to.be.a('function');
+      expect(Future.fork(noop, noop)).to.be.a('function');
+    });
+
+    it('dispatches to #fork', done => {
+      Future.fork(done, done.bind(null, null), Future.of(1));
+    });
+
+  });
+
+});
+
 describe('Utilities', () => {
 
   describe('.cache()', () => {

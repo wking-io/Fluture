@@ -111,16 +111,6 @@ eventualPackage.fork(console.error, console.log);
 
 ----
 
-#### `map :: Future a b ~> (b -> c) -> Future a c`
-
-Map over the value inside the Future. If the Future is rejected, mapping is not
-performed.
-
-```js
-Future.of(1).map(x => x + 1).fork(console.error, console.log);
-//> 2
-```
-
 #### `fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
 
 Execute the Future (which up until now was merely a container for its
@@ -143,6 +133,24 @@ Future.reject(new Error('It broke!')).fork(
 //> "Oh no! It broke!"
 ```
 
+#### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
+
+A curried dispatcher to Future#fork.
+
+#### `map :: Future a b ~> (b -> c) -> Future a c`
+
+Map over the value inside the Future. If the Future is rejected, mapping is not
+performed.
+
+```js
+Future.of(1).map(x => x + 1).fork(console.error, console.log);
+//> 2
+```
+
+#### `map :: Functor m => (a -> b) -> m a -> m b`
+
+A curried dispatcher to Future#map.
+
 #### `chain :: Future a b ~> (b -> Future a c) -> Future a c`
 
 FlatMap over the value inside the Future. If the Future is rejected, chaining is
@@ -152,6 +160,9 @@ not performed.
 Future.of(1).chain(x => Future.of(x + 1)).fork(console.error, console.log);
 //> 2
 ```
+#### `chain :: Chain m => (a -> m b) -> m a -> m b`
+
+A curried dispatcher to Future#chain
 
 #### `ap :: Future a (b -> c) ~> Future a b -> Future a c`
 
@@ -162,6 +173,10 @@ rejected, applying is not performed.
 Future.of(x => x + 1).ap(Future.of(1)).fork(console.error, console.log);
 //> 2
 ```
+
+#### `ap :: Apply m => m (a -> b) -> m a -> m b`
+
+A curried dispatcher to Future#ap
 
 ----
 
@@ -218,7 +233,7 @@ Like liftNode, but for a function which returns a Promise.
 * [x] Implement Future.cache
 * [ ] Implement Future.mapRej
 * [ ] Implement Future.chainRej
-* [ ] Implement dispatchers: chain, map, ap, fork
+* [x] Implement dispatchers: chain, map, ap, fork
 * [ ] Implement Future.swap
 * [ ] Implement Future.and
 * [ ] Implement Future.or
