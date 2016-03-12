@@ -1,6 +1,6 @@
 # Fluture
 
-A complete Fantasy Land compatible Future library.
+A complete [Fantasy Land][1] compatible Future library.
 
 > `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
   like modern browsers, transpilers or Node 5+</sup>
@@ -8,11 +8,31 @@ A complete Fantasy Land compatible Future library.
 
 ## Usage
 
+Using the low level method API:
+
 ```js
-Future.node(done => fs.readFile('package.json', 'utf8', done))
-.chain(x => Future.try(() => JSON.parse(x)))
-.map(x => x.name)
-.fork(console.error, console.log)
+const Future = require('fluture');
+const program = file =>
+  Future.node(done => fs.readFile(file, 'utf8', done))
+  .chain(x => Future.try(() => JSON.parse(x)))
+  .map(x => x.name)
+  .fork(console.error, console.log);
+program('package.json');
+//> "fluture"
+```
+
+Or use the higher level dispatch API for function composition using something
+like [`S.pipe`][2]:
+
+```js
+const {node, chain, try, map, fork} = require('fluture');
+const program = S.pipe([
+  file => node(fs.readFile.bind(fs, file, 'utf8')),
+  chain(x => try(() => JSON.parse(x))),
+  map(x => x.name),
+  fork(console.error, console.log)
+]);
+program('package.json')
 //> "fluture"
 ```
 
@@ -28,7 +48,7 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 ### Future
 
 A (monadic) container which represents an eventual value. A lot like Promise but
-more principled in that it follows the Fantasy Land algebraic JavaScript
+more principled in that it follows the [Fantasy Land][1] algebraic JavaScript
 specification.
 
 ```js
@@ -111,7 +131,7 @@ eventualPackage.fork(console.error, console.log);
 
 ----
 
-#### `fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
+#### `#fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
 
 Execute the Future (which up until now was merely a container for its
 computation), and get at the result or error.
@@ -137,7 +157,7 @@ Future.reject(new Error('It broke!')).fork(
 
 A curried dispatcher to Future#fork.
 
-#### `map :: Future a b ~> (b -> c) -> Future a c`
+#### `#map :: Future a b ~> (b -> c) -> Future a c`
 
 Map over the value inside the Future. If the Future is rejected, mapping is not
 performed.
@@ -149,9 +169,9 @@ Future.of(1).map(x => x + 1).fork(console.error, console.log);
 
 #### `map :: Functor m => (a -> b) -> m a -> m b`
 
-A curried dispatcher to Future#map.
+A curried dispatcher to Future#map. Similar to [`R.map`][3].
 
-#### `chain :: Future a b ~> (b -> Future a c) -> Future a c`
+#### `#chain :: Future a b ~> (b -> Future a c) -> Future a c`
 
 FlatMap over the value inside the Future. If the Future is rejected, chaining is
 not performed.
@@ -162,9 +182,9 @@ Future.of(1).chain(x => Future.of(x + 1)).fork(console.error, console.log);
 ```
 #### `chain :: Chain m => (a -> m b) -> m a -> m b`
 
-A curried dispatcher to Future#chain
+A curried dispatcher to Future#chain. Similar to [`R.chain`][4].
 
-#### `ap :: Future a (b -> c) ~> Future a b -> Future a c`
+#### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
 
 Apply the value in the Future to the value in the given Future. If the Future is
 rejected, applying is not performed.
@@ -176,7 +196,7 @@ Future.of(x => x + 1).ap(Future.of(1)).fork(console.error, console.log);
 
 #### `ap :: Apply m => m (a -> b) -> m a -> m b`
 
-A curried dispatcher to Future#ap
+A curried dispatcher to Future#ap. Similar to [`R.ap`][5].
 
 ----
 
@@ -267,3 +287,11 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 ----
 
 [MIT licensed](LICENSE)
+
+<!-- References -->
+
+[1]:  https://github.com/fantasyland/fantasy-land
+[2]:  https://github.com/plaid/sanctuary#pipe--a-bb-cm-n---a---n
+[3]:  http://ramdajs.com/docs/#map
+[4]:  http://ramdajs.com/docs/#chain
+[5]:  http://ramdajs.com/docs/#ap
