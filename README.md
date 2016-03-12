@@ -36,12 +36,12 @@ program('package.json')
 //> "fluture"
 ```
 
-## Motivation
+## Why?
 
-* A stand-alone Fantasy Future package.
+* Great error messages.
 * Async control utilities included.
-* Easier debugging than `f(...).fork is not a function`.
-* Still maintain decent speed.
+* High performance Future implementation.
+* Decent documentation.
 
 ## Documentation
 
