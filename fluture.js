@@ -302,17 +302,10 @@
   // Utilities //
   ///////////////
 
-  /**
-   * Cache a Future
-   *
-   * Returns a Future which caches the resolution value of the given Future so
-   * that whenever it's forked, it can load the value from cache rather than
-   * reexecuting the chain.
-   *
-   * @param {Future} m The Future to be cached.
-   *
-   * @return {Future} The Future which does the caching.
-   */
+  // Cache a Future.
+  // Returns a Future which caches the resolution value of the given Future so
+  // that whenever it's forked, it can load the value from cache rather than
+  // reexecuting the chain.
   Future.cache = function Future$cache(m){
     check$cache(m);
     let que = [];
@@ -368,21 +361,7 @@
     });
   };
 
-  /**
-   * Allow one-off wrapping of a function that requires a node-style callback.
-   *
-   * @sig fromNode :: ((err, a) -> Void) -> Future[Error, a]
-   *
-   * @param {Function} f The operation expected to eventaully call the callback.
-   *
-   * @return {Future}
-   *
-   * @example
-   *
-   *     node(done => MySql.connect(done))
-   *     .fork(console.error, console.log)
-   *
-   */
+  //node :: ((err, a) -> Void) -> Future[Error, a]
   Future.node = function Future$node(f){
     check$node(f);
     return new FutureClass(function Future$node$fork(rej, res){
