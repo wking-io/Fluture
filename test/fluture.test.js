@@ -466,6 +466,22 @@ describe('Future', () => {
 
   });
 
+  describe('#value()', () => {
+
+    it('throws when called on a rejected Future', () => {
+      const f = () => Future.reject('broken').value(noop);
+      expect(f).to.throw(Error, /Future/);
+    });
+
+    it('calls the given function with the resolution value', done => {
+      Future.of(1).value(x => {
+        expect(x).to.equal(1);
+        done();
+      });
+    });
+
+  });
+
 });
 
 describe('Lawfullness', () => {
@@ -632,6 +648,19 @@ describe('Dispatchers', () => {
 
     it('dispatches to #fold', () => {
       return assertResolved(Future.fold(x => x + 1, x => x + 1, Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.value()', () => {
+
+    it('is curried', () => {
+      expect(Future.value).to.be.a('function');
+      expect(Future.value(noop)).to.be.a('function');
+    });
+
+    it('dispatches to #value', done => {
+      Future.value(x => (expect(x).to.equal(1), done()), Future.of(1));
     });
 
   });

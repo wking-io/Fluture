@@ -128,6 +128,11 @@
     if(!isFunction(g)) error$invalidArgument('Future#fold', 1, 'be a function', g);
   }
 
+  function check$value(it, f){
+    if(!isFluture(it)) error$invalidContext('Future#value', it);
+    if(!isFunction(f)) error$invalidArgument('Future#value', 0, 'be a function', f);
+  }
+
   function check$cache(m){
     if(!isFluture(m)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
   }
@@ -269,6 +274,18 @@
     });
   }
 
+  function Future$value(f){
+    check$value(this, f);
+    this._f(
+      function Future$value$rej(e){
+        throw new Error(
+          `Future#value was called on a rejected Future\n  Actual: Future.reject(${toString(e)})`
+        );
+      },
+      f
+    );
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
     _f: null,
@@ -285,7 +302,8 @@
     toString: Future$toString,
     inspect: Future$toString,
     race: Future$race,
-    fold: Future$fold
+    fold: Future$fold,
+    value: Future$value
   };
 
   //Expose `of` statically as well.
@@ -341,6 +359,9 @@
 
   //fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c
   Future.fold = createBinaryDispatcher('fold');
+
+  //value :: (b -> Void) -> Future a b -> Void
+  Future.value = createUnaryDispatcher('value');
 
   ///////////////
   // Utilities //

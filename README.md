@@ -250,6 +250,20 @@ Future.reject('it broke').fold(S.Left, S.Right).fork(noop, console.log);
 //> Left('it broke')
 ```
 
+#### `value :: Future a b ~> (b -> Void) -> Void`
+
+Extracts the value from a resolved Future by forking it. Only use this function
+if you are sure the Future is going to be resolved, for example; after using
+`.fold()`. If the Future rejects and `value` was used, an (likely uncatchable)
+`Error` will be thrown.
+
+```js
+Future.reject(new Error('It broke'))
+.fold(S.Left, S.Right)
+.value(console.log)
+//> Left([Error: It broke])
+```
+
 ### Dispatcher API
 
 #### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
@@ -294,6 +308,10 @@ first([
 
 Dispatches the first and second arguments to the `fold` method of the third argument.
 
+#### `value :: (b -> Void) -> Future a b -> Void`
+
+Dispatches the first argument to the `value` method of the second argument.
+
 ### Futurization
 
 To reduce the boilerplate of making Node or Promise functions return Future's
@@ -324,7 +342,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future#and
 * [ ] Implement Future#or
 * [x] Implement Future#fold
-* [ ] Implement Future#value
+* [x] Implement Future#value
 * [x] Implement Future#race
 * [x] Implement Future.parallel
 * [ ] Implement Future.predicate
