@@ -41,28 +41,42 @@
   // Error handling //
   ////////////////////
 
-  //A toString function to provide a slightly more meaningful representation of values.
-  const toString = x =>
+  //A small string representing a value, but not containing the whole value.
+  const preview = x =>
     typeof x === 'string'
     ? JSON.stringify(x)
     : Array.isArray(x)
-    ? `[${x.map(toString).join(', ')}]`
+    ? `[Array ${x.length}]`
+    : typeof x === 'function'
+    ? typeof x.name === 'string'
+    ? `[Function ${x.name}]`
+    : '[Function]'
+    : x && x.toString === Object.prototype.toString
+    ? `{${Object.keys(x).map(String).join(', ')}}`
+    : String(x);
+
+  //A show function to provide a slightly more meaningful representation of values.
+  const show = x =>
+    typeof x === 'string'
+    ? preview(x)
+    : Array.isArray(x)
+    ? `[${x.map(preview).join(', ')}]`
     : x && (typeof x.toString === 'function')
     ? x.toString === Object.prototype.toString
-    ? `{${Object.keys(x).reduce((o, k) => o.concat(`${toString(k)}: ${toString(x[k])}`), []).join(', ')}}`
+    ? `{${Object.keys(x).reduce((o, k) => o.concat(`${preview(k)}: ${preview(x[k])}`), []).join(', ')}}`
     : x.toString()
-    : String(x);
+    : preview(x);
 
   function error$invalidArgument(it, at, expected, actual){
     throw new TypeError(
-      `${it} expects argument ${at} to ${expected}\n  Actual: ${toString(actual)}`
+      `${it} expects argument ${at} to ${expected}\n  Actual: ${show(actual)}`
     );
   }
 
   function error$invalidContext(it, actual){
     throw new TypeError(
       `${it} was invoked outside the context of a Future. You might want to use`
-      + ` a dispatcher instead\n  Called on: ${toString(actual)}`
+      + ` a dispatcher instead\n  Called on: ${show(actual)}`
     )
   }
 
@@ -84,7 +98,7 @@
   function check$chain$f(m, f, x){
     if(!isFluture(m)) throw new TypeError(
       'Future#chain expects the function its given to return a Future'
-      + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+      + `\n  Actual: ${show(m)}\n  From calling: ${show(f)}\n  With: ${show(x)}`
     );
   }
 
@@ -96,7 +110,7 @@
   function check$chainRej$f(m, f, x){
     if(!isFluture(m)) throw new TypeError(
       'Future.chainRej expects the function its given to return a Future'
-      + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+      + `\n  Actual: ${show(m)}\n  From calling: ${show(f)}\n  With: ${show(x)}`
     );
   }
 
@@ -113,7 +127,7 @@
   //Check resolution value of the Future on which #ap was called.
   function check$ap$f(f){
     if(!isFunction(f)) throw new TypeError(
-      `Future#ap can only b used on Future<Function> but was used on: ${toString(f)}`
+      `Future#ap can only b used on Future<Function> but was used on: ${show(f)}`
     );
   }
 
@@ -142,8 +156,8 @@
       'Future.cache expects the Future it wraps to only resolve or reject once; '
       + ' a cached Future tried to ' + (newState === 2 ? 'reject' : 'resolve') + ' a second time.'
       + ' Please check your cached Future and make sure it does not call res or rej multiple times'
-      + '\n  It was ' + (oldState === 2 ? 'rejected' : 'resolved') + ' with: ' + toString(oldValue)
-      + '\n  It got ' + (newState === 2 ? 'rejected' : 'resolved') + ' with: ' + toString(newValue)
+      + '\n  It was ' + (oldState === 2 ? 'rejected' : 'resolved') + ' with: ' + show(oldValue)
+      + '\n  It got ' + (newState === 2 ? 'rejected' : 'resolved') + ' with: ' + show(newValue)
     );
   }
 
@@ -167,7 +181,7 @@
   function check$parallel$m(m, i){
     if(!isFluture(m)) throw new TypeError(
       'Future.parallel expects argument 1 to be an array of Futures.'
-      + ` The value at position ${i} in the array was not a Future.\n  Actual: ${toString(m)}`
+      + ` The value at position ${i} in the array was not a Future.\n  Actual: ${show(m)}`
     );
   }
 
@@ -252,7 +266,7 @@
   }
 
   function Future$toString(){
-    return `Future(${toString(this._f)})`;
+    return `Future(${show(this._f)})`;
   }
 
   function Future$race(m){
@@ -279,7 +293,7 @@
     this._f(
       function Future$value$rej(e){
         throw new Error(
-          `Future#value was called on a rejected Future\n  Actual: Future.reject(${toString(e)})`
+          `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
         );
       },
       f

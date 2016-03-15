@@ -64,6 +64,13 @@ describe('Constructors', () => {
       expect(actual).to.be.an.instanceof(Future);
     });
 
+    it('takes it easy with the recursive data structures', () => {
+      const data = {foo: 'bar'};
+      data.data = data;
+      const f = () => Future(data);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
   });
 
   describe('.of()', () => {
