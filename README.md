@@ -173,6 +173,20 @@ Future.of(1).chain(x => Future.of(x + 1)).fork(console.error, console.log);
 //> 2
 ```
 
+#### `chainRej :: Future a b ~> (a -> Future a c) -> Future a c`
+
+FlatMap over the **rejection** value inside the Future. If the Future is
+resolved, chaining is not performed.
+
+```js
+Future.reject(new Error('It broke!')).chainRej(err => {
+  console.error(err);
+  return Future.of('All is good')
+})
+.fork(console.error, console.log)
+//> "All is good"
+```
+
 #### `ap :: Future a (b -> c) ~> Future a b -> Future a c`
 
 Apply the value in the Future to the value in the given Future. If the Future is
@@ -210,6 +224,10 @@ Has the same effect as [`R.map`][3].
 
 Dispatches the first argument to the `chain` method of the second argument.
 Has the same effect as [`R.chain`][4].
+
+#### `chainRej :: (a -> Future a c) -> Future a b -> Future a c`
+
+Dispatches the first argument to the `chainRej` method of the second argument.
 
 #### `ap :: Apply m => m (a -> b) -> m a -> m b`
 
@@ -263,7 +281,7 @@ Like liftNode, but for a function which returns a Promise.
 * [ ] Implement Traversable?
 * [x] Implement Future.cache
 * [ ] Implement Future#mapRej
-* [ ] Implement Future#chainRej
+* [x] Implement Future#chainRej
 * [x] Implement dispatchers
 * [ ] Implement Future#swap
 * [ ] Implement Future#and

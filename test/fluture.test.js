@@ -268,6 +268,32 @@ describe('Future', () => {
 
   });
 
+  describe('#chainRej()', () => {
+
+    const m = Future.reject(1);
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+
+    it('throws TypeError when not given a function', () => {
+      const fs = xs.map(x => () => m.chainRej(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the given function does not return Future', () => {
+      const fs = xs.map(x => () => m.chainRej(() => x).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('calls the given function with the inner of the Future', () => {
+      m.chainRej(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
+    });
+
+    it('returns a Future with an inner equal to the returned Future', () => {
+      const actual = m.chainRej(() => Future.of(2));
+      return assertResolved(actual, 2);
+    });
+
+  });
+
   describe('#ap()', () => {
 
     it('throws TypeError when not given Future', () => {
@@ -434,6 +460,19 @@ describe('Dispatchers', () => {
 
     it('dispatches to #chain', () => {
       return assertResolved(Future.chain(x => Future.of(x + 1), Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.chainRej()', () => {
+
+    it('is curried', () => {
+      expect(Future.chainRej).to.be.a('function');
+      expect(Future.chainRej(noop)).to.be.a('function');
+    });
+
+    it('dispatches to #chainRej', () => {
+      return assertResolved(Future.chainRej(x => Future.of(x + 1), Future.reject(1)), 2);
     });
 
   });

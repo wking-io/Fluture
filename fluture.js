@@ -77,6 +77,18 @@
     );
   }
 
+  function check$chainRej(it, f){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future.chainRej', it);
+    if(typeof f !== 'function') error$invalidArgument('Future.chainRej', 0, 'a function', f);
+  }
+
+  function check$chainRej$f(m, f, x){
+    if(!(m instanceof FutureClass)) throw new TypeError(
+      'Future.chainRej expects the function its given to return a Future'
+      + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+    );
+  }
+
   //Check input to Future#map.
   function check$map(it, f){
     if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
@@ -181,6 +193,18 @@
     });
   }
 
+  function Future$chainRej(f){
+    check$chainRej(this, f);
+    const _this = this;
+    return new FutureClass(function Future$chainRej$fork(rej, res){
+      _this._f(function Future$chainRej$rej(x){
+        const m = f(x);
+        check$chainRej$f(m, f, x);
+        m._f(rej, res);
+      }, res);
+    });
+  }
+
   function Future$map(f){
     check$map(this, f);
     const _this = this;
@@ -233,6 +257,7 @@
     of: Future$of,
     [FL.chain]: Future$chain,
     chain: Future$chain,
+    chainRej: Future$chainRej,
     [FL.map]: Future$map,
     map: Future$map,
     [FL.ap]: Future$ap,
@@ -269,6 +294,9 @@
 
   //chain :: Chain m => (a -> m b) -> m a -> m b
   Future.chain = createUnaryDispatcher('chain');
+
+  //chainRej :: (a -> Future a c) -> Future a b -> Future a c
+  Future.chainRej = createUnaryDispatcher('chainRej');
 
   //map :: Functor m => (a -> b) -> m a -> m b
   Future.map = createUnaryDispatcher('map');
