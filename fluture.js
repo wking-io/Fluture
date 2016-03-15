@@ -22,6 +22,14 @@
 
   'use strict';
 
+  ///////////////////
+  // Type checking //
+  ///////////////////
+
+  function isFluture(m){
+    return m instanceof FutureClass;
+  }
+
   ////////////////////
   // Error handling //
   ////////////////////
@@ -58,32 +66,32 @@
 
   //Check input to Future#fork.
   function check$fork(it, rej, res){
-    if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
+    if(!isFluture(it)) error$invalidContext('Future#chain', it);
     if(typeof rej !== 'function') error$invalidArgument('Future#fork', 0, 'be a function', rej);
     if(typeof res !== 'function') error$invalidArgument('Future#fork', 1, 'be a function', res);
   }
 
   //Check input to Future#chain.
   function check$chain(it, f){
-    if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
+    if(!isFluture(it)) error$invalidContext('Future#chain', it);
     if(typeof f !== 'function') error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
   //Check output from the function passed to Future#chain.
   function check$chain$f(m, f, x){
-    if(!(m instanceof FutureClass)) throw new TypeError(
+    if(!isFluture(m)) throw new TypeError(
       'Future#chain expects the function its given to return a Future'
       + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
     );
   }
 
   function check$chainRej(it, f){
-    if(!(it instanceof FutureClass)) error$invalidContext('Future.chainRej', it);
+    if(!isFluture(it)) error$invalidContext('Future.chainRej', it);
     if(typeof f !== 'function') error$invalidArgument('Future.chainRej', 0, 'a function', f);
   }
 
   function check$chainRej$f(m, f, x){
-    if(!(m instanceof FutureClass)) throw new TypeError(
+    if(!isFluture(m)) throw new TypeError(
       'Future.chainRej expects the function its given to return a Future'
       + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
     );
@@ -91,14 +99,14 @@
 
   //Check input to Future#map.
   function check$map(it, f){
-    if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
+    if(!isFluture(it)) error$invalidContext('Future#map', it);
     if(typeof f !== 'function') error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
   //Check input to Future#ap.
   function check$ap(it, m){
-    if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
+    if(!isFluture(it)) error$invalidContext('Future#map', it);
+    if(!isFluture(m)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
   }
 
   //Check resolution value of the Future on which #ap was called.
@@ -109,12 +117,12 @@
   }
 
   function check$race(it, m){
-    if(!(it instanceof FutureClass)) error$invalidContext('Future.race', it);
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future.race', 0, 'be a function', m);
+    if(!isFluture(it)) error$invalidContext('Future.race', it);
+    if(!isFluture(m)) error$invalidArgument('Future.race', 0, 'be a function', m);
   }
 
   function check$cache(m){
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
+    if(!isFluture(m)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
   }
 
   function check$cache$settle(oldState, newState, oldValue, newValue){
@@ -157,7 +165,7 @@
   //The of method.
   function Future$of(x){
     return new FutureClass(function Future$of$fork(rej, res){
-      res(x)
+      res(x);
     });
   }
 
