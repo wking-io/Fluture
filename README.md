@@ -107,6 +107,30 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 //> "{...}"
 ```
 
+#### `parallel :: PositiveInteger -> [Future a b] -> Future a [b]`
+
+Creates a Future which when forked runs all Futures in the given `array` in
+parallel, ensuring no more than `limit` Futures are running at once.
+
+```js
+const tenFutures = Array.from(Array(10).keys()).map(Future.after(20));
+
+//Runs all Futures in sequence:
+Future.parallel(1, tenFutures).fork(console.error, console.log);
+//after about 200ms:
+//> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+//Runs upto five Futures in parallel:
+Future.parallel(5, tenFutures).fork(console.error, console.log);
+//after about 40ms:
+//> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+//Runs all Futures in parallel:
+Future.parallel(Infinity, tenFutures).fork(console.error, console.log);
+//after about 20ms:
+//> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+```
+
 #### `cache :: Future a b -> Future a b`
 
 Returns a Future which caches the resolution value of the given Future so that
@@ -281,7 +305,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future#fold
 * [ ] Implement Future#value
 * [x] Implement Future#race
-* [ ] Implement Future.parallel
+* [x] Implement Future.parallel
 * [ ] Implement Future.predicate
 * [ ] Implement Future#promise
 * [ ] Implement Future.cast

@@ -65,3 +65,19 @@ Future.cache(Future.of(1)).fork(noop, noop);
 
 printStatus(Future.cache);
 printStatus(Future.prototype.fork);
+
+
+console.log('--- parallel fork ---');
+
+Future.parallel(2, [Future.of(1), Future.of(2)]).fork(noop, noop);
+
+%OptimizeFunctionOnNextCall(Future.parallel);
+%OptimizeFunctionOnNextCall(Future.prototype.fork);
+
+printStatus(Future.parallel);
+printStatus(Future.prototype.fork);
+
+Future.parallel(2, [Future.of(1), Future.of(2)]).fork(noop, noop);
+
+printStatus(Future.parallel);
+printStatus(Future.prototype.fork);

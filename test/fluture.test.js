@@ -1,3 +1,5 @@
+'use strict';
+
 const expect = require('chai').expect;
 const Future = require('../fluture');
 
@@ -7,6 +9,14 @@ const compose = f => g => x => f(g(x));
 const add = a => b => a + b;
 const mult = a => b => a * b;
 const error = new Error('It broke');
+
+const repeat = (n, x) => {
+  const out = new Array(n);
+  while(n-- > 0){
+    out[n] = x;
+  }
+  return out;
+};
 
 const failRes = x => {
   throw new Error(`Invalidly entered resolution branch with value ${x}`);
@@ -21,17 +31,17 @@ const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 const assertEqual = (a, b) => new Promise(done => {
   assertIsFuture(a);
   assertIsFuture(b);
-  a.fork(failRej, a => b.fork(failRej, b => (expect(a).to.equal(b), done())));
+  a.fork(failRej, a => b.fork(failRej, b => (expect(a).to.deep.equal(b), done())));
 });
 
 const assertResolved = (m, x) => new Promise(done => {
   assertIsFuture(m);
-  m.fork(failRej, y => (expect(y).to.equal(x), done()));
+  m.fork(failRej, y => (expect(y).to.deep.equal(x), done()));
 });
 
 const assertRejected = (m, x) => new Promise(done => {
   assertIsFuture(m);
-  m.fork(y => (expect(y).to.equal(x), done()), failRes);
+  m.fork(y => (expect(y).to.deep.equal(x), done()), failRes);
 });
 
 describe('Constructors', () => {
@@ -200,6 +210,73 @@ describe('Constructors', () => {
     it('returns a Future which eventually resolves with the given value', () => {
       const actual = Future.after(20, 1);
       return assertResolved(actual, 1);
+    });
+
+  });
+
+  describe('.parallel()', () => {
+
+    it('is curried', () => {
+      expect(Future.parallel(1)).to.be.a('function');
+    });
+
+    it('throws when given something other than PositiveInteger as a first argument', () => {
+      const xs = [0, -1, 1.5, NaN, '1', 'one'];
+      const fs = xs.map(x => () => Future.parallel(x, []));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws when given something other than Array as second argument', () => {
+      const xs = [NaN, {}, 1, 'a', new Date, undefined, null, Future.of(1)];
+      const fs = xs.map(x => () => Future.parallel(1, x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws when the Array contains something other than Futures', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.parallel(1, [x]).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('parallelizes execution', function(){
+      this.slow(80);
+      this.timeout(50);
+      const actual = Future.parallel(2, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      return assertResolved(actual, ['a', 'b']);
+    });
+
+    it('limits parallelism to the given number', () => {
+      let running = 0;
+      const m = Future((rej, res) => {
+        running++;
+        if(running > 2){
+          return rej(new Error('More than two running in parallel'));
+        }
+        setTimeout(() => {
+          running--;
+          res('a');
+        }, 20);
+      });
+      const actual = Future.parallel(2, repeat(8, m));
+      return assertResolved(actual, repeat(8, 'a'));
+    });
+
+    it('runs all in parallel when given number larger than the array length', function(){
+      this.slow(80);
+      this.timeout(50);
+      const actual = Future.parallel(10, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      return assertResolved(actual, ['a', 'b']);
+    });
+
+    it('resolves to an empty array when given an empty array', () => {
+      return assertResolved(Future.parallel(1, []), []);
+    });
+
+    it('runs all in parallel when given Infinity', function(){
+      this.slow(80);
+      this.timeout(50);
+      const actual = Future.parallel(Infinity, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      return assertResolved(actual, ['a', 'b']);
     });
 
   });

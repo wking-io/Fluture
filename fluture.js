@@ -30,6 +30,10 @@
     return m instanceof FutureClass;
   }
 
+  function isPositiveInteger(n){
+    return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
+  }
+
   ////////////////////
   // Error handling //
   ////////////////////
@@ -145,6 +149,18 @@
 
   function check$node(f){
     if(typeof f !== 'function') error$invalidArgument('Future.node', 0, 'be a function', f);
+  }
+
+  function check$parallel(i, ms){
+    if(!isPositiveInteger(i)) error$invalidArgument('Future.parallel', 0, 'be a positive integer', i);
+    if(!Array.isArray(ms)) error$invalidArgument('Future.parallel', 0, 'be an array', ms);
+  }
+
+  function check$parallel$m(m, i){
+    if(!isFluture(m)) throw new TypeError(
+      'Future.parallel expects argument 1 to be an array of Futures.'
+      + ` The value at position ${i} in the array was not a Future.\n  Actual: ${toString(m)}`
+    );
   }
 
   ////////////
@@ -375,6 +391,24 @@
     check$node(f);
     return new FutureClass(function Future$node$fork(rej, res){
       f((a, b) => a ? rej(a) : res(b));
+    });
+  };
+
+  //parallel :: PositiveInteger -> [Future a b] -> Future a [b]
+  Future.parallel = function Future$parallel(i, ms){
+    if(arguments.length === 1) return ms => Future$parallel(i, ms);
+    check$parallel(i, ms);
+    const l = ms.length;
+    return l < 1 ? Future$of([]) : new FutureClass(function Future$parallel$fork(rej, res){
+      let ko = false;
+      let ok = 0;
+      const out = new Array(l);
+      const next = j => i < l ? fork(ms[i], i++) : (j === l && res(out));
+      const fork = (m, j) => (check$parallel$m(m, j), m._f(
+        e => ko || (rej(e), ko = true),
+        x => ko || (out[j] = x, next(++ok))
+      ));
+      ms.slice(0, i).forEach(fork);
     });
   };
 
