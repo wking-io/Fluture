@@ -22,8 +22,7 @@
     "node": "^5.0.0"
   },
   "dependencies": {
-    "fantasy-land": "^0.2.1",
-    "lodash.curry": "^4.0.0"
+    "fantasy-land": "^0.2.1"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",

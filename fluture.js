@@ -1,24 +1,23 @@
 /*global define*/
 /*global FantasyLand*/
-/*global _*/
 (function(global, f){
 
   'use strict';
 
   /* istanbul ignore else */
   if(typeof module !== 'undefined'){
-    module.exports = f(require('fantasy-land'), require('lodash.curry'));
+    module.exports = f(require('fantasy-land'));
   }
 
   else if(typeof define === 'function' && define.amd){
-    define(['fantasy-land', 'lodash.curry'], f);
+    define(['fantasy-land'], f);
   }
 
   else{
-    global.Fluture = f(FantasyLand, _.curry);
+    global.Fluture = f(FantasyLand);
   }
 
-}(global || window || this, function(FL, curry){
+}(global || window || this, function(FL){
 
   'use strict';
 
@@ -288,18 +287,21 @@
 
   //Creates a dispatcher for a unary method.
   function createUnaryDispatcher(method){
-    return curry(function dispatch(a, m){
+    return function dispatch(a, m){
+      if(arguments.length === 1) return m => dispatch(a, m);
       if(m && typeof m[method] === 'function') return m[method](a);
       error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
-    });
+    };
   }
 
   //Creates a dispatcher for a binary method.
   function createBinaryDispatcher(method){
-    return curry(function dispatch(a, b, m){
+    return function dispatch(a, b, m){
+      if(arguments.length === 1) return (b, m) => m ? dispatch(a, b, m) : dispatch(a, b);
+      if(arguments.length === 2) return m => dispatch(a, b, m);
       if(m && typeof m[method] === 'function') return m[method](a, b);
       error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
-    });
+    };
   }
 
   //chain :: Chain m => (a -> m b) -> m a -> m b
@@ -312,10 +314,11 @@
   Future.map = createUnaryDispatcher('map');
 
   //ap :: Apply m => m (a -> b) -> m a -> m b
-  Future.ap = curry(function dispatch$ap(m, a){
+  Future.ap = function dispatch$ap(m, a){
+    if(arguments.length === 1) return a => dispatch$ap(m, a);
     if(m && typeof m.ap === 'function') return m.ap(a);
     error$invalidArgument('Future.ap', 0, 'have a "ap" method', m);
-  });
+  };
 
   //fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void
   Future.fork = createBinaryDispatcher('fork');
@@ -365,12 +368,13 @@
   };
 
   //Create a Future which resolves after the given time with the given value.
-  Future.after = curry(function Future$after(n, x){
+  Future.after = function Future$after(n, x){
+    if(arguments.length === 1) return x => Future$after(n, x);
     check$after(n);
     return new FutureClass(function Future$after$fork(rej, res){
       setTimeout(res, n, x);
     })
-  });
+  };
 
   //Create a Future which resolves with the return value of the given function,
   //or rejects with the exception thrown by the given function.
