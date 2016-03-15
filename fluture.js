@@ -248,6 +248,7 @@
     [FL.ap]: Future$ap,
     ap: Future$ap,
     toString: Future$toString,
+    inspect: Future$toString,
     race: Future$race
   };
 
