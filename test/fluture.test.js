@@ -34,9 +34,9 @@ const assertRejected = (m, x) => new Promise(done => {
   m.fork(y => (expect(y).to.equal(x), done()), failRes);
 });
 
-describe('Future', () => {
+describe('Constructors', () => {
 
-  describe('constructor', () => {
+  describe('Future', () => {
 
     it('is a unary function', () => {
       expect(Future).to.be.a('function');
@@ -81,6 +81,132 @@ describe('Future', () => {
     });
 
   });
+
+  describe('.cache()', () => {
+
+    const onceOrError = f => {
+      var called = false;
+      return function(){
+        if(called) throw new Error(`Function ${f} was called twice`);
+        called = true;
+        f(...arguments);
+      }
+    };
+
+    it('throws TypeError when not given Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.cache(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which resolves with the resolution value of the given Future', () => {
+      return assertResolved(Future.cache(Future.of(1)), 1);
+    });
+
+    it('returns a Future which rejects with the rejection reason of the given Future', () => {
+      return assertRejected(Future.cache(Future.reject(error)), error);
+    });
+
+    it('only forks its given Future once', () => {
+      const m = Future.cache(Future(onceOrError((rej, res) => res(1))));
+      m.fork(noop, noop);
+      m.fork(noop, noop);
+      return assertResolved(m, 1);
+    });
+
+    it('throws an error if the given Future resolves or rejects multiple times', () => {
+      const ms = [
+        Future((rej, res) => (res(1), res(1))),
+        Future((rej, res) => (res(1), rej(2))),
+        Future((rej) => (rej(2), rej(2))),
+        Future((rej, res) => (rej(2), res(1)))
+      ];
+      const fs = ms.map(m => () => Future.cache(m).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(Error, /Future/));
+    });
+
+    it('resolves all forks once a delayed resolution happens', () => {
+      const m = Future.cache(Future.after(20, 1));
+      const a = assertResolved(m, 1);
+      const b = assertResolved(m, 1);
+      const c = assertResolved(m, 1);
+      return Promise.all([a, b, c]);
+    });
+
+    it('rejects all forks once a delayed rejection happens', () => {
+      const m = Future.cache(Future(rej => setTimeout(rej, 20, error)));
+      const a = assertRejected(m, error);
+      const b = assertRejected(m, error);
+      const c = assertRejected(m, error);
+      return Promise.all([a, b, c]);
+    });
+
+  });
+
+  describe('.try()', () => {
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.try(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which resolves with the return value of the function', () => {
+      const actual = Future.try(() => 1);
+      return assertResolved(actual, 1);
+    });
+
+    it('returns a Future which rejects with the exception thrown by the function', () => {
+      const actual = Future.try(() => {
+        throw error;
+      });
+      return assertRejected(actual, error);
+    });
+
+  });
+
+  describe('.node()', () => {
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.node(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which rejects when the callback is called with (err)', () => {
+      const f = done => done(error);
+      return assertRejected(Future.node(f), error);
+    });
+
+    it('returns a Future which resolves when the callback is called with (null, a)', () => {
+      const f = done => done(null, 'a');
+      return assertResolved(Future.node(f), 'a');
+    });
+
+  });
+
+  describe('.after()', () => {
+
+    it('is curried', () => {
+      expect(Future.after(20)).to.be.a('function');
+    });
+
+    it('throws TypeError when not given a number as first argument', () => {
+      const xs = [{}, [], 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.after(x, 1));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which eventually resolves with the given value', () => {
+      const actual = Future.after(20, 1);
+      return assertResolved(actual, 1);
+    });
+
+  });
+
+});
+
+describe('Future', () => {
 
   describe('#fork()', () => {
 
@@ -183,6 +309,28 @@ describe('Future', () => {
     it('returns a string representation', () => {
       const actual = Future(x => x).toString();
       expect(actual).to.equal('Future(x => x)');
+    });
+
+  });
+
+  describe('#race()', () => {
+
+    it('throw TypeError when not given a Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.of(1).race(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which rejects when the first one rejects', () => {
+      const m1 = Future((rej, res) => setTimeout(res, 15, 1));
+      const m2 = Future(rej => setTimeout(rej, 5, error));
+      return assertRejected(m1.race(m2), error);
+    });
+
+    it('returns a Future which resolves when the first one resolves', () => {
+      const m1 = Future((rej, res) => setTimeout(res, 5, 1));
+      const m2 = Future(rej => setTimeout(rej, 15, error));
+      return assertResolved(m1.race(m2), 1);
     });
 
   });
@@ -317,70 +465,22 @@ describe('Dispatchers', () => {
 
   });
 
-});
+  describe('.race()', () => {
 
-describe('Utilities', () => {
-
-  describe('.cache()', () => {
-
-    const onceOrError = f => {
-      var called = false;
-      return function(){
-        if(called) throw new Error(`Function ${f} was called twice`);
-        called = true;
-        f(...arguments);
-      }
-    };
-
-    it('throws TypeError when not given Future', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-      const fs = xs.map(x => () => Future.cache(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    it('is curried', () => {
+      expect(Future.race).to.be.a('function');
+      expect(Future.race(Future.of(1))).to.be.a('function');
     });
 
-    it('returns a Future which resolves with the resolution value of the given Future', () => {
-      return assertResolved(Future.cache(Future.of(1)), 1);
-    });
-
-    it('returns a Future which rejects with the rejection reason of the given Future', () => {
-      return assertRejected(Future.cache(Future.reject(error)), error);
-    });
-
-    it('only forks its given Future once', () => {
-      const m = Future.cache(Future(onceOrError((rej, res) => res(1))));
-      m.fork(noop, noop);
-      m.fork(noop, noop);
-      return assertResolved(m, 1);
-    });
-
-    it('throws an error if the given Future resolves or rejects multiple times', () => {
-      const ms = [
-        Future((rej, res) => (res(1), res(1))),
-        Future((rej, res) => (res(1), rej(2))),
-        Future((rej) => (rej(2), rej(2))),
-        Future((rej, res) => (rej(2), res(1)))
-      ];
-      const fs = ms.map(m => () => Future.cache(m).fork(noop, noop));
-      fs.forEach(f => expect(f).to.throw(Error, /Future/));
-    });
-
-    it('resolves all forks once a delayed resolution happens', () => {
-      const m = Future.cache(Future.after(20, 1));
-      const a = assertResolved(m, 1);
-      const b = assertResolved(m, 1);
-      const c = assertResolved(m, 1);
-      return Promise.all([a, b, c]);
-    });
-
-    it('rejects all forks once a delayed rejection happens', () => {
-      const m = Future.cache(Future(rej => setTimeout(rej, 20, error)));
-      const a = assertRejected(m, error);
-      const b = assertRejected(m, error);
-      const c = assertRejected(m, error);
-      return Promise.all([a, b, c]);
+    it('dispatches to #race', () => {
+      return assertResolved(Future.race(Future.of(1), Future.of(2)), 2);
     });
 
   });
+
+});
+
+describe('Futurization', () => {
 
   describe('.liftNode()', () => {
 
@@ -442,99 +542,6 @@ describe('Utilities', () => {
     it('the Future rejects with the value of the rejected Promise', () => {
       const f = Future.liftPromise(promiseRej);
       return assertRejected(f(), error);
-    });
-
-  });
-
-  describe('.try()', () => {
-
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.try(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('returns a Future which resolves with the return value of the function', () => {
-      const actual = Future.try(() => 1);
-      return assertResolved(actual, 1);
-    });
-
-    it('returns a Future which rejects with the exception thrown by the function', () => {
-      const actual = Future.try(() => {
-        throw error;
-      });
-      return assertRejected(actual, error);
-    });
-
-  });
-
-  describe('.node()', () => {
-
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.node(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('returns a Future which rejects when the callback is called with (err)', () => {
-      const f = done => done(error);
-      return assertRejected(Future.node(f), error);
-    });
-
-    it('returns a Future which resolves when the callback is called with (null, a)', () => {
-      const f = done => done(null, 'a');
-      return assertResolved(Future.node(f), 'a');
-    });
-
-  });
-
-  describe('.after()', () => {
-
-    it('is curried', () => {
-      expect(Future.after(20)).to.be.a('function');
-    });
-
-    it('throws TypeError when not given a number as first argument', () => {
-      const xs = [{}, [], 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.after(x, 1));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('returns a Future which eventually resolves with the given value', () => {
-      const actual = Future.after(20, 1);
-      return assertResolved(actual, 1);
-    });
-
-  });
-
-  describe('.race()', () => {
-
-    it('is curried', () => {
-      expect(Future.race(Future.of(1))).to.be.a('function');
-    });
-
-    it('throw TypeError when not given a Future as first argument', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-      const fs = xs.map(x => () => Future.race(x, Future.of(1)));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('throw TypeError when not given a Future as second argument', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-      const fs = xs.map(x => () => Future.race(Future.of(1), x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('returns a Future which rejects when the first one rejects', () => {
-      const m1 = Future((rej, res) => setTimeout(res, 15, 1));
-      const m2 = Future(rej => setTimeout(rej, 5, error));
-      return assertRejected(Future.race(m1, m2), error);
-    });
-
-    it('returns a Future which resolves when the first one resolves', () => {
-      const m1 = Future((rej, res) => setTimeout(res, 5, 1));
-      const m2 = Future(rej => setTimeout(rej, 15, error));
-      return assertResolved(Future.race(m1, m2), 1);
     });
 
   });

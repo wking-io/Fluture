@@ -8,7 +8,7 @@ A complete [Fantasy Land][1] compatible Future library.
 
 ## Usage
 
-Using the low level method API:
+Using the low level, high performance method API:
 
 ```js
 const Future = require('fluture');
@@ -21,8 +21,8 @@ program('package.json');
 //> "fluture"
 ```
 
-Or use the higher level dispatch API for function composition using something
-like [`S.pipe`][2]:
+Or use the high level, fully curried, functional dispatch API for function
+composition using composers like [`S.pipe`][2]:
 
 ```js
 const {node, chain, try, map, fork} = require('fluture');
@@ -45,7 +45,9 @@ program('package.json')
 
 ## Documentation
 
-### Future
+### Constructors
+
+#### Future :: ((a -> Void), (b -> Void) -> Void) -> Future a b
 
 A (monadic) container which represents an eventual value. A lot like Promise but
 more principled in that it follows the [Fantasy Land][1] algebraic JavaScript
@@ -59,8 +61,6 @@ const eventualThing = Future((reject, resolve) => {
 eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 //> "Hello world!"
 ```
-
-----
 
 #### `of :: b -> Future a b`
 
@@ -129,9 +129,9 @@ eventualPackage.fork(console.error, console.log);
 //> "{...}"
 ```
 
-----
+### Method API
 
-#### `#fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
+#### `fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
 
 Execute the Future (which up until now was merely a container for its
 computation), and get at the result or error.
@@ -153,11 +153,7 @@ Future.reject(new Error('It broke!')).fork(
 //> "Oh no! It broke!"
 ```
 
-#### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
-
-A curried dispatcher to Future#fork.
-
-#### `#map :: Future a b ~> (b -> c) -> Future a c`
+#### `map :: Future a b ~> (b -> c) -> Future a c`
 
 Map over the value inside the Future. If the Future is rejected, mapping is not
 performed.
@@ -167,11 +163,7 @@ Future.of(1).map(x => x + 1).fork(console.error, console.log);
 //> 2
 ```
 
-#### `map :: Functor m => (a -> b) -> m a -> m b`
-
-A curried dispatcher to Future#map. Similar to [`R.map`][3].
-
-#### `#chain :: Future a b ~> (b -> Future a c) -> Future a c`
+#### `chain :: Future a b ~> (b -> Future a c) -> Future a c`
 
 FlatMap over the value inside the Future. If the Future is rejected, chaining is
 not performed.
@@ -180,11 +172,8 @@ not performed.
 Future.of(1).chain(x => Future.of(x + 1)).fork(console.error, console.log);
 //> 2
 ```
-#### `chain :: Chain m => (a -> m b) -> m a -> m b`
 
-A curried dispatcher to Future#chain. Similar to [`R.chain`][4].
-
-#### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
+#### `ap :: Future a (b -> c) ~> Future a b -> Future a c`
 
 Apply the value in the Future to the value in the given Future. If the Future is
 rejected, applying is not performed.
@@ -194,22 +183,44 @@ Future.of(x => x + 1).ap(Future.of(1)).fork(console.error, console.log);
 //> 2
 ```
 
-#### `ap :: Apply m => m (a -> b) -> m a -> m b`
-
-A curried dispatcher to Future#ap. Similar to [`R.ap`][5].
-
-----
-
-#### `race :: Future a b -> Future a b -> Future a b`
+#### `race :: Future a b ~> Future a b -> Future a b`
 
 Race two Futures against eachother. Creates a new Future which resolves or
 rejects with the resolution or rejection value of the first Future to settle.
 
 ```js
-Future.race(Future.after(100, 'hello'), Future.after(50, 'bye'))
+Future.after(100, 'hello')
+.race(Future.after(50, 'bye'))
 .fork(console.error, console.log)
 //> "bye"
+```
 
+### Dispatcher API
+
+#### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
+
+Dispatches the first and second arguments to the `fork` method of the third argument.
+
+#### `map :: Functor m => (a -> b) -> m a -> m b`
+
+Dispatches the first argument to the `map` method of the second argument.
+Has the same effect as [`R.map`][3].
+
+#### `chain :: Chain m => (a -> m b) -> m a -> m b`
+
+Dispatches the first argument to the `chain` method of the second argument.
+Has the same effect as [`R.chain`][4].
+
+#### `ap :: Apply m => m (a -> b) -> m a -> m b`
+
+Dispatches the second argument to the `ap` method of the first argument.
+Has the same effect as [`R.ap`][5].
+
+#### `race :: Future a b -> Future a b -> Future a b`
+
+Dispatches the first argument to the `race` method of the second argument.
+
+```js
 const first = futures => futures.reduce(Future.race);
 first([
   Future.after(100, 'hello'),
@@ -220,7 +231,7 @@ first([
 //> [Error nope]
 ```
 
-----
+### Futurization
 
 #### `liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future a b`
 
@@ -251,17 +262,18 @@ Like liftNode, but for a function which returns a Promise.
 * [x] Write benchmarks
 * [ ] Implement Traversable?
 * [x] Implement Future.cache
-* [ ] Implement Future.mapRej
-* [ ] Implement Future.chainRej
-* [x] Implement dispatchers: chain, map, ap, fork
-* [ ] Implement Future.swap
-* [ ] Implement Future.and
-* [ ] Implement Future.or
-* [ ] Implement Future#fold and dispatcher
-* [x] Implement Future.race
+* [ ] Implement Future#mapRej
+* [ ] Implement Future#chainRej
+* [x] Implement dispatchers
+* [ ] Implement Future#swap
+* [ ] Implement Future#and
+* [ ] Implement Future#or
+* [ ] Implement Future#fold
+* [ ] Implement Future#value
+* [x] Implement Future#race
 * [ ] Implement Future.parallel
 * [ ] Implement Future.predicate
-* [ ] Implement Future.promise
+* [ ] Implement Future#promise
 * [ ] Implement Future.cast
 * [ ] Implement Future.encase
 * [x] Check `this` on instance methods

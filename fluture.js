@@ -96,6 +96,11 @@
     );
   }
 
+  function check$race(it, m){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future.race', it);
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.race', 0, 'be a function', m);
+  }
+
   function check$cache(m){
     if(!(m instanceof FutureClass)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
   }
@@ -135,11 +140,6 @@
 
   function check$node(f){
     if(typeof f !== 'function') error$invalidArgument('Future.node', 0, 'be a function', f);
-  }
-
-  function check$race(m1, m2){
-    if(!(m1 instanceof FutureClass)) error$invalidArgument('Future.race', 0, 'be a function', m1);
-    if(!(m2 instanceof FutureClass)) error$invalidArgument('Future.race', 1, 'be a function', m2);
   }
 
   ////////////
@@ -214,6 +214,17 @@
     return `Future(${toString(this._f)})`;
   }
 
+  function Future$race(m){
+    check$race(this, m);
+    const _this = this;
+    return new FutureClass(function Future$race$fork(rej, res){
+      let settled = false;
+      const once = f => a => settled || (settled = true, f(a));
+      _this._f(once(rej), once(res));
+      m._f(once(rej), once(res));
+    });
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
     _f: null,
@@ -226,7 +237,8 @@
     map: Future$map,
     [FL.ap]: Future$ap,
     ap: Future$ap,
-    toString: Future$toString
+    toString: Future$toString,
+    race: Future$race
   };
 
   //Expose `of` statically as well.
@@ -269,6 +281,9 @@
 
   //fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void
   Future.fork = createBinaryDispatcher('fork');
+
+  //race :: Future a b -> Future a b -> Future a b
+  Future.race = createUnaryDispatcher('race');
 
   ///////////////
   // Utilities //
@@ -406,35 +421,6 @@
       f((a, b) => a ? rej(a) : res(b));
     });
   };
-
-  /**
-   * Race two Futures against eachother.
-   *
-   * Creates a new Future which resolves or rejects with the resolution or
-   * rejection value of the first Future to settle.
-   *
-   * @param {Future} m1 The first Future.
-   * @param {Future} m2 The second Future.
-   *
-   * @return {Future}
-   *
-   * @example
-   *
-   *     race(
-   *       Future(rej => setTimeout(rej, 8000, new Error('Request timed out'))),
-   *       fromNode(done => request('http://example.com', done))
-   *     )
-   *
-   */
-  Future.race = curry(function Future$race(m1, m2){
-    check$race(m1, m2);
-    return new FutureClass(function Future$race$fork(rej, res){
-      let settled = false;
-      const once = f => a => settled || (settled = true, f(a));
-      m1._f(once(rej), once(res));
-      m2._f(once(rej), once(res));
-    });
-  });
 
   //Export Future factory.
   return Future;
