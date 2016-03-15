@@ -8,7 +8,7 @@ A complete [Fantasy Land][1] compatible Future library.
 
 ## Usage
 
-Using the low level, high performance method API:
+Using the low level, high performance [method API](#method-api):
 
 ```js
 const Future = require('fluture');
@@ -21,8 +21,8 @@ program('package.json');
 //> "fluture"
 ```
 
-Or use the high level, fully curried, functional dispatch API for function
-composition using composers like [`S.pipe`][2]:
+Or use the high level, fully curried, [functional dispatch API](#dispatcher-api)
+for function composition using composers like [`S.pipe`][2]:
 
 ```js
 const {node, chain, try, map, fork} = require('fluture');
@@ -239,7 +239,7 @@ Applies the left function to the rejection value, or the right function to the
 resolution value, depending on which is present, and resolves with the result.
 
 This provides a convenient means to ensure a Future is always resolved. It can
-be used with other type constructors, like [`S.Either`](7), to maintain a
+be used with other type constructors, like [`S.Either`][7], to maintain a
 representataion of failures:
 
 ```js
@@ -336,6 +336,7 @@ readFile('README.md', 'utf8')
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
 * [ ] Add test coverage
+* [ ] Add readme badges
 * [ ] A transpiled ES5 version if demand arises
 
 ## Benchmarks
