@@ -66,25 +66,21 @@
     )
   }
 
-  //Check input to Future.
   function check$Future(fork){
     if(!isFunction(fork)) error$invalidArgument('Future', 0, 'be a function', fork);
   }
 
-  //Check input to Future#fork.
   function check$fork(it, rej, res){
-    if(!isFluture(it)) error$invalidContext('Future#chain', it);
+    if(!isFluture(it)) error$invalidContext('Future#fork', it);
     if(!isFunction(rej)) error$invalidArgument('Future#fork', 0, 'be a function', rej);
     if(!isFunction(res)) error$invalidArgument('Future#fork', 1, 'be a function', res);
   }
 
-  //Check input to Future#chain.
   function check$chain(it, f){
     if(!isFluture(it)) error$invalidContext('Future#chain', it);
     if(!isFunction(f)) error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
-  //Check output from the function passed to Future#chain.
   function check$chain$f(m, f, x){
     if(!isFluture(m)) throw new TypeError(
       'Future#chain expects the function its given to return a Future'
@@ -104,15 +100,13 @@
     );
   }
 
-  //Check input to Future#map.
   function check$map(it, f){
     if(!isFluture(it)) error$invalidContext('Future#map', it);
     if(!isFunction(f)) error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
-  //Check input to Future#ap.
   function check$ap(it, m){
-    if(!isFluture(it)) error$invalidContext('Future#map', it);
+    if(!isFluture(it)) error$invalidContext('Future#ap', it);
     if(!isFluture(m)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
   }
 
@@ -130,8 +124,8 @@
 
   function check$fold(it, f, g){
     if(!isFluture(it)) error$invalidContext('Future#fold', it);
-    if(!isFunction(f)) error$invalidArgument('Future#race', 0, 'be a function', f);
-    if(!isFunction(g)) error$invalidArgument('Future#race', 1, 'be a function', g);
+    if(!isFunction(f)) error$invalidArgument('Future#fold', 0, 'be a function', f);
+    if(!isFunction(g)) error$invalidArgument('Future#fold', 1, 'be a function', g);
   }
 
   function check$cache(m){
