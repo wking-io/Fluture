@@ -40,7 +40,7 @@
 
   function error$invalidArgument(it, at, expected, actual){
     throw new TypeError(
-      `${it} expects argument ${at} to be ${expected}\n  Actual: ${toString(actual)}`
+      `${it} expects argument ${at} to ${expected}\n  Actual: ${toString(actual)}`
     );
   }
 
@@ -53,20 +53,20 @@
 
   //Check input to Future.
   function check$Future(fork){
-    if(typeof fork !== 'function') error$invalidArgument('Future', 0, 'a function', fork);
+    if(typeof fork !== 'function') error$invalidArgument('Future', 0, 'be a function', fork);
   }
 
   //Check input to Future#fork.
   function check$fork(it, rej, res){
     if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
-    if(typeof rej !== 'function') error$invalidArgument('Future#fork', 0, 'a function', rej);
-    if(typeof res !== 'function') error$invalidArgument('Future#fork', 1, 'a function', res);
+    if(typeof rej !== 'function') error$invalidArgument('Future#fork', 0, 'be a function', rej);
+    if(typeof res !== 'function') error$invalidArgument('Future#fork', 1, 'be a function', res);
   }
 
   //Check input to Future#chain.
   function check$chain(it, f){
     if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
-    if(typeof f !== 'function') error$invalidArgument('Future#chain', 0, 'a function', f);
+    if(typeof f !== 'function') error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
   //Check output from the function passed to Future#chain.
@@ -80,13 +80,13 @@
   //Check input to Future#map.
   function check$map(it, f){
     if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
-    if(typeof f !== 'function') error$invalidArgument('Future#map', 0, 'a function', f);
+    if(typeof f !== 'function') error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
   //Check input to Future#ap.
   function check$ap(it, m){
     if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future#ap', 0, 'a Future', m);
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
   }
 
   //Check resolution value of the Future on which #ap was called.
@@ -97,7 +97,7 @@
   }
 
   function check$cache(m){
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future.cache', 0, 'a Future', m);
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
   }
 
   function check$cache$settle(oldState, newState, oldValue, newValue){
@@ -111,11 +111,11 @@
   }
 
   function check$liftNode(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.liftNode', 0, 'a function', f);
+    if(typeof f !== 'function') error$invalidArgument('Future.liftNode', 0, 'be a function', f);
   }
 
   function check$liftPromise(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.liftPromise', 0, 'a function', f);
+    if(typeof f !== 'function') error$invalidArgument('Future.liftPromise', 0, 'be a function', f);
   }
 
   function check$liftPromise$f(m, f, x){
@@ -126,36 +126,20 @@
   }
 
   function check$after(n){
-    if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'a number', n);
+    if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
   }
 
   function check$try(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.try', 0, 'a function', f);
+    if(typeof f !== 'function') error$invalidArgument('Future.try', 0, 'be a function', f);
   }
 
   function check$node(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.node', 0, 'a function', f);
+    if(typeof f !== 'function') error$invalidArgument('Future.node', 0, 'be a function', f);
   }
 
   function check$race(m1, m2){
-    if(!(m1 instanceof FutureClass)) error$invalidArgument('Future.race', 0, 'a function', m1);
-    if(!(m2 instanceof FutureClass)) error$invalidArgument('Future.race', 1, 'a function', m2);
-  }
-
-  function check$dispatch$chain(m){
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future.chain', 0, 'a function', m);
-  }
-
-  function check$dispatch$map(m){
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future.map', 0, 'a function', m);
-  }
-
-  function check$dispatch$ap(m){
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future.ap', 0, 'a function', m);
-  }
-
-  function check$dispatch$fork(m){
-    if(!(m instanceof FutureClass)) error$invalidArgument('Future.fork', 0, 'a function', m);
+    if(!(m1 instanceof FutureClass)) error$invalidArgument('Future.race', 0, 'be a function', m1);
+    if(!(m2 instanceof FutureClass)) error$invalidArgument('Future.race', 1, 'be a function', m2);
   }
 
   ////////////
@@ -255,29 +239,36 @@
   // Dispatchers //
   /////////////////
 
+  //Creates a dispatcher for a unary method.
+  function createUnaryDispatcher(method){
+    return curry(function dispatch(a, m){
+      if(m && typeof m[method] === 'function') return m[method](a);
+      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+    });
+  }
+
+  //Creates a dispatcher for a binary method.
+  function createBinaryDispatcher(method){
+    return curry(function dispatch(a, b, m){
+      if(m && typeof m[method] === 'function') return m[method](a, b);
+      error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
+    });
+  }
+
   //chain :: Chain m => (a -> m b) -> m a -> m b
-  Future.chain = curry(function chain(f, m){
-    check$dispatch$chain(m);
-    return m.chain(f);
-  });
+  Future.chain = createUnaryDispatcher('chain');
 
   //map :: Functor m => (a -> b) -> m a -> m b
-  Future.map = curry(function map(f, m){
-    check$dispatch$map(m);
-    return m.map(f);
-  });
+  Future.map = createUnaryDispatcher('map');
 
   //ap :: Apply m => m (a -> b) -> m a -> m b
-  Future.ap = curry(function ap(m1, m2){
-    check$dispatch$ap(m1);
-    return m1.ap(m2);
+  Future.ap = curry(function dispatch$ap(m, a){
+    if(m && typeof m.ap === 'function') return m.ap(a);
+    error$invalidArgument('Future.ap', 0, 'have a "ap" method', m);
   });
 
   //fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void
-  Future.fork = curry(function(rej, res, m){
-    check$dispatch$fork(m);
-    return m.fork(rej, res);
-  });
+  Future.fork = createBinaryDispatcher('fork');
 
   ///////////////
   // Utilities //
