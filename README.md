@@ -251,27 +251,19 @@ first([
 
 ### Futurization
 
-#### `liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future a b`
-
-Turn a node continuation-passing-style function into a function which returns a Future.
-
-Takes a function which uses a node-style callback for continuation and returns a
-function which returns a Future for continuation.
+To reduce the boilerplate of making Node or Promise functions return Future's
+instead, one might use the [Futurize][6] library:
 
 ```js
-const readFile = Future.liftNode(fs.readFile);
+const Future = require('fluture');
+const futurize = require('futurize').futurize(Future);
+const readFile = futurize(require('fs').readFile);
 readFile('README.md', 'utf8')
 .map(text => text.split('\n'))
 .map(lines => lines[0])
 .fork(console.error, console.log);
 //> "# Fluture"
 ```
-
-#### `liftPromise :: (x... -> Promise a b) -> x... -> Future a b`
-
-Turn a function which returns a Promise into a function which returns a Future.
-
-Like liftNode, but for a function which returns a Promise.
 
 ## Road map
 
@@ -325,3 +317,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [3]:  http://ramdajs.com/docs/#map
 [4]:  http://ramdajs.com/docs/#chain
 [5]:  http://ramdajs.com/docs/#ap
+[6]:  https://github.com/futurize/futurize

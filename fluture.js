@@ -127,21 +127,6 @@
     );
   }
 
-  function check$liftNode(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.liftNode', 0, 'be a function', f);
-  }
-
-  function check$liftPromise(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.liftPromise', 0, 'be a function', f);
-  }
-
-  function check$liftPromise$f(m, f, x){
-    if(!m || typeof m.then !== 'function') throw new TypeError(
-      'Future.liftPromise expects the function its given to return a Promise'
-      + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
-    );
-  }
-
   function check$after(n){
     if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
   }
@@ -352,51 +337,6 @@
           m.fork(settleWith(2), settleWith(3));
       }
     });
-  };
-
-  /**
-   * Turn a node continuation-passing-style function into a function which returns a Future.
-   *
-   * Takes a function which uses a node-style callback for continuation and
-   * returns a function which returns a Future for continuation.
-   *
-   * @sig liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future[a, b]
-   *
-   * @param {Function} f The node function to wrap.
-   *
-   * @return {Function} A function which returns a Future.
-   */
-  Future.liftNode = function Future$liftNode(f){
-    check$liftNode(f);
-    return function Future$liftNode$lifted(){
-      const xs = arguments;
-      return new FutureClass(function Future$liftNode$fork(rej, res){
-        return f(...xs, function Future$liftNode$callback(err, result){
-          err ? rej(err) : res(result);
-        });
-      });
-    };
-  };
-
-  /**
-   * Turn a function which returns a Promise into a function which returns a Future.
-   *
-   * @sig liftPromise :: (x... -> Promise a b) -> x... -> Future a b
-   *
-   * @param {Function} f The function to wrap.
-   *
-   * @return {Function} A function which returns a Future.
-   */
-  Future.liftPromise = function Future$liftPromise(f){
-    check$liftPromise(f);
-    return function Future$liftPromise$lifted(){
-      const xs = arguments;
-      return new FutureClass(function Future$liftPromise$fork(rej, res){
-        const m = f(...xs);
-        check$liftPromise$f(m, f, xs);
-        return m.then(res, rej);
-      });
-    };
   };
 
   //Create a Future which rejects witth the given value.
