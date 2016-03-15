@@ -48,11 +48,11 @@
     : Array.isArray(x)
     ? `[Array ${x.length}]`
     : typeof x === 'function'
-    ? typeof x.name === 'string'
+    ? typeof x.name === 'string' && x.name.length > 0
     ? `[Function ${x.name}]`
     : '[Function]'
     : x && x.toString === Object.prototype.toString
-    ? `{${Object.keys(x).map(String).join(', ')}}`
+    ? `[Object ${Object.keys(x).map(String).join(', ')}]`
     : String(x);
 
   //A show function to provide a slightly more meaningful representation of values.
