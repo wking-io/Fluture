@@ -8,7 +8,7 @@ A complete [Fantasy Land][1] compatible Future library.
 
 ## Usage
 
-Using the low level, high performance method API:
+Using the low level, high performance [method API](#method-api):
 
 ```js
 const Future = require('fluture');
@@ -21,8 +21,8 @@ program('package.json');
 //> "fluture"
 ```
 
-Or use the high level, fully curried, functional dispatch API for function
-composition using composers like [`S.pipe`][2]:
+Or use the high level, fully curried, [functional dispatch API](#dispatcher-api)
+for function composition using composers like [`S.pipe`][2]:
 
 ```js
 const {node, chain, try, map, fork} = require('fluture');
@@ -105,6 +105,30 @@ a node style callback API.
 Future.node(done => fs.readFile('package.json', 'utf8', done))
 .fork(console.error, console.log)
 //> "{...}"
+```
+
+#### `parallel :: PositiveInteger -> [Future a b] -> Future a [b]`
+
+Creates a Future which when forked runs all Futures in the given `array` in
+parallel, ensuring no more than `limit` Futures are running at once.
+
+```js
+const tenFutures = Array.from(Array(10).keys()).map(Future.after(20));
+
+//Runs all Futures in sequence:
+Future.parallel(1, tenFutures).fork(console.error, console.log);
+//after about 200ms:
+//> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+//Runs upto five Futures in parallel:
+Future.parallel(5, tenFutures).fork(console.error, console.log);
+//after about 40ms:
+//> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+//Runs all Futures in parallel:
+Future.parallel(Infinity, tenFutures).fork(console.error, console.log);
+//after about 20ms:
+//> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
 
 #### `cache :: Future a b -> Future a b`
@@ -209,6 +233,37 @@ Future.after(100, 'hello')
 //> "bye"
 ```
 
+#### `fold :: Future a b ~> (a -> c), (b -> c) -> Future _ c`
+
+Applies the left function to the rejection value, or the right function to the
+resolution value, depending on which is present, and resolves with the result.
+
+This provides a convenient means to ensure a Future is always resolved. It can
+be used with other type constructors, like [`S.Either`][7], to maintain a
+representataion of failures:
+
+```js
+Future.of('hello').fold(S.Left, S.Right).fork(noop, console.log);
+//> Right('hello')
+
+Future.reject('it broke').fold(S.Left, S.Right).fork(noop, console.log);
+//> Left('it broke')
+```
+
+#### `value :: Future a b ~> (b -> Void) -> Void`
+
+Extracts the value from a resolved Future by forking it. Only use this function
+if you are sure the Future is going to be resolved, for example; after using
+`.fold()`. If the Future rejects and `value` was used, an (likely uncatchable)
+`Error` will be thrown.
+
+```js
+Future.reject(new Error('It broke'))
+.fold(S.Left, S.Right)
+.value(console.log)
+//> Left([Error: It broke])
+```
+
 ### Dispatcher API
 
 #### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
@@ -249,6 +304,14 @@ first([
 //> [Error nope]
 ```
 
+#### `fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c`
+
+Dispatches the first and second arguments to the `fold` method of the third argument.
+
+#### `value :: (b -> Void) -> Future a b -> Void`
+
+Dispatches the first argument to the `value` method of the second argument.
+
 ### Futurization
 
 To reduce the boilerplate of making Node or Promise functions return Future's
@@ -278,10 +341,10 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future#swap
 * [ ] Implement Future#and
 * [ ] Implement Future#or
-* [ ] Implement Future#fold
-* [ ] Implement Future#value
+* [x] Implement Future#fold
+* [x] Implement Future#value
 * [x] Implement Future#race
-* [ ] Implement Future.parallel
+* [x] Implement Future.parallel
 * [ ] Implement Future.predicate
 * [ ] Implement Future#promise
 * [ ] Implement Future.cast
@@ -291,6 +354,7 @@ readFile('README.md', 'utf8')
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
 * [ ] Add test coverage
+* [ ] Add readme badges
 * [ ] A transpiled ES5 version if demand arises
 
 ## Benchmarks
@@ -313,8 +377,9 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 <!-- References -->
 
 [1]:  https://github.com/fantasyland/fantasy-land
-[2]:  https://github.com/plaid/sanctuary#pipe--a-bb-cm-n---a---n
+[2]:  http://sanctuary.js.org/#pipe
 [3]:  http://ramdajs.com/docs/#map
 [4]:  http://ramdajs.com/docs/#chain
 [5]:  http://ramdajs.com/docs/#ap
 [6]:  https://github.com/futurize/futurize
+[7]:  http://sanctuary.js.org/#either-type

@@ -1,3 +1,5 @@
+'use strict';
+
 const expect = require('chai').expect;
 const Future = require('../fluture');
 
@@ -7,6 +9,14 @@ const compose = f => g => x => f(g(x));
 const add = a => b => a + b;
 const mult = a => b => a * b;
 const error = new Error('It broke');
+
+const repeat = (n, x) => {
+  const out = new Array(n);
+  while(n-- > 0){
+    out[n] = x;
+  }
+  return out;
+};
 
 const failRes = x => {
   throw new Error(`Invalidly entered resolution branch with value ${x}`);
@@ -21,17 +31,17 @@ const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 const assertEqual = (a, b) => new Promise(done => {
   assertIsFuture(a);
   assertIsFuture(b);
-  a.fork(failRej, a => b.fork(failRej, b => (expect(a).to.equal(b), done())));
+  a.fork(failRej, a => b.fork(failRej, b => (expect(a).to.deep.equal(b), done())));
 });
 
 const assertResolved = (m, x) => new Promise(done => {
   assertIsFuture(m);
-  m.fork(failRej, y => (expect(y).to.equal(x), done()));
+  m.fork(failRej, y => (expect(y).to.deep.equal(x), done()));
 });
 
 const assertRejected = (m, x) => new Promise(done => {
   assertIsFuture(m);
-  m.fork(y => (expect(y).to.equal(x), done()), failRes);
+  m.fork(y => (expect(y).to.deep.equal(x), done()), failRes);
 });
 
 describe('Constructors', () => {
@@ -204,6 +214,73 @@ describe('Constructors', () => {
 
   });
 
+  describe('.parallel()', () => {
+
+    it('is curried', () => {
+      expect(Future.parallel(1)).to.be.a('function');
+    });
+
+    it('throws when given something other than PositiveInteger as a first argument', () => {
+      const xs = [0, -1, 1.5, NaN, '1', 'one'];
+      const fs = xs.map(x => () => Future.parallel(x, []));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws when given something other than Array as second argument', () => {
+      const xs = [NaN, {}, 1, 'a', new Date, undefined, null, Future.of(1)];
+      const fs = xs.map(x => () => Future.parallel(1, x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws when the Array contains something other than Futures', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.parallel(1, [x]).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('parallelizes execution', function(){
+      this.slow(80);
+      this.timeout(50);
+      const actual = Future.parallel(2, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      return assertResolved(actual, ['a', 'b']);
+    });
+
+    it('limits parallelism to the given number', () => {
+      let running = 0;
+      const m = Future((rej, res) => {
+        running++;
+        if(running > 2){
+          return rej(new Error('More than two running in parallel'));
+        }
+        setTimeout(() => {
+          running--;
+          res('a');
+        }, 20);
+      });
+      const actual = Future.parallel(2, repeat(8, m));
+      return assertResolved(actual, repeat(8, 'a'));
+    });
+
+    it('runs all in parallel when given number larger than the array length', function(){
+      this.slow(80);
+      this.timeout(50);
+      const actual = Future.parallel(10, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      return assertResolved(actual, ['a', 'b']);
+    });
+
+    it('resolves to an empty array when given an empty array', () => {
+      return assertResolved(Future.parallel(1, []), []);
+    });
+
+    it('runs all in parallel when given Infinity', function(){
+      this.slow(80);
+      this.timeout(50);
+      const actual = Future.parallel(Infinity, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      return assertResolved(actual, ['a', 'b']);
+    });
+
+  });
+
 });
 
 describe('Future', () => {
@@ -361,6 +438,50 @@ describe('Future', () => {
 
   });
 
+  describe('#fold()', () => {
+
+    const add1 = x => x + 1;
+
+    it('throws TypeError when first argument is not a function', () => {
+      const m = Future.of(1);
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => m.fold(x, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when second argument is not a function', () => {
+      const m = Future.of(1);
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => m.fold(noop, x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('resolves with the transformed rejection value', () => {
+      return assertResolved(Future.reject(1).fold(add1, add1), 2);
+    });
+
+    it('resolves with the transformed resolution value', () => {
+      return assertResolved(Future.of(1).fold(add1, add1), 2);
+    });
+
+  });
+
+  describe('#value()', () => {
+
+    it('throws when called on a rejected Future', () => {
+      const f = () => Future.reject('broken').value(noop);
+      expect(f).to.throw(Error, /Future/);
+    });
+
+    it('calls the given function with the resolution value', done => {
+      Future.of(1).value(x => {
+        expect(x).to.equal(1);
+        done();
+      });
+    });
+
+  });
+
 });
 
 describe('Lawfullness', () => {
@@ -513,6 +634,33 @@ describe('Dispatchers', () => {
 
     it('dispatches to #race', () => {
       return assertResolved(Future.race(Future.of(1), Future.of(2)), 2);
+    });
+
+  });
+
+  describe('.fold()', () => {
+
+    it('is curried', () => {
+      expect(Future.fold).to.be.a('function');
+      expect(Future.fold(noop)).to.be.a('function');
+      expect(Future.fold(noop, noop)).to.be.a('function');
+    });
+
+    it('dispatches to #fold', () => {
+      return assertResolved(Future.fold(x => x + 1, x => x + 1, Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.value()', () => {
+
+    it('is curried', () => {
+      expect(Future.value).to.be.a('function');
+      expect(Future.value(noop)).to.be.a('function');
+    });
+
+    it('dispatches to #value', done => {
+      Future.value(x => (expect(x).to.equal(1), done()), Future.of(1));
     });
 
   });
