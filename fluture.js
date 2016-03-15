@@ -29,6 +29,10 @@
     return m instanceof FutureClass;
   }
 
+  function isFunction(f){
+    return typeof f === 'function';
+  }
+
   function isPositiveInteger(n){
     return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
   }
@@ -64,20 +68,20 @@
 
   //Check input to Future.
   function check$Future(fork){
-    if(typeof fork !== 'function') error$invalidArgument('Future', 0, 'be a function', fork);
+    if(!isFunction(fork)) error$invalidArgument('Future', 0, 'be a function', fork);
   }
 
   //Check input to Future#fork.
   function check$fork(it, rej, res){
     if(!isFluture(it)) error$invalidContext('Future#chain', it);
-    if(typeof rej !== 'function') error$invalidArgument('Future#fork', 0, 'be a function', rej);
-    if(typeof res !== 'function') error$invalidArgument('Future#fork', 1, 'be a function', res);
+    if(!isFunction(rej)) error$invalidArgument('Future#fork', 0, 'be a function', rej);
+    if(!isFunction(res)) error$invalidArgument('Future#fork', 1, 'be a function', res);
   }
 
   //Check input to Future#chain.
   function check$chain(it, f){
     if(!isFluture(it)) error$invalidContext('Future#chain', it);
-    if(typeof f !== 'function') error$invalidArgument('Future#chain', 0, 'be a function', f);
+    if(!isFunction(f)) error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
   //Check output from the function passed to Future#chain.
@@ -90,7 +94,7 @@
 
   function check$chainRej(it, f){
     if(!isFluture(it)) error$invalidContext('Future.chainRej', it);
-    if(typeof f !== 'function') error$invalidArgument('Future.chainRej', 0, 'a function', f);
+    if(!isFunction(f)) error$invalidArgument('Future.chainRej', 0, 'a function', f);
   }
 
   function check$chainRej$f(m, f, x){
@@ -103,7 +107,7 @@
   //Check input to Future#map.
   function check$map(it, f){
     if(!isFluture(it)) error$invalidContext('Future#map', it);
-    if(typeof f !== 'function') error$invalidArgument('Future#map', 0, 'be a function', f);
+    if(!isFunction(f)) error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
   //Check input to Future#ap.
@@ -114,7 +118,7 @@
 
   //Check resolution value of the Future on which #ap was called.
   function check$ap$f(f){
-    if(typeof f !== 'function') throw new TypeError(
+    if(!isFunction(f)) throw new TypeError(
       `Future#ap can only b used on Future<Function> but was used on: ${toString(f)}`
     );
   }
