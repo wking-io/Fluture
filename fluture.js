@@ -22,6 +22,10 @@
 
   'use strict';
 
+  ////////////////////
+  // Error handling //
+  ////////////////////
+
   //A toString function to provide a slightly more meaningful representation of values.
   const toString = x =>
     typeof x === 'string'
@@ -34,79 +38,83 @@
     : x.toString()
     : String(x);
 
-  function error(message, actual){
-    return message + '\n  Actual: ' + actual;
+  function error$invalidArgument(it, at, expected, actual){
+    throw new TypeError(
+      `${it} expects argument ${at} to ${expected}\n  Actual: ${toString(actual)}`
+    );
+  }
+
+  function error$invalidContext(it, actual){
+    throw new TypeError(
+      `${it} was invoked outside the context of a Future. You might want to use`
+      + ` a dispatcher instead\n  Called on: ${toString(actual)}`
+    )
   }
 
   //Check input to Future.
   function check$Future(fork){
-    if(typeof fork !== 'function') throw new TypeError(error(
-      'Future expects its argument to be a function',
-      toString(fork)
-    ));
+    if(typeof fork !== 'function') error$invalidArgument('Future', 0, 'be a function', fork);
   }
 
   //Check input to Future#fork.
-  function check$fork$rej(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future#fork expects its first argument to be a function',
-      toString(f)
-    ));
-  }
-
-  //Check input to Future#fork.
-  function check$fork$res(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future#fork expects its second argument to be a function',
-      toString(f)
-    ));
+  function check$fork(it, rej, res){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
+    if(typeof rej !== 'function') error$invalidArgument('Future#fork', 0, 'be a function', rej);
+    if(typeof res !== 'function') error$invalidArgument('Future#fork', 1, 'be a function', res);
   }
 
   //Check input to Future#chain.
-  function check$chain(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future#chain expects its argument to be a function',
-      toString(f)
-    ));
+  function check$chain(it, f){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#chain', it);
+    if(typeof f !== 'function') error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
   //Check output from the function passed to Future#chain.
   function check$chain$f(m, f, x){
-    if(!(m instanceof FutureClass)) throw new TypeError(error(
-      'Future#chain expects the function its given to return a Future',
-      `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
-    ));
+    if(!(m instanceof FutureClass)) throw new TypeError(
+      'Future#chain expects the function its given to return a Future'
+      + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+    );
+  }
+
+  function check$chainRej(it, f){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future.chainRej', it);
+    if(typeof f !== 'function') error$invalidArgument('Future.chainRej', 0, 'a function', f);
+  }
+
+  function check$chainRej$f(m, f, x){
+    if(!(m instanceof FutureClass)) throw new TypeError(
+      'Future.chainRej expects the function its given to return a Future'
+      + `\n  Actual: ${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
+    );
   }
 
   //Check input to Future#map.
-  function check$map(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future#map expects its argument to be a function',
-      toString(f)
-    ));
+  function check$map(it, f){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
+    if(typeof f !== 'function') error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
   //Check input to Future#ap.
-  function check$ap(m){
-    if(!(m instanceof FutureClass)) throw new TypeError(error(
-      'Future#ap expects its argument to be a Future',
-      toString(m)
-    ));
+  function check$ap(it, m){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future#map', it);
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
   }
 
   //Check resolution value of the Future on which #ap was called.
   function check$ap$f(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future#ap was called on something other than Future<Function>',
-      `Future.of(${toString(f)})`
-    ));
+    if(typeof f !== 'function') throw new TypeError(
+      `Future#ap can only b used on Future<Function> but was used on: ${toString(f)}`
+    );
+  }
+
+  function check$race(it, m){
+    if(!(it instanceof FutureClass)) error$invalidContext('Future.race', it);
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.race', 0, 'be a function', m);
   }
 
   function check$cache(m){
-    if(!(m instanceof FutureClass)) throw new TypeError(error(
-      'Future.cache expects its argument to be a Future',
-      toString(m)
-    ));
+    if(!(m instanceof FutureClass)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
   }
 
   function check$cache$settle(oldState, newState, oldValue, newValue){
@@ -119,61 +127,21 @@
     );
   }
 
-  function check$liftNode(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future.liftNode expects its first argument to be a function',
-      toString(f)
-    ));
-  }
-
-  function check$liftPromise(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future.liftPromise expects its first argument to be a function',
-      toString(f)
-    ));
-  }
-
-  function check$liftPromise$f(m, f, x){
-    if(!m || typeof m.then !== 'function') throw new TypeError(error(
-      'Future.liftPromise expects the function its given to return a Promise',
-      `${toString(m)}\n  From calling: ${toString(f)}\n  With: ${toString(x)}`
-    ));
-  }
-
   function check$after(n){
-    if(typeof n !== 'number') throw new TypeError(error(
-      'Future.after expects its first argument to be a number',
-      toString(n)
-    ));
+    if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
   }
 
   function check$try(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future.try expects its first argument to be a function',
-      toString(f)
-    ));
+    if(typeof f !== 'function') error$invalidArgument('Future.try', 0, 'be a function', f);
   }
 
   function check$node(f){
-    if(typeof f !== 'function') throw new TypeError(error(
-      'Future.node expects its first argument to be a function',
-      toString(f)
-    ));
+    if(typeof f !== 'function') error$invalidArgument('Future.node', 0, 'be a function', f);
   }
 
-  function check$race$m1(m){
-    if(!(m instanceof FutureClass)) throw new TypeError(error(
-      'Future.race expects its first argument to be a Future',
-      toString(m)
-    ));
-  }
-
-  function check$race$m2(m){
-    if(!(m instanceof FutureClass)) throw new TypeError(error(
-      'Future.race expects its second argument to be a Future',
-      toString(m)
-    ));
-  }
+  ////////////
+  // Future //
+  ////////////
 
   //Constructor.
   function FutureClass(f){
@@ -194,13 +162,12 @@
   }
 
   function Future$fork(rej, res){
-    check$fork$rej(rej);
-    check$fork$res(res);
+    check$fork(this, rej, res);
     this._f(rej, res);
   }
 
   function Future$chain(f){
-    check$chain(f);
+    check$chain(this, f);
     const _this = this;
     return new FutureClass(function Future$chain$fork(rej, res){
       _this._f(rej, function Future$chain$res(x){
@@ -211,8 +178,20 @@
     });
   }
 
+  function Future$chainRej(f){
+    check$chainRej(this, f);
+    const _this = this;
+    return new FutureClass(function Future$chainRej$fork(rej, res){
+      _this._f(function Future$chainRej$rej(x){
+        const m = f(x);
+        check$chainRej$f(m, f, x);
+        m._f(rej, res);
+      }, res);
+    });
+  }
+
   function Future$map(f){
-    check$map(f);
+    check$map(this, f);
     const _this = this;
     return new FutureClass(function Future$map$fork(rej, res){
       _this._f(rej, function Future$map$res(x){
@@ -222,7 +201,7 @@
   }
 
   function Future$ap(m){
-    check$ap(m);
+    check$ap(this, m);
     const _this = this;
     return new FutureClass(function Future$ap$fork(g, h){
       let _f, _x, ok1, ok2, ko;
@@ -244,6 +223,17 @@
     return `Future(${toString(this._f)})`;
   }
 
+  function Future$race(m){
+    check$race(this, m);
+    const _this = this;
+    return new FutureClass(function Future$race$fork(rej, res){
+      let settled = false;
+      const once = f => a => settled || (settled = true, f(a));
+      _this._f(once(rej), once(res));
+      m._f(once(rej), once(res));
+    });
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
     _f: null,
@@ -252,11 +242,13 @@
     of: Future$of,
     [FL.chain]: Future$chain,
     chain: Future$chain,
+    chainRej: Future$chainRej,
     [FL.map]: Future$map,
     map: Future$map,
     [FL.ap]: Future$ap,
     ap: Future$ap,
-    toString: Future$toString
+    toString: Future$toString,
+    race: Future$race
   };
 
   //Expose `of` statically as well.
@@ -264,6 +256,51 @@
 
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
+
+  /////////////////
+  // Dispatchers //
+  /////////////////
+
+  //Creates a dispatcher for a unary method.
+  function createUnaryDispatcher(method){
+    return curry(function dispatch(a, m){
+      if(m && typeof m[method] === 'function') return m[method](a);
+      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+    });
+  }
+
+  //Creates a dispatcher for a binary method.
+  function createBinaryDispatcher(method){
+    return curry(function dispatch(a, b, m){
+      if(m && typeof m[method] === 'function') return m[method](a, b);
+      error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
+    });
+  }
+
+  //chain :: Chain m => (a -> m b) -> m a -> m b
+  Future.chain = createUnaryDispatcher('chain');
+
+  //chainRej :: (a -> Future a c) -> Future a b -> Future a c
+  Future.chainRej = createUnaryDispatcher('chainRej');
+
+  //map :: Functor m => (a -> b) -> m a -> m b
+  Future.map = createUnaryDispatcher('map');
+
+  //ap :: Apply m => m (a -> b) -> m a -> m b
+  Future.ap = curry(function dispatch$ap(m, a){
+    if(m && typeof m.ap === 'function') return m.ap(a);
+    error$invalidArgument('Future.ap', 0, 'have a "ap" method', m);
+  });
+
+  //fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void
+  Future.fork = createBinaryDispatcher('fork');
+
+  //race :: Future a b -> Future a b -> Future a b
+  Future.race = createUnaryDispatcher('race');
+
+  ///////////////
+  // Utilities //
+  ///////////////
 
   /**
    * Cache a Future
@@ -300,51 +337,6 @@
           m.fork(settleWith(2), settleWith(3));
       }
     });
-  };
-
-  /**
-   * Turn a node continuation-passing-style function into a function which returns a Future.
-   *
-   * Takes a function which uses a node-style callback for continuation and
-   * returns a function which returns a Future for continuation.
-   *
-   * @sig liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future[a, b]
-   *
-   * @param {Function} f The node function to wrap.
-   *
-   * @return {Function} A function which returns a Future.
-   */
-  Future.liftNode = function Future$liftNode(f){
-    check$liftNode(f);
-    return function Future$liftNode$lifted(){
-      const xs = arguments;
-      return new FutureClass(function Future$liftNode$fork(rej, res){
-        return f(...xs, function Future$liftNode$callback(err, result){
-          err ? rej(err) : res(result);
-        });
-      });
-    };
-  };
-
-  /**
-   * Turn a function which returns a Promise into a function which returns a Future.
-   *
-   * @sig liftPromise :: (x... -> Promise a b) -> x... -> Future a b
-   *
-   * @param {Function} f The function to wrap.
-   *
-   * @return {Function} A function which returns a Future.
-   */
-  Future.liftPromise = function Future$liftPromise(f){
-    check$liftPromise(f);
-    return function Future$liftPromise$lifted(){
-      const xs = arguments;
-      return new FutureClass(function Future$liftPromise$fork(rej, res){
-        const m = f(...xs);
-        check$liftPromise$f(m, f, xs);
-        return m.then(res, rej);
-      });
-    };
   };
 
   //Create a Future which rejects witth the given value.
@@ -397,36 +389,6 @@
       f((a, b) => a ? rej(a) : res(b));
     });
   };
-
-  /**
-   * Race two Futures against eachother.
-   *
-   * Creates a new Future which resolves or rejects with the resolution or
-   * rejection value of the first Future to settle.
-   *
-   * @param {Future} m1 The first Future.
-   * @param {Future} m2 The second Future.
-   *
-   * @return {Future}
-   *
-   * @example
-   *
-   *     race(
-   *       Future(rej => setTimeout(rej, 8000, new Error('Request timed out'))),
-   *       fromNode(done => request('http://example.com', done))
-   *     )
-   *
-   */
-  Future.race = curry(function Future$race(m1, m2){
-    check$race$m1(m1);
-    check$race$m2(m2);
-    return new FutureClass(function Future$race$fork(rej, res){
-      let settled = false;
-      const once = f => a => settled || (settled = true, f(a));
-      m1._f(once(rej), once(res));
-      m2._f(once(rej), once(res));
-    });
-  });
 
   //Export Future factory.
   return Future;

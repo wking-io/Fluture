@@ -1,6 +1,6 @@
 # Fluture
 
-A complete Fantasy Land compatible Future library.
+A complete [Fantasy Land][1] compatible Future library.
 
 > `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
   like modern browsers, transpilers or Node 5+</sup>
@@ -8,27 +8,49 @@ A complete Fantasy Land compatible Future library.
 
 ## Usage
 
+Using the low level, high performance method API:
+
 ```js
-Future.node(done => fs.readFile('package.json', 'utf8', done))
-.chain(x => Future.try(() => JSON.parse(x)))
-.map(x => x.name)
-.fork(console.error, console.log)
+const Future = require('fluture');
+const program = file =>
+  Future.node(done => fs.readFile(file, 'utf8', done))
+  .chain(x => Future.try(() => JSON.parse(x)))
+  .map(x => x.name)
+  .fork(console.error, console.log);
+program('package.json');
 //> "fluture"
 ```
 
-## Motivation
+Or use the high level, fully curried, functional dispatch API for function
+composition using composers like [`S.pipe`][2]:
 
-* A stand-alone Fantasy Future package.
+```js
+const {node, chain, try, map, fork} = require('fluture');
+const program = S.pipe([
+  file => node(fs.readFile.bind(fs, file, 'utf8')),
+  chain(x => try(() => JSON.parse(x))),
+  map(x => x.name),
+  fork(console.error, console.log)
+]);
+program('package.json')
+//> "fluture"
+```
+
+## Why?
+
+* Great error messages.
 * Async control utilities included.
-* Easier debugging than `f(...).fork is not a function`.
-* Still maintain decent speed.
+* High performance Future implementation.
+* Decent documentation.
 
 ## Documentation
 
-### Future
+### Constructors
+
+#### Future :: ((a -> Void), (b -> Void) -> Void) -> Future a b
 
 A (monadic) container which represents an eventual value. A lot like Promise but
-more principled in that it follows the Fantasy Land algebraic JavaScript
+more principled in that it follows the [Fantasy Land][1] algebraic JavaScript
 specification.
 
 ```js
@@ -39,8 +61,6 @@ const eventualThing = Future((reject, resolve) => {
 eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 //> "Hello world!"
 ```
-
-----
 
 #### `of :: b -> Future a b`
 
@@ -109,7 +129,29 @@ eventualPackage.fork(console.error, console.log);
 //> "{...}"
 ```
 
-----
+### Method API
+
+#### `fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
+
+Execute the Future (which up until now was merely a container for its
+computation), and get at the result or error.
+
+It is the return from Fantasy Land to the real world. This function best shows
+the fundamental difference between Promises and Futures.
+
+```js
+Future.of('world').fork(
+  err => console.log(`Oh no! ${err.message}`),
+  thing => console.log(`Hello ${thing}!`)
+);
+//> "Hello world!"
+
+Future.reject(new Error('It broke!')).fork(
+  err => console.log(`Oh no! ${err.message}`),
+  thing => console.log(`Hello ${thing}!`)
+);
+//> "Oh no! It broke!"
+```
 
 #### `map :: Future a b ~> (b -> c) -> Future a c`
 
@@ -131,6 +173,20 @@ Future.of(1).chain(x => Future.of(x + 1)).fork(console.error, console.log);
 //> 2
 ```
 
+#### `chainRej :: Future a b ~> (a -> Future a c) -> Future a c`
+
+FlatMap over the **rejection** value inside the Future. If the Future is
+resolved, chaining is not performed.
+
+```js
+Future.reject(new Error('It broke!')).chainRej(err => {
+  console.error(err);
+  return Future.of('All is good')
+})
+.fork(console.error, console.log)
+//> "All is good"
+```
+
 #### `ap :: Future a (b -> c) ~> Future a b -> Future a c`
 
 Apply the value in the Future to the value in the given Future. If the Future is
@@ -141,18 +197,48 @@ Future.of(x => x + 1).ap(Future.of(1)).fork(console.error, console.log);
 //> 2
 ```
 
-----
-
-#### `race :: Future a b -> Future a b -> Future a b`
+#### `race :: Future a b ~> Future a b -> Future a b`
 
 Race two Futures against eachother. Creates a new Future which resolves or
 rejects with the resolution or rejection value of the first Future to settle.
 
 ```js
-Future.race(Future.after(100, 'hello'), Future.after(50, 'bye'))
+Future.after(100, 'hello')
+.race(Future.after(50, 'bye'))
 .fork(console.error, console.log)
 //> "bye"
+```
 
+### Dispatcher API
+
+#### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
+
+Dispatches the first and second arguments to the `fork` method of the third argument.
+
+#### `map :: Functor m => (a -> b) -> m a -> m b`
+
+Dispatches the first argument to the `map` method of the second argument.
+Has the same effect as [`R.map`][3].
+
+#### `chain :: Chain m => (a -> m b) -> m a -> m b`
+
+Dispatches the first argument to the `chain` method of the second argument.
+Has the same effect as [`R.chain`][4].
+
+#### `chainRej :: (a -> Future a c) -> Future a b -> Future a c`
+
+Dispatches the first argument to the `chainRej` method of the second argument.
+
+#### `ap :: Apply m => m (a -> b) -> m a -> m b`
+
+Dispatches the second argument to the `ap` method of the first argument.
+Has the same effect as [`R.ap`][5].
+
+#### `race :: Future a b -> Future a b -> Future a b`
+
+Dispatches the first argument to the `race` method of the second argument.
+
+```js
 const first = futures => futures.reduce(Future.race);
 first([
   Future.after(100, 'hello'),
@@ -163,29 +249,21 @@ first([
 //> [Error nope]
 ```
 
-----
+### Futurization
 
-#### `liftNode :: (x..., (a, b -> Void) -> Void) -> x... -> Future a b`
-
-Turn a node continuation-passing-style function into a function which returns a Future.
-
-Takes a function which uses a node-style callback for continuation and returns a
-function which returns a Future for continuation.
+To reduce the boilerplate of making Node or Promise functions return Future's
+instead, one might use the [Futurize][6] library:
 
 ```js
-const readFile = Future.liftNode(fs.readFile);
+const Future = require('fluture');
+const futurize = require('futurize').futurize(Future);
+const readFile = futurize(require('fs').readFile);
 readFile('README.md', 'utf8')
 .map(text => text.split('\n'))
 .map(lines => lines[0])
 .fork(console.error, console.log);
 //> "# Fluture"
 ```
-
-#### `liftPromise :: (x... -> Promise a b) -> x... -> Future a b`
-
-Turn a function which returns a Promise into a function which returns a Future.
-
-Like liftNode, but for a function which returns a Promise.
 
 ## Road map
 
@@ -194,17 +272,21 @@ Like liftNode, but for a function which returns a Promise.
 * [x] Write benchmarks
 * [ ] Implement Traversable?
 * [x] Implement Future.cache
-* [ ] Implement Future.mapRej
-* [ ] Implement Future.chainRej
-* [ ] Implement dispatchers: chain, map, ap, fork
-* [ ] Implement Future.swap
-* [ ] Implement Future.and
-* [ ] Implement Future.or
-* [x] Implement Future.race
+* [ ] Implement Future#mapRej
+* [x] Implement Future#chainRej
+* [x] Implement dispatchers
+* [ ] Implement Future#swap
+* [ ] Implement Future#and
+* [ ] Implement Future#or
+* [ ] Implement Future#fold
+* [ ] Implement Future#value
+* [x] Implement Future#race
 * [ ] Implement Future.parallel
 * [ ] Implement Future.predicate
-* [ ] Implement Future.promise
+* [ ] Implement Future#promise
 * [ ] Implement Future.cast
+* [ ] Implement Future.encase
+* [x] Check `this` on instance methods
 * [x] Create documentation
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
@@ -227,3 +309,12 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 ----
 
 [MIT licensed](LICENSE)
+
+<!-- References -->
+
+[1]:  https://github.com/fantasyland/fantasy-land
+[2]:  https://github.com/plaid/sanctuary#pipe--a-bb-cm-n---a---n
+[3]:  http://ramdajs.com/docs/#map
+[4]:  http://ramdajs.com/docs/#chain
+[5]:  http://ramdajs.com/docs/#ap
+[6]:  https://github.com/futurize/futurize
