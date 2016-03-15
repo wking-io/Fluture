@@ -120,8 +120,8 @@
   }
 
   function check$race(it, m){
-    if(!isFluture(it)) error$invalidContext('Future.race', it);
-    if(!isFluture(m)) error$invalidArgument('Future.race', 0, 'be a function', m);
+    if(!isFluture(it)) error$invalidContext('Future#race', it);
+    if(!isFluture(m)) error$invalidArgument('Future#race', 0, 'be a function', m);
   }
 
   function check$cache(m){
