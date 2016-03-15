@@ -438,6 +438,34 @@ describe('Future', () => {
 
   });
 
+  describe('#fold()', () => {
+
+    const add1 = x => x + 1;
+
+    it('throws TypeError when first argument is not a function', () => {
+      const m = Future.of(1);
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => m.fold(x, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when second argument is not a function', () => {
+      const m = Future.of(1);
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => m.fold(noop, x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('resolves with the transformed rejection value', () => {
+      return assertResolved(Future.reject(1).fold(add1, add1), 2);
+    });
+
+    it('resolves with the transformed resolution value', () => {
+      return assertResolved(Future.of(1).fold(add1, add1), 2);
+    });
+
+  });
+
 });
 
 describe('Lawfullness', () => {
@@ -590,6 +618,20 @@ describe('Dispatchers', () => {
 
     it('dispatches to #race', () => {
       return assertResolved(Future.race(Future.of(1), Future.of(2)), 2);
+    });
+
+  });
+
+  describe('.fold()', () => {
+
+    it('is curried', () => {
+      expect(Future.fold).to.be.a('function');
+      expect(Future.fold(noop)).to.be.a('function');
+      expect(Future.fold(noop, noop)).to.be.a('function');
+    });
+
+    it('dispatches to #fold', () => {
+      return assertResolved(Future.fold(x => x + 1, x => x + 1, Future.of(1)), 2);
     });
 
   });

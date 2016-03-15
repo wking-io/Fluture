@@ -233,6 +233,23 @@ Future.after(100, 'hello')
 //> "bye"
 ```
 
+#### `fold :: Future a b ~> (a -> c), (b -> c) -> Future _ c`
+
+Applies the left function to the rejection value, or the right function to the
+resolution value, depending on which is present, and resolves with the result.
+
+This provides a convenient means to ensure a Future is always resolved. It can
+be used with other type constructors, like [`S.Either`](7), to maintain a
+representataion of failures:
+
+```js
+Future.of('hello').fold(S.Left, S.Right).fork(noop, console.log);
+//> Right('hello')
+
+Future.reject('it broke').fold(S.Left, S.Right).fork(noop, console.log);
+//> Left('it broke')
+```
+
 ### Dispatcher API
 
 #### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
@@ -273,6 +290,10 @@ first([
 //> [Error nope]
 ```
 
+#### `fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c`
+
+Dispatches the first and second arguments to the `fold` method of the third argument.
+
 ### Futurization
 
 To reduce the boilerplate of making Node or Promise functions return Future's
@@ -302,7 +323,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future#swap
 * [ ] Implement Future#and
 * [ ] Implement Future#or
-* [ ] Implement Future#fold
+* [x] Implement Future#fold
 * [ ] Implement Future#value
 * [x] Implement Future#race
 * [x] Implement Future.parallel
@@ -337,8 +358,9 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 <!-- References -->
 
 [1]:  https://github.com/fantasyland/fantasy-land
-[2]:  https://github.com/plaid/sanctuary#pipe--a-bb-cm-n---a---n
+[2]:  http://sanctuary.js.org/#pipe
 [3]:  http://ramdajs.com/docs/#map
 [4]:  http://ramdajs.com/docs/#chain
 [5]:  http://ramdajs.com/docs/#ap
 [6]:  https://github.com/futurize/futurize
+[7]:  http://sanctuary.js.org/#either-type

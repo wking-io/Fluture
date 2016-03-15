@@ -128,6 +128,12 @@
     if(!isFluture(m)) error$invalidArgument('Future#race', 0, 'be a function', m);
   }
 
+  function check$fold(it, f, g){
+    if(!isFluture(it)) error$invalidContext('Future#fold', it);
+    if(!isFunction(f)) error$invalidArgument('Future#race', 0, 'be a function', f);
+    if(!isFunction(g)) error$invalidArgument('Future#race', 1, 'be a function', g);
+  }
+
   function check$cache(m){
     if(!isFluture(m)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
   }
@@ -261,6 +267,14 @@
     });
   }
 
+  function Future$fold(f, g){
+    check$fold(this, f, g);
+    const _this = this;
+    return new FutureClass(function Future$fold$fork(rej, res){
+      _this._f(e => res(f(e)), x => res(g(x)));
+    });
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
     _f: null,
@@ -276,7 +290,8 @@
     ap: Future$ap,
     toString: Future$toString,
     inspect: Future$toString,
-    race: Future$race
+    race: Future$race,
+    fold: Future$fold
   };
 
   //Expose `of` statically as well.
@@ -329,6 +344,9 @@
 
   //race :: Future a b -> Future a b -> Future a b
   Future.race = createUnaryDispatcher('race');
+
+  //fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c
+  Future.fold = createBinaryDispatcher('fold');
 
   ///////////////
   // Utilities //
