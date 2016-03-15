@@ -330,27 +330,13 @@ readFile('README.md', 'utf8')
 
 ## Road map
 
-* [x] Implement Future Monad
-* [x] Write tests
-* [x] Write benchmarks
-* [ ] Implement Traversable?
-* [x] Implement Future.cache
 * [ ] Implement Future#mapRej
-* [x] Implement Future#chainRej
-* [x] Implement dispatchers
-* [ ] Implement Future#swap
 * [ ] Implement Future#and
 * [ ] Implement Future#or
-* [x] Implement Future#fold
-* [x] Implement Future#value
-* [x] Implement Future#race
-* [x] Implement Future.parallel
 * [ ] Implement Future.predicate
 * [ ] Implement Future#promise
 * [ ] Implement Future.cast
 * [ ] Implement Future.encase
-* [x] Check `this` on instance methods
-* [x] Create documentation
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
 * [ ] Add test coverage
