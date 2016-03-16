@@ -2,12 +2,10 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture');
+const jsc = require('jsverify');
 
 const noop = () => {};
-const identity = x => x;
-const compose = f => g => x => f(g(x));
 const add = a => b => a + b;
-const mult = a => b => a * b;
 const error = new Error('It broke');
 
 const repeat = (n, x) => {
@@ -29,9 +27,8 @@ const failRej = x => {
 const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 
 const assertEqual = (a, b) => new Promise(done => {
-  assertIsFuture(a);
-  assertIsFuture(b);
-  a.fork(failRej, a => b.fork(failRej, b => (expect(a).to.deep.equal(b), done())));
+  if(!(a instanceof Future && b instanceof Future)) return done(false);
+  a.fork(failRej, a => b.fork(failRej, b => done(a === b)));
 });
 
 const assertResolved = (m, x) => new Promise(done => {
@@ -491,75 +488,36 @@ describe('Future', () => {
 
 });
 
-describe('Lawfullness', () => {
+describe('Lawfulness', function(){
+
+  this.slow(200);
 
   describe('Functor', () => {
-
-    it('identity', () => {
-      const a = Future.of(1);
-      const b = a.map(identity);
-      return assertEqual(a, b);
-    });
-
-    it('composition', () => {
-      const x = Future.of(1);
-      const a = x.map(compose(mult(2))(add(1)));
-      const b = x.map(add(1)).map(mult(2));
-      return assertEqual(a, b);
-    });
-
+    const law = require('fantasy-land/laws/functor');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future.of)(assertEqual)));
   });
 
   describe('Apply', () => {
-
-    it('composition', () => {
-      const f = Future.of(mult(2));
-      const g = Future.of(add(1));
-      const x = Future.of(1);
-      const a = f.map(compose).ap(g).ap(x);
-      const b = f.ap(g.ap(x));
-      return assertEqual(a, b);
-    });
-
+    const law = require('fantasy-land/laws/apply');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
   });
 
   describe('Applicative', () => {
-
-    it('identity', () => {
-      const a = Future.of(1);
-      const b = Future.of(identity).ap(a);
-      return assertEqual(a, b);
-    });
-
-    it('homomorphism', () => {
-      const f = add(1);
-      const x = 1;
-      const a = Future.of(f).ap(Future.of(x));
-      const b = Future.of(f(x));
-      return assertEqual(a, b);
-    });
-
-    it('interchange', () => {
-      const f = Future.of(add(1));
-      const x = 1;
-      const a = f.ap(Future.of(x));
-      const b = Future.of(g => g(x)).ap(f);
-      return assertEqual(a, b);
-    });
-
+    const law = require('fantasy-land/laws/applicative');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
   });
 
   describe('Chain', () => {
+    const law = require('fantasy-land/laws/chain');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
+  });
 
-    it('associativity', () => {
-      const x = Future.of(1);
-      const f = compose(Future.of)(add(1));
-      const g = compose(Future.of)(mult(2));
-      const a = x.chain(f).chain(g);
-      const b = x.chain(x => f(x).chain(g));
-      return assertEqual(a, b);
-    });
-
+  describe('Monad', () => {
+    const law = require('fantasy-land/laws/monad');
+    const left = law.leftIdentity(Future)(assertEqual);
+    const right = law.rightIdentity(Future)(assertEqual);
+    jsc.property('leftIdentity', 'number | string', x => left(Future.of(x)));
+    jsc.property('rightIdentity', 'number | string', right);
   });
 
 });
