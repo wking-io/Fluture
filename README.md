@@ -359,7 +359,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement [Profunctor][8]
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
-* [ ] Add test coverage
+* [x] Add test coverage
 * [ ] Add readme badges
 * [ ] A transpiled ES5 version if demand arises
 
