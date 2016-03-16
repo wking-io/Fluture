@@ -4,6 +4,7 @@ const suite = new benchmark.Suite();
 const Fluture = require('..');
 
 const noop = () => {};
+const B = (f, g) => x => f(g(x));
 
 suite.add('Method API', () => {
   Fluture.of(1)
@@ -41,6 +42,13 @@ suite.add('Curried dispatch API', () => {
         (Fluture.map
           (x => x + 1)
           (Fluture.of(1)))));
+});
+
+const mapChain = B(Fluture.chain(x => Fluture.of(f => f(x + 1))), Fluture.map(x => x + 1));
+const mapChainAp = B(Fluture.ap(Fluture.of(x => x + 1)), mapChain);
+const mapChainApFork = B(Fluture.fork(noop, noop), mapChainAp);
+suite.add('Precomposed dispatch API', () => {
+  mapChainApFork(Fluture.of(1));
 });
 
 suite.on('complete', require('./_print'))
