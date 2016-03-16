@@ -1,5 +1,8 @@
 # Fluture
 
+[![npm version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
+[![dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
+
 A complete [Fantasy Land][1] compatible Future library.
 
 > `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
