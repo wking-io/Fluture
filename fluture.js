@@ -4,7 +4,7 @@
 
   'use strict';
 
-  /* istanbul ignore else */
+  /*istanbul ignore else*/
   if(typeof module !== 'undefined'){
     module.exports = f(require('fantasy-land'));
   }
@@ -17,7 +17,7 @@
     global.Fluture = f(FantasyLand);
   }
 
-}(/* istanbul ignore next */(global || window || this), function(FL){
+}(/*istanbul ignore next*/(global || window || this), function(FL){
 
   'use strict';
 
