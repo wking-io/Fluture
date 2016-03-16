@@ -330,13 +330,13 @@ readFile('README.md', 'utf8')
 
 ## Road map
 
-* [ ] Implement Future#mapRej
 * [ ] Implement Future#and
 * [ ] Implement Future#or
 * [ ] Implement Future.predicate
 * [ ] Implement Future#promise
 * [ ] Implement Future.cast
 * [ ] Implement Future.encase
+* [ ] Implement [Profunctor][8]
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
 * [ ] Add test coverage
@@ -369,3 +369,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [5]:  http://ramdajs.com/docs/#ap
 [6]:  https://github.com/futurize/futurize
 [7]:  http://sanctuary.js.org/#either-type
+[8]:  https://github.com/fantasyland/fantasy-land/pull/124
