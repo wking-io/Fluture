@@ -17,7 +17,7 @@
     global.Fluture = f(FantasyLand);
   }
 
-}(global || window || this, function(FL){
+}(/* istanbul ignore next */(global || window || this), function(FL){
 
   'use strict';
 
@@ -249,18 +249,18 @@
   function Future$ap(m){
     check$ap(this, m);
     const _this = this;
-    return new FutureClass(function Future$ap$fork(g, h){
+    return new FutureClass(function Future$ap$fork(g, res){
       let _f, _x, ok1, ok2, ko;
       const rej = x => ko || (ko = 1, g(x));
       _this._f(rej, function Future$ap$resThis(f){
         if(!ok2) return void (ok1 = 1, _f = f);
         check$ap$f(f);
-        h(f(_x));
+        res(f(_x));
       });
       m._f(rej, function Future$ap$resThat(x){
         if(!ok1) return void (ok2 = 1, _x = x)
         check$ap$f(_f);
-        h(_f(x));
+        res(_f(x));
       });
     });
   }
