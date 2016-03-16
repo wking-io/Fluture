@@ -4,7 +4,7 @@
 
   'use strict';
 
-  /*istanbul ignore else*/
+  /*istanbul ignore next*/
   if(typeof module !== 'undefined'){
     module.exports = f(require('fantasy-land'));
   }
