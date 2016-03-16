@@ -1,8 +1,8 @@
 # Fluture
 
-[![npm version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
-[![dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
-[![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=develop)](https://travis-ci.org/Avaq/Fluture)
+[![NPM Version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
+[![Dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
+[![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
 
 A complete [Fantasy Land][1] compatible Future library.
 
