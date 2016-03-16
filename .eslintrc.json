@@ -95,7 +95,6 @@
     "no-dupe-class-members": 2,
     "prefer-const": 1,
     "prefer-spread": 1,
-    "prefer-reflect": 1,
     "require-yield": 2,
     "array-bracket-spacing": [2, "never"],
     "brace-style": [2, "stroustrup", { "allowSingleLine": false }],

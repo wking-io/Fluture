@@ -2,12 +2,10 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture');
+const jsc = require('jsverify');
 
 const noop = () => {};
-const identity = x => x;
-const compose = f => g => x => f(g(x));
 const add = a => b => a + b;
-const mult = a => b => a * b;
 const error = new Error('It broke');
 
 const repeat = (n, x) => {
@@ -29,9 +27,8 @@ const failRej = x => {
 const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 
 const assertEqual = (a, b) => new Promise(done => {
-  assertIsFuture(a);
-  assertIsFuture(b);
-  a.fork(failRej, a => b.fork(failRej, b => (expect(a).to.deep.equal(b), done())));
+  if(!(a instanceof Future && b instanceof Future)) return done(false);
+  a.fork(failRej, a => b.fork(failRej, b => done(a === b)));
 });
 
 const assertResolved = (m, x) => new Promise(done => {
@@ -64,11 +61,34 @@ describe('Constructors', () => {
       expect(actual).to.be.an.instanceof(Future);
     });
 
-    it('takes it easy with the recursive data structures', () => {
-      const data = {foo: 'bar'};
-      data.data = data;
-      const f = () => Future(data);
-      expect(f).to.throw(TypeError, /Future/);
+    describe('error message', () => {
+
+      it('takes it easy with the recursive data structures', () => {
+        const data = {foo: 'bar'};
+        data.data = data;
+        const f = () => Future(data);
+        expect(f).to.throw(TypeError, /Future/);
+      });
+
+      it('displays nested named functions by their name', () => {
+        function nyerk(){}
+        const data = {foo: nyerk};
+        const f = () => Future(data);
+        expect(f).to.throw(TypeError, /\[Function nyerk\]/);
+      });
+
+      it('displays nested anonymous functions', () => {
+        const data = {foo: () => {}};
+        const f = () => Future(data);
+        expect(f).to.throw(TypeError, /\[Function\]/);
+      });
+
+      it('displays nested arrays', () => {
+        const data = {foo: ['a', 'b', 'c']};
+        const f = () => Future(data);
+        expect(f).to.throw(TypeError, /\[Array 3\]/);
+      });
+
     });
 
   });
@@ -158,6 +178,12 @@ describe('Constructors', () => {
       return Promise.all([a, b, c]);
     });
 
+    it('rejects all new forks after a rejection happened', () => {
+      const m = Future.cache(Future.reject('err'));
+      m.fork(noop, noop);
+      return assertRejected(m, 'err');
+    });
+
   });
 
   describe('.try()', () => {
@@ -210,12 +236,12 @@ describe('Constructors', () => {
 
     it('throws TypeError when not given a number as first argument', () => {
       const xs = [{}, [], 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.after(x, 1));
+      const fs = xs.map(x => () => Future.after(x)(1));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('returns a Future which eventually resolves with the given value', () => {
-      const actual = Future.after(20, 1);
+      const actual = Future.after(20)(1);
       return assertResolved(actual, 1);
     });
 
@@ -229,26 +255,26 @@ describe('Constructors', () => {
 
     it('throws when given something other than PositiveInteger as a first argument', () => {
       const xs = [0, -1, 1.5, NaN, '1', 'one'];
-      const fs = xs.map(x => () => Future.parallel(x, []));
+      const fs = xs.map(x => () => Future.parallel(x)([]));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws when given something other than Array as second argument', () => {
       const xs = [NaN, {}, 1, 'a', new Date, undefined, null, Future.of(1)];
-      const fs = xs.map(x => () => Future.parallel(1, x));
+      const fs = xs.map(x => () => Future.parallel(1)(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws when the Array contains something other than Futures', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.parallel(1, [x]).fork(noop, noop));
+      const fs = xs.map(x => () => Future.parallel(1)([x]).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('parallelizes execution', function(){
       this.slow(80);
       this.timeout(50);
-      const actual = Future.parallel(2, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      const actual = Future.parallel(2)([Future.after(35, 'a'), Future.after(35, 'b')]);
       return assertResolved(actual, ['a', 'b']);
     });
 
@@ -264,26 +290,31 @@ describe('Constructors', () => {
           res('a');
         }, 20);
       });
-      const actual = Future.parallel(2, repeat(8, m));
+      const actual = Future.parallel(2)(repeat(8, m));
       return assertResolved(actual, repeat(8, 'a'));
     });
 
     it('runs all in parallel when given number larger than the array length', function(){
       this.slow(80);
       this.timeout(50);
-      const actual = Future.parallel(10, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      const actual = Future.parallel(10)([Future.after(35, 'a'), Future.after(35, 'b')]);
       return assertResolved(actual, ['a', 'b']);
     });
 
     it('resolves to an empty array when given an empty array', () => {
-      return assertResolved(Future.parallel(1, []), []);
+      return assertResolved(Future.parallel(1)([]), []);
     });
 
     it('runs all in parallel when given Infinity', function(){
       this.slow(80);
       this.timeout(50);
-      const actual = Future.parallel(Infinity, [Future.after(35, 'a'), Future.after(35, 'b')]);
+      const actual = Future.parallel(Infinity)([Future.after(35, 'a'), Future.after(35, 'b')]);
       return assertResolved(actual, ['a', 'b']);
+    });
+
+    it('rejects if one of the input rejects', () => {
+      const actual = Future.parallel(2, [Future.of(1), Future.reject('err')]);
+      return assertRejected(actual, 'err');
     });
 
   });
@@ -293,6 +324,11 @@ describe('Constructors', () => {
 describe('Future', () => {
 
   describe('#fork()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).fork.call(null, noop, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
 
     it('throws TypeError when first argument is not a function', () => {
       const m = Future.of(1);
@@ -331,6 +367,11 @@ describe('Future', () => {
     const m = Future.of(1);
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).chain.call(null, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('throws TypeError when not given a function', () => {
       const fs = xs.map(x => () => m.chain(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
@@ -357,6 +398,11 @@ describe('Future', () => {
     const m = Future.reject(1);
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).chainRej.call(null, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('throws TypeError when not given a function', () => {
       const fs = xs.map(x => () => m.chainRej(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
@@ -380,6 +426,11 @@ describe('Future', () => {
 
   describe('#ap()', () => {
 
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).ap.call(null, Future.of(1));
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('throws TypeError when not given Future', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
       const fs = xs.map(x => () => Future.of(noop).ap(x));
@@ -397,9 +448,40 @@ describe('Future', () => {
       return assertResolved(actual, 2);
     });
 
+    it('rejects if one of the two reject', () => {
+      const left = Future.reject('err').ap(Future.of(1));
+      const right = Future.of(add(1)).ap(Future.reject('err'));
+      return Promise.all([
+        assertRejected(left, 'err'),
+        assertRejected(right, 'err')
+      ]);
+    });
+
+    it('does not matter if the left resolves late', () => {
+      const actual = Future.after(20, add(1)).ap(Future.of(1));
+      return assertResolved(actual, 2);
+    });
+
+    it('does not matter if the right resolves late', () => {
+      const actual = Future.of(add(1)).ap(Future.after(20, 1));
+      return assertResolved(actual, 2);
+    });
+
+    it('forks in parallel', function(){
+      this.slow(80);
+      this.timeout(50);
+      const actual = Future.after(30, add(1)).ap(Future.after(30, 1));
+      return assertResolved(actual, 2);
+    });
+
   });
 
   describe('#map()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).map.call(null, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
 
     it('throws TypeError when not given a function', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
@@ -425,6 +507,11 @@ describe('Future', () => {
 
   describe('#race()', () => {
 
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).race.call(null, Future.of(1));
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('throw TypeError when not given a Future', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
       const fs = xs.map(x => () => Future.of(1).race(x));
@@ -447,7 +534,10 @@ describe('Future', () => {
 
   describe('#fold()', () => {
 
-    const add1 = x => x + 1;
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).fold.call(null, noop, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
 
     it('throws TypeError when first argument is not a function', () => {
       const m = Future.of(1);
@@ -464,16 +554,27 @@ describe('Future', () => {
     });
 
     it('resolves with the transformed rejection value', () => {
-      return assertResolved(Future.reject(1).fold(add1, add1), 2);
+      return assertResolved(Future.reject(1).fold(add(1), add(1)), 2);
     });
 
     it('resolves with the transformed resolution value', () => {
-      return assertResolved(Future.of(1).fold(add1, add1), 2);
+      return assertResolved(Future.of(1).fold(add(1), add(1)), 2);
     });
 
   });
 
   describe('#value()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).value.call(null, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.of(1).value(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
 
     it('throws when called on a rejected Future', () => {
       const f = () => Future.reject('broken').value(noop);
@@ -491,75 +592,36 @@ describe('Future', () => {
 
 });
 
-describe('Lawfullness', () => {
+describe('Lawfulness', function(){
+
+  this.slow(200);
 
   describe('Functor', () => {
-
-    it('identity', () => {
-      const a = Future.of(1);
-      const b = a.map(identity);
-      return assertEqual(a, b);
-    });
-
-    it('composition', () => {
-      const x = Future.of(1);
-      const a = x.map(compose(mult(2))(add(1)));
-      const b = x.map(add(1)).map(mult(2));
-      return assertEqual(a, b);
-    });
-
+    const law = require('fantasy-land/laws/functor');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future.of)(assertEqual)));
   });
 
   describe('Apply', () => {
-
-    it('composition', () => {
-      const f = Future.of(mult(2));
-      const g = Future.of(add(1));
-      const x = Future.of(1);
-      const a = f.map(compose).ap(g).ap(x);
-      const b = f.ap(g.ap(x));
-      return assertEqual(a, b);
-    });
-
+    const law = require('fantasy-land/laws/apply');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
   });
 
   describe('Applicative', () => {
-
-    it('identity', () => {
-      const a = Future.of(1);
-      const b = Future.of(identity).ap(a);
-      return assertEqual(a, b);
-    });
-
-    it('homomorphism', () => {
-      const f = add(1);
-      const x = 1;
-      const a = Future.of(f).ap(Future.of(x));
-      const b = Future.of(f(x));
-      return assertEqual(a, b);
-    });
-
-    it('interchange', () => {
-      const f = Future.of(add(1));
-      const x = 1;
-      const a = f.ap(Future.of(x));
-      const b = Future.of(g => g(x)).ap(f);
-      return assertEqual(a, b);
-    });
-
+    const law = require('fantasy-land/laws/applicative');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
   });
 
   describe('Chain', () => {
+    const law = require('fantasy-land/laws/chain');
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
+  });
 
-    it('associativity', () => {
-      const x = Future.of(1);
-      const f = compose(Future.of)(add(1));
-      const g = compose(Future.of)(mult(2));
-      const a = x.chain(f).chain(g);
-      const b = x.chain(x => f(x).chain(g));
-      return assertEqual(a, b);
-    });
-
+  describe('Monad', () => {
+    const law = require('fantasy-land/laws/monad');
+    const left = law.leftIdentity(Future)(assertEqual);
+    const right = law.rightIdentity(Future)(assertEqual);
+    jsc.property('leftIdentity', 'number | string', x => left(Future.of(x)));
+    jsc.property('rightIdentity', 'number | string', right);
   });
 
 });
@@ -573,8 +635,13 @@ describe('Dispatchers', () => {
       expect(Future.map(noop)).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.map(add(1))(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #map', () => {
-      return assertResolved(Future.map(x => x + 1, Future.of(1)), 2);
+      return assertResolved(Future.map(add(1))(Future.of(1)), 2);
     });
 
   });
@@ -586,8 +653,13 @@ describe('Dispatchers', () => {
       expect(Future.chain(noop)).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.chain(noop)(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #chain', () => {
-      return assertResolved(Future.chain(x => Future.of(x + 1), Future.of(1)), 2);
+      return assertResolved(Future.chain(x => Future.of(x + 1))(Future.of(1)), 2);
     });
 
   });
@@ -599,8 +671,13 @@ describe('Dispatchers', () => {
       expect(Future.chainRej(noop)).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.chainRej(noop)(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #chainRej', () => {
-      return assertResolved(Future.chainRej(x => Future.of(x + 1), Future.reject(1)), 2);
+      return assertResolved(Future.chainRej(x => Future.of(x + 1))(Future.reject(1)), 2);
     });
 
   });
@@ -612,8 +689,13 @@ describe('Dispatchers', () => {
       expect(Future.ap(Future.of(1))).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.ap(1)(Future.of(noop));
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #ap', () => {
-      return assertResolved(Future.ap(Future.of(x => x + 1), Future.of(1)), 2);
+      return assertResolved(Future.ap(Future.of(add(1)))(Future.of(1)), 2);
     });
 
   });
@@ -626,8 +708,13 @@ describe('Dispatchers', () => {
       expect(Future.fork(noop, noop)).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.fork(noop)(noop)(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #fork', done => {
-      Future.fork(done, done.bind(null, null), Future.of(1));
+      Future.fork(done)(done.bind(null, null))(Future.of(1));
     });
 
   });
@@ -639,8 +726,13 @@ describe('Dispatchers', () => {
       expect(Future.race(Future.of(1))).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.race(Future.of(1))(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #race', () => {
-      return assertResolved(Future.race(Future.of(1), Future.of(2)), 2);
+      return assertResolved(Future.race(Future.of(1))(Future.of(2)), 2);
     });
 
   });
@@ -653,8 +745,17 @@ describe('Dispatchers', () => {
       expect(Future.fold(noop, noop)).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.fold(noop)(noop)(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #fold', () => {
-      return assertResolved(Future.fold(x => x + 1, x => x + 1, Future.of(1)), 2);
+      return assertResolved(Future.fold(add(1))(add(1))(Future.of(1)), 2);
+    });
+
+    it('can take (a)(b, c)', () => {
+      return assertResolved(Future.fold(add(1))(add(1), Future.of(1)), 2);
     });
 
   });
@@ -666,8 +767,13 @@ describe('Dispatchers', () => {
       expect(Future.value(noop)).to.be.a('function');
     });
 
+    it('throws when not given a Future', () => {
+      const f = () => Future.value(noop)(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
     it('dispatches to #value', done => {
-      Future.value(x => (expect(x).to.equal(1), done()), Future.of(1));
+      Future.value(x => (expect(x).to.equal(1), done()))(Future.of(1));
     });
 
   });

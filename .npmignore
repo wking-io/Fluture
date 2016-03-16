@@ -4,3 +4,4 @@ test/
 bench/
 .babelrc
 .eslintrc.json
+.travis.yml
