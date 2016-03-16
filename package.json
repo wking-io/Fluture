@@ -1,6 +1,6 @@
 {
   "name": "fluture",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A complete Fantasy Land compatible Future library",
   "main": "fluture.js",
   "repository": "https://github.com/Avaq/fluture.git",
