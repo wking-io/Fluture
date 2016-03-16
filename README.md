@@ -61,7 +61,10 @@ const eventualThing = Future((reject, resolve) => {
   setTimeout(resolve, 500, 'world');
 });
 
-eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
+eventualThing.fork(
+  console.error,
+  thing => console.log(`Hello ${thing}!`)
+);
 //> "Hello world!"
 ```
 
@@ -71,7 +74,10 @@ A constructor that creates a Future containing the given value.
 
 ```js
 const eventualThing = Future.of('world');
-eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
+eventualThing.fork(
+  console.error,
+  thing => console.log(`Hello ${thing}!`)
+);
 //> "Hello world!"
 ```
 
@@ -92,7 +98,8 @@ the given function, or rejects with the error thrown by the given function.
 
 ```js
 const data = {foo: 'bar'}
-Future.try(() => data.foo.bar.baz).fork(console.error, console.log)
+Future.try(() => data.foo.bar.baz)
+.fork(console.error, console.log)
 //> [TypeError: Cannot read property 'baz' of undefined]
 ```
 
@@ -186,7 +193,9 @@ Map over the value inside the Future. If the Future is rejected, mapping is not
 performed.
 
 ```js
-Future.of(1).map(x => x + 1).fork(console.error, console.log);
+Future.of(1)
+.map(x => x + 1)
+.fork(console.error, console.log);
 //> 2
 ```
 
@@ -196,7 +205,9 @@ FlatMap over the value inside the Future. If the Future is rejected, chaining is
 not performed.
 
 ```js
-Future.of(1).chain(x => Future.of(x + 1)).fork(console.error, console.log);
+Future.of(1)
+.chain(x => Future.of(x + 1))
+.fork(console.error, console.log);
 //> 2
 ```
 
@@ -220,7 +231,9 @@ Apply the value in the Future to the value in the given Future. If the Future is
 rejected, applying is not performed.
 
 ```js
-Future.of(x => x + 1).ap(Future.of(1)).fork(console.error, console.log);
+Future.of(x => x + 1)
+.ap(Future.of(1))
+.fork(console.error, console.log);
 //> 2
 ```
 
@@ -246,10 +259,14 @@ be used with other type constructors, like [`S.Either`][7], to maintain a
 representataion of failures:
 
 ```js
-Future.of('hello').fold(S.Left, S.Right).fork(noop, console.log);
+Future.of('hello')
+.fold(S.Left, S.Right)
+.value(console.log);
 //> Right('hello')
 
-Future.reject('it broke').fold(S.Left, S.Right).fork(noop, console.log);
+Future.reject('it broke')
+.fold(S.Left, S.Right)
+.value(console.log);
 //> Left('it broke')
 ```
 
