@@ -4,6 +4,7 @@
 [![Dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
 [![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
 [![Code Coverage](https://codecov.io/github/Avaq/Fluture/coverage.svg?branch=develop)](https://codecov.io/github/Avaq/Fluture/fluture.js?branch=develop)
+[![Code Quality](https://www.bithound.io/github/Avaq/Fluture/badges/score.svg)](https://www.bithound.io/github/Avaq/Fluture)
 
 A complete [Fantasy Land][1] compatible Future library.
 
