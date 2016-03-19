@@ -2,7 +2,7 @@
 
 const Future = require('..');
 
-function printStatus(fn) {;
+function printStatus(fn) {
   switch(%GetOptimizationStatus(fn)) {
     case 1: console.log('Function is optimized'); break;
     case 2: console.log('Function is not optimized'); break;
