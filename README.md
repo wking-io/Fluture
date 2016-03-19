@@ -20,7 +20,7 @@ Using the low level, high performance [method API](#method-api):
 const Future = require('fluture');
 const program = file =>
   Future.node(done => fs.readFile(file, 'utf8', done))
-  .chain(x => Future.try(() => JSON.parse(x)))
+  .chain(Future.encase(JSON.parse))
   .map(x => x.name)
   .fork(console.error, console.log);
 program('package.json');
@@ -31,10 +31,10 @@ Or use the high level, fully curried, [functional dispatch API](#dispatcher-api)
 for function composition using composers like [`S.pipe`][2]:
 
 ```js
-const {node, chain, try, map, fork} = require('fluture');
+const {node, chain, encase, map, fork} = require('fluture');
 const program = S.pipe([
   file => node(fs.readFile.bind(fs, file, 'utf8')),
-  chain(x => try(() => JSON.parse(x))),
+  chain(encase(JSON.parse)),
   map(x => x.name),
   fork(console.error, console.log)
 ]);
@@ -96,10 +96,24 @@ eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 //> "Hello world!"
 ```
 
+#### `encase :: (a -> !b | c) -> a -> Future b c`
+
+Creates a Future which resolves with the result of calling the given function
+with the given value, or rejects with the error thrown by the function.
+
+```js
+const data = '{"foo" = "bar"}';
+const parseJson = Future.encase(JSON.parse);
+parseJson('a').fork(console.error, console.log)
+//> [SyntaxError: Unexpected token =]
+```
+
 #### `try :: (Void -> !a | b) -> Future a b`
 
 A constructor that creates a Future which resolves with the result of calling
 the given function, or rejects with the error thrown by the given function.
+
+Sugar for `Future.encase(f, undefined)`.
 
 ```js
 const data = {foo: 'bar'}
@@ -366,7 +380,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future.predicate
 * [ ] Implement Future#promise
 * [ ] Implement Future.cast
-* [ ] Implement Future.encase
+* [x] Implement Future.encase
 * [ ] Implement [Profunctor][8] (and possibly rename `chainRej -> lchain`)
 * [ ] Fail-fast curried functions
 * [ ] Wiki: Comparison between Future libs

@@ -186,6 +186,32 @@ describe('Constructors', () => {
 
   });
 
+  describe('.encase()', () => {
+
+    it('is curried', () => {
+      expect(Future.encase(noop)).to.be.a('function');
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.encase(x)(1));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which resolves with the return value of the function', () => {
+      const actual = Future.encase(x => x + 1)(1);
+      return assertResolved(actual, 2);
+    });
+
+    it('returns a Future which rejects with the exception thrown by the function', () => {
+      const actual = Future.encase(() => {
+        throw error;
+      })(1);
+      return assertRejected(actual, error);
+    });
+
+  });
+
   describe('.try()', () => {
 
     it('throws TypeError when not given a function', () => {

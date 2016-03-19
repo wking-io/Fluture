@@ -165,8 +165,8 @@
     if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
   }
 
-  function check$try(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.try', 0, 'be a function', f);
+  function check$encase(f){
+    if(typeof f !== 'function') error$invalidArgument('Future.encase', 0, 'be a function', f);
   }
 
   function check$node(f){
@@ -427,18 +427,24 @@
     })
   };
 
-  //Create a Future which resolves with the return value of the given function,
-  //or rejects with the exception thrown by the given function.
-  Future.try = function Future$try(f){
-    check$try(f);
-    return new FutureClass(function Future$try$fork(rej, res){
+  //encase :: (a -> !b | c) -> a -> Future b c
+  Future.encase = function Future$encase(f, x){
+    if(arguments.length === 1) return x => Future$encase(f, x);
+    check$encase(f);
+    return new FutureClass(function Future$encase$fork(rej, res){
       try{
-        res(f());
+        res(f(x));
       }
       catch(err){
         rej(err);
       }
     });
+  };
+
+  //Create a Future which resolves with the return value of the given function,
+  //or rejects with the exception thrown by the given function.
+  Future.try = function Future$try(f){
+    return Future.encase(f, undefined);
   };
 
   //node :: ((err, a) -> Void) -> Future[Error, a]
