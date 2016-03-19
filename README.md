@@ -42,18 +42,20 @@ program('package.json')
 //> "fluture"
 ```
 
-## Why?
+## Motivation
 
-* Great error messages.
-* Async control utilities included.
-* High performance Future implementation.
-* Decent documentation.
+I've always liked Promises, and I've come to like Futures even more. Existing
+implementations are a pain to debug though. I made this library in an effort to
+provide **great error messages** when something goes wrong. I didn't want these
+to come at the cost of performance though, so I made sure Fluture operates at
+**high performance**. Throughout my work with Future's, I've created a lot of
+**async control utilities** which I've decided to bundle with this library.
 
 ## Documentation
 
 ### Constructors
 
-#### Future :: ((a -> Void), (b -> Void) -> Void) -> Future a b
+#### `Future :: ((a -> Void), (b -> Void) -> Void) -> Future a b`
 
 A (monadic) container which represents an eventual value. A lot like Promise but
 more principled in that it follows the [Fantasy Land][1] algebraic JavaScript
@@ -359,7 +361,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future#promise
 * [ ] Implement Future.cast
 * [ ] Implement Future.encase
-* [ ] Implement [Profunctor][8]
+* [ ] Implement [Profunctor][8] (and possibly rename `chainRej -> lchain`)
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
 * [x] Add test coverage
