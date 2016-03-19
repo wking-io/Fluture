@@ -295,6 +295,12 @@ Future.reject(new Error('It broke'))
 
 Dispatches the first and second arguments to the `fork` method of the third argument.
 
+```js
+const consoleFork = Future.fork(console.error, console.log);
+consoleFork(Future.of('Hello'));
+//> "Hello"
+```
+
 #### `map :: Functor m => (a -> b) -> m a -> m b`
 
 Dispatches the first argument to the `map` method of the second argument.
@@ -362,6 +368,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future.cast
 * [ ] Implement Future.encase
 * [ ] Implement [Profunctor][8] (and possibly rename `chainRej -> lchain`)
+* [ ] Fail-fast curried functions
 * [ ] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
 * [x] Add test coverage
