@@ -300,7 +300,7 @@
   function Future$or(m){
     check$or(this, m);
     const _this = this;
-    return new FutureClass(function Future$fold$fork(rej, res){
+    return new FutureClass(function Future$or$fork(rej, res){
       let ok = false, ko = false, val, err;
       _this._f(
         () => ko ? rej(err) : ok ? res(val) : (ko = true),
