@@ -480,7 +480,7 @@ readFile('README.md', 'utf8')
 * [x] Implement Future.encase
 * [ ] Implement [Profunctor][8] (and possibly rename `chainRej -> lchain`)
 * [ ] Fail-fast curried functions
-* [ ] Wiki: Comparison between Future libs
+* [x] Wiki: Comparison between Future libs
 * [ ] Wiki: Comparison Future and Promise
 * [x] Add test coverage
 * [x] Add readme badges
