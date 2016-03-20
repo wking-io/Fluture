@@ -56,29 +56,18 @@ to come at the cost of performance though, so I made sure Fluture operates at
 ### Type signatures
 
 I'm using [Hindley-Milner][9] type signatures to document functions. A list of
-all types I'll use within these signatures follows.
+all types I'll use within these signatures follows:
 
-#### Forkable
-
-Any Object with a `fork` method that takes at least two arguments. This includes
-instances of Fluture, instances of Task from [`data.task`][10] or instances of
-Future from [`ramda-fantasy`][11].
-
-#### Future
-
-Instances of Future provided by Fluture.
-
-#### Functor
-
-Any object that has a `map` method which satisfies the [Fantasy Land Functor specification][12].
-
-#### Chain
-
-Any object that has a `chain` method which satisfies the [Fantasy Land Chain specification][13].
-
-#### Apply
-
-Any object that has an `ap` method which satisfies the [Fantasy Land Apply specification][14].
+- **Forkable** - Any Object with a `fork` method that takes at least two
+  arguments. This includes instances of Fluture, instances of Task from
+  [`data.task`][10] or instances of Future from [`ramda-fantasy`][11].
+- **Future** - Instances of Future provided by Fluture.
+- **Functor** - Any object that has a `map` method which satisfies the
+  [Fantasy Land Functor specification][12].
+- **Chain** - Any object that has a `chain` method which satisfies the
+  [Fantasy Land Chain specification][13].
+- **Apply** - Any object that has an `ap` method which satisfies the
+  [Fantasy Land Apply specification][14].
 
 ### Constructors
 
