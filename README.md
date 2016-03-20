@@ -47,7 +47,8 @@ Existing implementations of Future are a pain to debug. This library was made in
 an effort to provide **great error messages** when something goes wrong. The
 library also comes bundled with many **async control utilities**. To prevent
 these features from coming at the cost of performance, Fluture was optimized to
-operate at **high performance**.
+operate at **high performance**. For an overview of differences between Fluture
+and other Future implementations, look at [this wiki article][15].
 
 ## Documentation
 
@@ -518,3 +519,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [12]: https://github.com/fantasyland/fantasy-land#functor
 [13]: https://github.com/fantasyland/fantasy-land#chain
 [14]: https://github.com/fantasyland/fantasy-land#apply
+[15]: https://github.com/Avaq/Fluture/wiki/Comparison-of-Future-Implementations
