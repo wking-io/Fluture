@@ -53,6 +53,27 @@ to come at the cost of performance though, so I made sure Fluture operates at
 
 ## Documentation
 
+### Type signatures
+
+I'm using [Hindley-Milner] type signatures to document functions. A list of all
+types I'll use within these signatures follows.
+
+#### Future
+
+Instances of Future provided by Fluture.
+
+#### Functor
+
+Any object that has a `map` method which satisfies the [Fantasy Land Functor specification][12].
+
+#### Chain
+
+Any object that has a `chain` method which satisfies the [Fantasy Land Chain specification][13].
+
+#### Apply
+
+Any object that has an `ap` method which satisfies the [Fantasy Land Apply specification][14].
+
 ### Constructors
 
 #### `Future :: ((a -> Void), (b -> Void) -> Void) -> Future a b`
@@ -436,3 +457,7 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [6]:  https://github.com/futurize/futurize
 [7]:  http://sanctuary.js.org/#either-type
 [8]:  https://github.com/fantasyland/fantasy-land/pull/124
+[9]:  https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
+[12]: https://github.com/fantasyland/fantasy-land#functor
+[13]: https://github.com/fantasyland/fantasy-land#chain
+[14]: https://github.com/fantasyland/fantasy-land#apply
