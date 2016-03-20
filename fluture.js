@@ -140,6 +140,11 @@
     if(!isFluture(m)) error$invalidArgument('Future#race', 0, 'be a Future', m);
   }
 
+  function check$or(it, m){
+    if(!isFluture(it)) error$invalidContext('Future#or', it);
+    if(!isFluture(m)) error$invalidArgument('Future#or', 0, 'be a Future', m);
+  }
+
   function check$fold(it, f, g){
     if(!isFluture(it)) error$invalidContext('Future#fold', it);
     if(!isFunction(f)) error$invalidArgument('Future#fold', 0, 'be a function', f);
@@ -288,6 +293,22 @@
     });
   }
 
+  function Future$or(m){
+    check$or(this, m);
+    const _this = this;
+    return new FutureClass(function Future$fold$fork(rej, res){
+      let ok = false, ko = false, val, err;
+      _this._f(
+        () => ko ? rej(err) : ok ? res(val) : (ko = true),
+        x => (ok = true, res(x))
+      );
+      m._f(
+        e => ok || (ko ? rej(e) : (err = e, ko = true)),
+        x => ok || (ko ? res(x) : (val = x, ok = true))
+      );
+    });
+  }
+
   function Future$fold(f, g){
     check$fold(this, f, g);
     const _this = this;
@@ -324,6 +345,7 @@
     toString: Future$toString,
     inspect: Future$toString,
     race: Future$race,
+    or: Future$or,
     fold: Future$fold,
     value: Future$value
   };
@@ -378,6 +400,9 @@
 
   //race :: Future a b -> Future a b -> Future a b
   Future.race = createUnaryDispatcher('race');
+
+  //or :: Future a b -> Future a b -> Future a b
+  Future.or = createUnaryDispatcher('or');
 
   //fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c
   Future.fold = createBinaryDispatcher('fold');

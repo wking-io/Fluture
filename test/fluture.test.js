@@ -583,6 +583,74 @@ describe('Future', () => {
 
   });
 
+  describe('#or()', () => {
+
+    const resolved = Future.of('resolved');
+    const resolvedSlow = Future.after(20, 'resolvedSlow');
+    const rejected = Future.reject('rejected');
+    const rejectedSlow = Future(rej => setTimeout(rej, 20, 'rejectedSlow'));
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).or.call(null, Future.of(1));
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throw TypeError when not given a Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.of(1).or(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    describe('(res, res)', () => {
+
+      it('resolves with left if left resolves first', () => {
+        return assertResolved(resolved.or(resolvedSlow), 'resolved');
+      });
+
+      it('resolves with left if left resolves last', () => {
+        return assertResolved(resolvedSlow.or(resolved), 'resolvedSlow');
+      });
+
+    });
+
+    describe('(rej, rej)', () => {
+
+      it('rejects with right if right rejects first', () => {
+        return assertRejected(rejectedSlow.or(rejected), 'rejected');
+      });
+
+      it('rejects with right if right rejects last', () => {
+        return assertRejected(rejected.or(rejectedSlow), 'rejectedSlow');
+      });
+
+    });
+
+    describe('(rej, res)', () => {
+
+      it('resolves with right if right resolves first', () => {
+        return assertResolved(rejectedSlow.or(resolved), 'resolved');
+      });
+
+      it('resolves with right if right resolves last', () => {
+        return assertResolved(rejected.or(resolvedSlow), 'resolvedSlow');
+      });
+
+    });
+
+    describe('(res, rej)', () => {
+
+      it('resolves with left if left resolves first', () => {
+        return assertResolved(resolved.or(rejectedSlow), 'resolved');
+      });
+
+      it('resolves with left if left resolves last', () => {
+        return assertResolved(resolvedSlow.or(rejected), 'resolvedSlow');
+      });
+
+    });
+
+  });
+
   describe('#fold()', () => {
 
     it('throws when invoked out of context', () => {
@@ -784,6 +852,24 @@ describe('Dispatchers', () => {
 
     it('dispatches to #race', () => {
       return assertResolved(Future.race(Future.of(1))(Future.of(2)), 2);
+    });
+
+  });
+
+  describe('.or()', () => {
+
+    it('is curried', () => {
+      expect(Future.or).to.be.a('function');
+      expect(Future.or(Future.of(1))).to.be.a('function');
+    });
+
+    it('throws when not given a Future', () => {
+      const f = () => Future.or(Future.of(1))(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('dispatches to #or', () => {
+      return assertResolved(Future.or(Future.of(1))(Future.of(2)), 2);
     });
 
   });

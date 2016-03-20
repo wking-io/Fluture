@@ -324,6 +324,29 @@ Future.after(100, 'hello')
 //> "bye"
 ```
 
+#### `or :: Future a b ~> Future a b -> Future a b`
+
+Logical or for Futures.
+
+Returns a new Future which either resolves with the first resolutation value, or
+rejects with the last rejection value once and if both Futures reject.
+
+This behaves analogues to how JavaScript's or operator does, except both
+Futures run simultaneously, so it is *not* short-circuited. That means that
+if the second has side-effects, they will run even if the first resolves.
+
+```js
+//An asynchronous version of:
+//const result = planA() || planB();
+
+const result = planA().or(planB());
+```
+
+In the example, assume both plans return Futures. Both plans are executed in
+parallel. If `planA` resolves, the returned Future will resolve with its value.
+If `planA` fails there is always `planB`. If both plans fail then the returned
+Future will also reject using the rejection reason of `planB`.
+
 #### `fold :: Future a b ~> (a -> c), (b -> c) -> Future _ c`
 
 Applies the left function to the rejection value, or the right function to the
@@ -405,6 +428,30 @@ first([
 //> [Error nope]
 ```
 
+#### `or :: Future a b -> Future a b -> Future a b`
+
+Dispatches the first argument to the `or` method of the second argument.
+
+```js
+const any = futures => futures.reduce(Future.or, Future.reject('Empty list!'));
+
+any([
+  Future.reject('first: nope'),
+  Future.of('second: yep'),
+  Future.reject('third: yep')
+])
+.fork(console.error, console.log);
+//> "second: yep"
+
+any([
+  Future.reject('first: nope'),
+  Future.reject('second: nope'),
+  Future.reject('third: nope')
+])
+.fork(console.error, console.log);
+//> "third: nope"
+```
+
 #### `fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c`
 
 Dispatches the first and second arguments to the `fold` method of the third argument.
@@ -432,7 +479,7 @@ readFile('README.md', 'utf8')
 ## Road map
 
 * [ ] Implement Future#and
-* [ ] Implement Future#or
+* [x] Implement Future#or
 * [ ] Implement Future.predicate
 * [ ] Implement Future#promise
 * [x] Implement Future.cast
