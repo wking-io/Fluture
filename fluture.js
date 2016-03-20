@@ -156,6 +156,10 @@
     if(!isFunction(f)) error$invalidArgument('Future#value', 0, 'be a function', f);
   }
 
+  function check$promise(it){
+    if(!isFluture(it)) error$invalidContext('Future#promise', it);
+  }
+
   function check$cache(m){
     if(!isFluture(m)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
   }
@@ -329,6 +333,14 @@
     );
   }
 
+  function Future$promise(){
+    check$promise(this);
+    const _this = this;
+    return new Promise(function Future$promise$do(resolve, reject){
+      _this.fork(reject, resolve);
+    });
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
     _f: null,
@@ -347,7 +359,8 @@
     race: Future$race,
     or: Future$or,
     fold: Future$fold,
-    value: Future$value
+    value: Future$value,
+    promise: Future$promise
   };
 
   //Expose `of` statically as well.

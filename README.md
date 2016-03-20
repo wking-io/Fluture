@@ -369,6 +369,12 @@ Future.reject(new Error('It broke'))
 //> Left([Error: It broke])
 ```
 
+#### `promise :: Future a b ~> Promise b a`
+
+Cast the Future to a Promise. This will cause the Future to be eagerly forked.
+This is useful if some API wants you to give it a Promise. You shouldn't need
+this method for anything else.
+
 ### Dispatcher API
 
 #### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
