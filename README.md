@@ -55,8 +55,8 @@ to come at the cost of performance though, so I made sure Fluture operates at
 
 ### Type signatures
 
-I'm using [Hindley-Milner] type signatures to document functions. A list of all
-types I'll use within these signatures follows.
+I'm using [Hindley-Milner][9] type signatures to document functions. A list of
+all types I'll use within these signatures follows.
 
 #### Forkable
 
@@ -481,7 +481,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future#and
 * [x] Implement Future#or
 * [ ] Implement Future.predicate
-* [ ] Implement Future#promise
+* [x] Implement Future#promise
 * [x] Implement Future.cast
 * [x] Implement Future.encase
 * [ ] Implement [Profunctor][8] (and possibly rename `chainRej -> lchain`)
