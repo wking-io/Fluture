@@ -160,6 +160,26 @@ Future.parallel(Infinity, tenFutures).fork(console.error, console.log);
 //> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 ```
 
+If you want to settle all Futures, even if some may fail, you can use this in
+combination with [fold](#fold--future-a-b--a---c-b---c---future-_-c):
+
+```js
+const fourInstableFutures = Array.from(Array(4).keys()).map(
+  i => Future(
+    (rej, res) => setTimeout(
+      () => Math.random() > 0.8 ? rej('failed') : res(i),
+      20
+    )
+  )
+);
+
+const stabalizedFutures = fourInstableFutures.map(Future.fold(S.Left, S.Right))
+
+Future.parallel(2, stabalizedFutures).fork(console.error, console.log);
+//after about 40ms:
+//> [ Right(0), Left("failed"), Right(2), Right(3) ]
+```
+
 #### `cache :: Future a b -> Future a b`
 
 Returns a Future which caches the resolution value of the given Future so that
