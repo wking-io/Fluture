@@ -44,19 +44,18 @@ program('package.json')
 
 ## Motivation
 
-I've always liked Promises, and I've come to like Futures even more. Existing
-implementations are a pain to debug though. I made this library in an effort to
-provide **great error messages** when something goes wrong. I didn't want these
-to come at the cost of performance though, so I made sure Fluture operates at
-**high performance**. Throughout my work with Future's, I've created a lot of
-**async control utilities** which I've decided to bundle with this library.
+Existing implementations of Future are a pain to debug. This library was made in
+an effort to provide **great error messages** when something goes wrong. The
+library also comes bundled with many **async control utilities**. To prevent
+these features from coming at the cost of performance, Fluture was optimized to
+operate at **high performance**.
 
 ## Documentation
 
 ### Type signatures
 
-I'm using [Hindley-Milner][9] type signatures to document functions. A list of
-all types I'll use within these signatures follows:
+[Hindley-Milner][9] type signatures are used to document functions. A list of
+all types used within these signatures follows:
 
 - **Forkable** - Any Object with a `fork` method that takes at least two
   arguments. This includes instances of Fluture, instances of Task from
