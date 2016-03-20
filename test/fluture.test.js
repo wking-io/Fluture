@@ -119,6 +119,31 @@ describe('Constructors', () => {
 
   });
 
+  describe('.cast()', () => {
+
+    it('throws TypeError when not given a Forkable', () => {
+      const xs = [null, {}, {fork: a => a}];
+      const fs = xs.map(x => () => Future.cast(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns identity when given a Future', () => {
+      const m = Future.of(1);
+      expect(Future.cast(m)).to.equal(m);
+    });
+
+    it('rejects if the Forkable calls the left', () => {
+      const forkable = {fork: (l, r) => (r, l(error))};
+      return assertRejected(Future.cast(forkable), error);
+    });
+
+    it('resolves if the Forkable calls the right', () => {
+      const forkable = {fork: (l, r) => r(1)};
+      return assertResolved(Future.cast(forkable), 1);
+    });
+
+  });
+
   describe('.cache()', () => {
 
     const onceOrError = f => {

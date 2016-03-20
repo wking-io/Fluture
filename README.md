@@ -58,6 +58,12 @@ to come at the cost of performance though, so I made sure Fluture operates at
 I'm using [Hindley-Milner] type signatures to document functions. A list of all
 types I'll use within these signatures follows.
 
+#### Forkable
+
+Any Object with a `fork` method that takes at least two arguments. This includes
+instances of Fluture, instances of Task from [`data.task`][10] or instances of
+Future from [`ramda-fantasy`][11].
+
 #### Future
 
 Instances of Future provided by Fluture.
@@ -115,6 +121,15 @@ A constructor that creates a Future containing the given value after n milliseco
 const eventualThing = Future.after(500, 'world');
 eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 //> "Hello world!"
+```
+
+#### `cast :: Forkable a b -> Future a b`
+
+Cast any [Forkable](#forkable) to a [Future](#future).
+
+```js
+Future.cast(require('data.task').of('hello')).value(console.log);
+//> "hello"
 ```
 
 #### `encase :: (a -> !b | c) -> a -> Future b c`
@@ -420,7 +435,7 @@ readFile('README.md', 'utf8')
 * [ ] Implement Future#or
 * [ ] Implement Future.predicate
 * [ ] Implement Future#promise
-* [ ] Implement Future.cast
+* [x] Implement Future.cast
 * [x] Implement Future.encase
 * [ ] Implement [Profunctor][8] (and possibly rename `chainRej -> lchain`)
 * [ ] Fail-fast curried functions
@@ -458,6 +473,8 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [7]:  http://sanctuary.js.org/#either-type
 [8]:  https://github.com/fantasyland/fantasy-land/pull/124
 [9]:  https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
+[10]: https://github.com/folktale/data.task
+[11]: https://github.com/ramda/ramda-fantasy
 [12]: https://github.com/fantasyland/fantasy-land#functor
 [13]: https://github.com/fantasyland/fantasy-land#chain
 [14]: https://github.com/fantasyland/fantasy-land#apply

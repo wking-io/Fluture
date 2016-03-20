@@ -25,6 +25,10 @@
   // Type checking //
   ///////////////////
 
+  function isForkable(m){
+    return m && typeof m.fork === 'function' && m.fork.length >= 2;
+  }
+
   function isFluture(m){
     return m instanceof FutureClass;
   }
@@ -163,6 +167,10 @@
 
   function check$after(n){
     if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
+  }
+
+  function check$cast(m){
+    if(!isForkable(m)) error$invalidArgument('Future.cast', 0, 'be a Forkable', m);
   }
 
   function check$encase(f){
@@ -425,6 +433,16 @@
     return new FutureClass(function Future$after$fork(rej, res){
       setTimeout(res, n, x);
     })
+  };
+
+  Future.cast = function Future$cast(m){
+    check$cast(m);
+    if(m instanceof FutureClass){
+      return m;
+    }
+    return new FutureClass(function Future$cast$fork(rej, res){
+      m.fork(rej, res);
+    });
   };
 
   //encase :: (a -> !b | c) -> a -> Future b c
