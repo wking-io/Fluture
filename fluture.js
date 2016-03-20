@@ -488,12 +488,14 @@
     if(arguments.length === 1) return x => Future$encase(f, x);
     check$encase(f);
     return new FutureClass(function Future$encase$fork(rej, res){
+      let y;
       try{
-        res(f(x));
+        y = f(x);
       }
       catch(err){
-        rej(err);
+        return void rej(err);
       }
+      res(y);
     });
   };
 

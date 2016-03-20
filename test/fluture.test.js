@@ -235,6 +235,17 @@ describe('Constructors', () => {
       return assertRejected(actual, error);
     });
 
+    it('does not swallow errors from subsequent maps and such', () => {
+      const f = () =>
+        Future.of('null')
+        .chain(Future.encase(JSON.parse))
+        .map(() => {
+          throw error;
+        })
+        .fork(noop, noop)
+      expect(f).to.throw(error);
+    });
+
   });
 
   describe('.try()', () => {
