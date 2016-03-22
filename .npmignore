@@ -5,3 +5,4 @@ bench/
 .babelrc
 .eslintrc.json
 .travis.yml
+test.js
