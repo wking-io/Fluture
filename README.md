@@ -66,11 +66,11 @@ all types used within these signatures follows:
   arguments. This includes instances of Fluture, instances of Task from
   [`data.task`][10] or instances of Future from [`ramda-fantasy`][11].
 - **Future** - Instances of Future provided by Fluture.
-- **Functor** - Any object that has a `map` method which satisfies the
+- **Functor** - Any object with a `map` method which satisfies the
   [Fantasy Land Functor specification][12].
-- **Chain** - Any object that has a `chain` method which satisfies the
+- **Chain** - Any object with a `chain` method which satisfies the
   [Fantasy Land Chain specification][13].
-- **Apply** - Any object that has an `ap` method which satisfies the
+- **Apply** - Any object with an `ap` method which satisfies the
   [Fantasy Land Apply specification][14].
 
 ### Constructors
@@ -377,9 +377,15 @@ Future.reject(new Error('It broke'))
 
 #### `promise :: Future a b ~> Promise b a`
 
-Cast the Future to a Promise. This will cause the Future to be eagerly forked.
-This is useful if some API wants you to give it a Promise. You shouldn't need
-this method for anything else.
+An alternative way to `fork` the Future. This eagerly forks the Future and
+returns a Promise of the result. This is useful if some API wants you to give it
+a Promise. It's the only method which forks the Future without a forced way to
+handle the rejection branch, which means it's considered dangerous to use.
+
+```js
+Future.of('Hello').promise().then(console.log);
+//> "Hello"
+```
 
 ### Dispatcher API
 
