@@ -1,5 +1,7 @@
 # Fluture
 
+[<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="116" height="116" alt="Fantasy Land" />][1]
+
 [![NPM Version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
 [![Dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
 [![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
