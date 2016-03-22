@@ -1,23 +1,22 @@
-/*global define*/
-/*global FantasyLand*/
+/*global define FantasyLand inspectx inspectf*/
 (function(global, f){
 
   'use strict';
 
   /*istanbul ignore next*/
   if(typeof module !== 'undefined'){
-    module.exports = f(require('fantasy-land'));
+    module.exports = f(require('fantasy-land'), require('inspect-x'), require('inspect-f'));
   }
 
   else if(typeof define === 'function' && define.amd){
-    define(['fantasy-land'], f);
+    define(['fantasy-land', 'inspect-x', 'inspect-f'], f);
   }
 
   else{
-    global.Fluture = f(FantasyLand);
+    global.Fluture = f(FantasyLand, inspectx, inspectf);
   }
 
-}(/*istanbul ignore next*/(global || window || this), function(FL){
+}(/*istanbul ignore next*/(global || window || this), function(FL, inspectx, inspectf){
 
   'use strict';
 
@@ -45,31 +44,8 @@
   // Error handling //
   ////////////////////
 
-  //A small string representing a value, but not containing the whole value.
-  const preview = x =>
-    typeof x === 'string'
-    ? JSON.stringify(x)
-    : Array.isArray(x)
-    ? `[Array ${x.length}]`
-    : typeof x === 'function'
-    ? typeof x.name === 'string' && x.name.length > 0
-    ? `[Function ${x.name}]`
-    : '[Function]'
-    : x && x.toString === Object.prototype.toString
-    ? `[Object ${Object.keys(x).map(String).join(', ')}]`
-    : String(x);
-
-  //A show function to provide a slightly more meaningful representation of values.
-  const show = x =>
-    typeof x === 'string'
-    ? preview(x)
-    : Array.isArray(x)
-    ? `[${x.map(preview).join(', ')}]`
-    : x && (typeof x.toString === 'function')
-    ? x.toString === Object.prototype.toString
-    ? `{${Object.keys(x).reduce((o, k) => o.concat(`${preview(k)}: ${preview(x[k])}`), []).join(', ')}}`
-    : x.toString()
-    : preview(x);
+  const show = x => inspectx(x, {depth: 1});
+  const showf = f => inspectf(2, f).replace(/^/gm, '  ').trim();
 
   function error$invalidArgument(it, at, expected, actual){
     throw new TypeError(
@@ -102,7 +78,7 @@
   function check$chain$f(m, f, x){
     if(!isFluture(m)) throw new TypeError(
       'Future#chain expects the function its given to return a Future'
-      + `\n  Actual: ${show(m)}\n  From calling: ${show(f)}\n  With: ${show(x)}`
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
     );
   }
 
@@ -114,7 +90,7 @@
   function check$chainRej$f(m, f, x){
     if(!isFluture(m)) throw new TypeError(
       'Future.chainRej expects the function its given to return a Future'
-      + `\n  Actual: ${show(m)}\n  From calling: ${show(f)}\n  With: ${show(x)}`
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
     );
   }
 
@@ -131,7 +107,7 @@
   //Check resolution value of the Future on which #ap was called.
   function check$ap$f(f){
     if(!isFunction(f)) throw new TypeError(
-      `Future#ap can only b used on Future<Function> but was used on: ${show(f)}`
+      `Future#ap can only be used on Future<Function> but was used on a Future of: ${show(f)}`
     );
   }
 
@@ -283,7 +259,7 @@
   }
 
   function Future$toString(){
-    return `Future(${show(this._f)})`;
+    return `Future(${this._f.toString()})`;
   }
 
   function Future$race(m){

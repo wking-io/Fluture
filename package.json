@@ -22,7 +22,9 @@
     "node": "^5.0.0"
   },
   "dependencies": {
-    "fantasy-land": "^0.2.1"
+    "fantasy-land": "^0.2.1",
+    "inspect-f": "^1.0.0",
+    "inspect-x": "^1.0.17"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",

@@ -61,36 +61,6 @@ describe('Constructors', () => {
       expect(actual).to.be.an.instanceof(Future);
     });
 
-    describe('error message', () => {
-
-      it('takes it easy with the recursive data structures', () => {
-        const data = {foo: 'bar'};
-        data.data = data;
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /Future/);
-      });
-
-      it('displays nested named functions by their name', () => {
-        function nyerk(){}
-        const data = {foo: nyerk};
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Function nyerk\]/);
-      });
-
-      it('displays nested anonymous functions', () => {
-        const data = {foo: () => {}};
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Function\]/);
-      });
-
-      it('displays nested arrays', () => {
-        const data = {foo: ['a', 'b', 'c']};
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Array 3\]/);
-      });
-
-    });
-
   });
 
   describe('.of()', () => {
