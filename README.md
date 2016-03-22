@@ -5,7 +5,10 @@
 [![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
 [![Code Coverage](https://codecov.io/github/Avaq/Fluture/coverage.svg?branch=develop)](https://codecov.io/github/Avaq/Fluture/fluture.js?branch=develop)
 
-A complete [Fantasy Land][1] compatible Future library.
+Futures are containers which represent some eventual value as a result of an
+asynchronous computation, much like Promises. Unlike Promises, however, Futures
+are *lazy* and *logical* by design. They have a predictable API governed by the
+[Fantasy Land][1] algebraic JavaScript specification.
 
 > `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
   like modern browsers, transpilers or Node 5+</sup>
@@ -456,7 +459,7 @@ Dispatches the first argument to the `value` method of the second argument.
 
 ### Futurization
 
-To reduce the boilerplate of making Node or Promise functions return Future's
+To reduce the boilerplate of making Node or Promise functions return Futures
 instead, one might use the [Futurize][6] library:
 
 ```js

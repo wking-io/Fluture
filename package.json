@@ -1,7 +1,7 @@
 {
   "name": "fluture",
   "version": "0.5.5",
-  "description": "A complete Fantasy Land compatible Future library",
+  "description": "A mathematically correct alternative to Promises for asynchronous control flow",
   "main": "fluture.js",
   "repository": "https://github.com/Avaq/fluture.git",
   "scripts": {
@@ -17,10 +17,31 @@
     "test:unit": "node --harmony-destructuring node_modules/.bin/istanbul cover --report html ./node_modules/.bin/_mocha -- --ui bdd --reporter spec --check-leaks --full-trace && codecov"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
+  "homepage": "https://github.com/Avaq/Fluture",
+  "bugs": {
+    "url": "https://github.com/Avaq/Fluture/issues"
+  },
   "license": "MIT",
   "engines": {
     "node": "^5.0.0"
   },
+  "keywords": [
+    "async",
+    "asynchronous",
+    "browser",
+    "control-flow",
+    "fantasy-land",
+    "fp",
+    "functional",
+    "functor",
+    "future",
+    "library",
+    "monad",
+    "node",
+    "parallel",
+    "promise",
+    "sequential"
+  ],
   "dependencies": {
     "fantasy-land": "^0.2.1",
     "inspect-f": "^1.0.0",
