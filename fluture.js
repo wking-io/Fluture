@@ -136,8 +136,8 @@
     if(!isFluture(it)) error$invalidContext('Future#promise', it);
   }
 
-  function check$cache(m){
-    if(!isFluture(m)) error$invalidArgument('Future.cache', 0, 'be a Future', m);
+  function check$cache(it){
+    if(!isFluture(it)) error$invalidContext('Future#cache', it);
   }
 
   function check$cache$settle(oldState, newState, oldValue, newValue){
@@ -317,6 +317,33 @@
     });
   }
 
+  function Future$cache(){
+    check$cache(this);
+    const _this = this;
+    let que = [];
+    let value, state;
+    const settleWith = newState => function Future$cache$settle(newValue){
+      check$cache$settle(state, newState, value, newValue);
+      value = newValue; state = newState;
+      for(let i = 0, l = que.length; i < l; i++){
+        que[i][state](value);
+        que[i] = undefined;
+      }
+      que = undefined;
+    };
+    return new FutureClass(function Future$cache$fork(rej, res){
+      switch(state){
+        case 1: que.push({2: rej, 3: res}); break;
+        case 2: rej(value); break;
+        case 3: res(value); break;
+        default:
+          state = 1;
+          que.push({2: rej, 3: res});
+          _this.fork(settleWith(2), settleWith(3));
+      }
+    });
+  }
+
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
     _f: null,
@@ -336,7 +363,8 @@
     or: Future$or,
     fold: Future$fold,
     value: Future$value,
-    promise: Future$promise
+    promise: Future$promise,
+    cache: Future$cache
   };
 
   //Expose `of` statically as well.
@@ -348,6 +376,14 @@
   /////////////////
   // Dispatchers //
   /////////////////
+
+  //Creates a dispatcher for a nullary method.
+  function createNullaryDispatcher(method){
+    return function dispatch(m){
+      if(m && typeof m[method] === 'function') return m[method]();
+      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+    };
+  }
 
   //Creates a dispatcher for a unary method.
   function createUnaryDispatcher(method){
@@ -399,39 +435,15 @@
   //value :: (b -> Void) -> Future a b -> Void
   Future.value = createUnaryDispatcher('value');
 
-  ///////////////
-  // Utilities //
-  ///////////////
+  //promise :: Future a b -> Promise b a
+  Future.promise = createNullaryDispatcher('promise');
 
-  // Cache a Future.
-  // Returns a Future which caches the resolution value of the given Future so
-  // that whenever it's forked, it can load the value from cache rather than
-  // reexecuting the chain.
-  Future.cache = function Future$cache(m){
-    check$cache(m);
-    let que = [];
-    let value, state;
-    const settleWith = newState => function Future$cache$settle(newValue){
-      check$cache$settle(state, newState, value, newValue);
-      value = newValue; state = newState;
-      for(let i = 0, l = que.length; i < l; i++){
-        que[i][state](value);
-        que[i] = undefined;
-      }
-      que = undefined;
-    };
-    return new FutureClass(function Future$cache$fork(rej, res){
-      switch(state){
-        case 1: que.push({2: rej, 3: res}); break;
-        case 2: rej(value); break;
-        case 3: res(value); break;
-        default:
-          state = 1;
-          que.push({2: rej, 3: res});
-          m.fork(settleWith(2), settleWith(3));
-      }
-    });
-  };
+  //cache :: Future a b -> Future a b
+  Future.cache = createNullaryDispatcher('cache');
+
+  //////////////////
+  // Constructors //
+  //////////////////
 
   //Create a Future which rejects witth the given value.
   Future.reject = function Future$reject(x){
