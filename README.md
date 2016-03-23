@@ -481,22 +481,6 @@ readFile('README.md', 'utf8')
 //> "# Fluture"
 ```
 
-## Road map
-
-* [ ] Implement Future#and
-* [x] Implement Future#or
-* [ ] Implement Future.predicate
-* [x] Implement Future#promise
-* [x] Implement Future.cast
-* [x] Implement Future.encase
-* [ ] Implement [Profunctor][8] (and possibly rename `chainRej -> lchain`)
-* [ ] Fail-fast curried functions
-* [x] Wiki: Comparison between Future libs
-* [ ] Wiki: Comparison Future and Promise
-* [x] Add test coverage
-* [x] Add readme badges
-* [ ] A transpiled ES5 version if demand arises
-
 ## Benchmarks
 
 Simply run `node ./bench/<file>` to see how a specific method compares to
