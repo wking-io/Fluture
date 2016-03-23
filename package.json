@@ -55,6 +55,7 @@
     "eslint": "^2.2.0",
     "istanbul": "^0.4.2",
     "jsverify": "^0.7.1",
+    "lazy-either": "^1.0.3",
     "mocha": "^2.3.3",
     "nsp": "^2.2.0",
     "ramda-fantasy": "^0.4.1",

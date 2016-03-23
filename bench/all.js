@@ -3,6 +3,7 @@ const suite = new benchmark.Suite();
 const DataTask = require('data.task');
 const RamdaFuture = require('ramda-fantasy').Future;
 const Fluture = require('..');
+const LazyEither = require('lazy-either');
 
 const noop = () => {};
 
@@ -28,6 +29,14 @@ suite.add('Ramda Fantasy', () => {
   .chain(x => RamdaFuture.of(f => f(x + 1)))
   .ap(RamdaFuture.of(x => x + 1))
   .fork(noop, noop);
+});
+
+suite.add('LazyEither', () => {
+  LazyEither.of(1)
+  .map(x => x + 1)
+  .chain(x => LazyEither.of(f => f(x + 1)))
+  .ap(LazyEither.of(x => x + 1))
+  .value(noop);
 });
 
 suite.on('complete', require('./_print'))
