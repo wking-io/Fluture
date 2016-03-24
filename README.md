@@ -438,23 +438,14 @@ first([
 Dispatches the first argument to the `or` method of the second argument.
 
 ```js
-const any = futures => futures.reduceRight(Future.or, Future.reject('Empty list!'));
+const program = S.pipe([
+  reject,
+  or(of('second chance')),
+  value(console.log)
+]);
 
-any([
-  Future.reject('first: nope'),
-  Future.of('second: yep'),
-  Future.reject('third: yep')
-])
-.fork(console.error, console.log);
-//> "second: yep"
-
-any([
-  Future.reject('first: nope'),
-  Future.reject('second: nope'),
-  Future.reject('third: nope')
-])
-.fork(console.error, console.log);
-//> "third: nope"
+program('first chance')
+> "second chance"
 ```
 
 #### `fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c`
