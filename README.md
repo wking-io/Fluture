@@ -438,7 +438,7 @@ first([
 Dispatches the first argument to the `or` method of the second argument.
 
 ```js
-const any = futures => futures.reduce(Future.or, Future.reject('Empty list!'));
+const any = futures => futures.reduceRight(Future.or, Future.reject('Empty list!'));
 
 any([
   Future.reject('first: nope'),

@@ -910,6 +910,15 @@ describe('Dispatchers', () => {
       return assertResolved(Future.or(Future.of(1))(Future.of(2)), 2);
     });
 
+    it('allows implementation of `any` in terms of reduce', () => {
+      const any = ms => ms.reduceRight(Future.or, Future.reject('empty list'));
+      return Promise.all([
+        assertRejected(any([]), 'empty list'),
+        assertResolved(any([Future.reject(1), Future.of(2)]), 2),
+        assertResolved(any([Future.reject(1), Future.after(20, 2), Future.of(3)]), 2)
+      ]);
+    });
+
   });
 
   describe('.fold()', () => {
