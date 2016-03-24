@@ -394,8 +394,8 @@ Future.of('Hello').promise().then(console.log);
 Dispatches the first and second arguments to the `fork` method of the third argument.
 
 ```js
-const consoleFork = Future.fork(console.error, console.log);
-consoleFork(Future.of('Hello'));
+const consoleFork = fork(console.error, console.log);
+consoleFork(of('Hello'));
 //> "Hello"
 ```
 
@@ -423,10 +423,10 @@ Has the same effect as [`R.ap`][5].
 Dispatches the first argument to the `race` method of the second argument.
 
 ```js
-const first = futures => futures.reduce(Future.race);
+const first = futures => futures.reduce(race);
 first([
-  Future.after(100, 'hello'),
-  Future.after(50, 'bye'),
+  after(100, 'hello'),
+  after(50, 'bye'),
   Future(rej => setTimeout(rej, 25, 'nope'))
 ])
 .fork(console.error, console.log)
