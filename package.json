@@ -44,8 +44,7 @@
   ],
   "dependencies": {
     "fantasy-land": "^0.2.1",
-    "inspect-f": "^1.0.0",
-    "inspect-x": "^1.0.17"
+    "inspect-f": "^1.0.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",

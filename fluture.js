@@ -1,11 +1,11 @@
-/*global define FantasyLand inspectx inspectf*/
+/*global define FantasyLand inspectf*/
 (function(global, f){
 
   'use strict';
 
   /*istanbul ignore next*/
   if(typeof module !== 'undefined'){
-    module.exports = f(require('fantasy-land'), require('inspect-x'), require('inspect-f'));
+    module.exports = f(require('fantasy-land'), require('inspect-f'));
   }
 
   else if(typeof define === 'function' && define.amd){
@@ -13,10 +13,10 @@
   }
 
   else{
-    global.Fluture = f(FantasyLand, inspectx, inspectf);
+    global.Fluture = f(FantasyLand, inspectf);
   }
 
-}(/*istanbul ignore next*/(global || window || this), function(FL, inspectx, inspectf){
+}(/*istanbul ignore next*/(global || window || this), function(FL, inspectf){
 
   'use strict';
 
@@ -44,7 +44,32 @@
   // Error handling //
   ////////////////////
 
-  const show = x => inspectx(x, {depth: 1});
+  //A small string representing a value, but not containing the whole value.
+  const preview = x =>
+    typeof x === 'string'
+    ? JSON.stringify(x)
+    : Array.isArray(x)
+    ? `[Array ${x.length}]`
+    : typeof x === 'function'
+    ? typeof x.name === 'string' && x.name.length > 0
+    ? `[Function ${x.name}]`
+    : '[Function]'
+    : x && x.toString === Object.prototype.toString
+    ? `[Object ${Object.keys(x).map(String).join(', ')}]`
+    : String(x);
+
+  //A show function to provide a slightly more meaningful representation of values.
+  const show = x =>
+    typeof x === 'string'
+    ? preview(x)
+    : Array.isArray(x)
+    ? `[${x.map(preview).join(', ')}]`
+    : x && (typeof x.toString === 'function')
+    ? x.toString === Object.prototype.toString
+    ? `{${Object.keys(x).reduce((o, k) => o.concat(`${preview(k)}: ${preview(x[k])}`), []).join(', ')}}`
+    : x.toString()
+    : preview(x);
+
   const showf = f => inspectf(2, f).replace(/^/gm, '  ').trim();
 
   function error$invalidArgument(it, at, expected, actual){
