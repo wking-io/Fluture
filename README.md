@@ -15,6 +15,19 @@ are *lazy* and *logical* by design. They have a predictable API governed by the
 > `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
   like modern browsers, transpilers or Node 5+</sup>
 
+## Table of contents
+
+- [Usage](#usage)
+- [Motivation and Features](#motivation-and-features)
+- [Documentation](#documentation)
+  - [Type signatures](#type-signatures)
+  - [Constructors](#constructors)
+  - [Method API](#method-api)
+  - [Dispatcher API](#dispatcher-api)
+  - [Cancellation and resource disposal](#cancellation-and-resource-disposal)
+  - [Futurization](#futurization)
+- [Benchmarks](#benchmarks)
+- [The name](#the-name)
 
 ## Usage
 
