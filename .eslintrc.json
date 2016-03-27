@@ -40,7 +40,6 @@
     "no-unexpected-multiline": 1,
     "accessor-pairs": 2,
     "no-var": 2,
-    "default-case": 1,
     "dot-notation": 2,
     "dot-location": [2, "property"],
     "eqeqeq": 2,

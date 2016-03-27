@@ -46,14 +46,20 @@ program('package.json')
 //> "fluture"
 ```
 
-## Motivation
+## Motivation and Features
 
 Existing implementations of Future are a pain to debug. This library was made in
-an effort to provide **great error messages** when something goes wrong. The
-library also comes bundled with many **async control utilities**. To prevent
-these features from coming at the cost of performance, Fluture was optimized to
-operate at **high performance**. For an overview of differences between Fluture
-and other Future implementations, look at [this wiki article][15].
+an effort to provide **great error messages** when something goes wrong. Some
+other features include:
+
+* Plenty of async control utilities, like
+  [`Future.parallel`][#parallel--positiveinteger---future-a-b---future-a-b]
+  and [`Future#or`][#or--future-a-b--future-a-b---future-a-b].
+* [Process cancellation and automatic resource disposal][#cancellation-and-resource-disposal].
+* High performance.
+
+For an overview of differences between Fluture and other Future implementations,
+have a look at [this wiki article][15].
 
 ## Documentation
 
@@ -75,7 +81,7 @@ all types used within these signatures follows:
 
 ### Constructors
 
-#### `Future :: ((a -> Void), (b -> Void) -> Void) -> Future a b`
+#### `Future :: ((a -> ()), (b -> ()) -> ?(() -> ())) -> Future a b`
 
 A (monadic) container which represents an eventual value. A lot like Promise but
 more principled in that it follows the [Fantasy Land][1] algebraic JavaScript
@@ -137,7 +143,7 @@ parseJson('a').fork(console.error, console.log)
 //> [SyntaxError: Unexpected token =]
 ```
 
-#### `try :: (Void -> !a | b) -> Future a b`
+#### `try :: (() -> !a | b) -> Future a b`
 
 A constructor that creates a Future which resolves with the result of calling
 the given function, or rejects with the error thrown by the given function.
@@ -151,7 +157,7 @@ Future.try(() => data.foo.bar.baz)
 //> [TypeError: Cannot read property 'baz' of undefined]
 ```
 
-#### `node :: ((a, b -> Void) -> Void) -> Future a b`
+#### `node :: ((a, b -> ()) -> ()) -> Future a b`
 
 A constructor that creates a Future which rejects with the first argument given
 to the function, or resolves with the second if the first is not present.
@@ -233,7 +239,7 @@ eventualPackage.fork(console.error, console.log);
 
 ### Method API
 
-#### `fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
+#### `fork :: Future a b ~> (a -> ()), (b -> ()) -> () -> ()`
 
 Execute the Future (which up until now was merely a container for its
 computation), and get at the result or error.
@@ -361,7 +367,7 @@ Future.reject('it broke')
 //> Left('it broke')
 ```
 
-#### `value :: Future a b ~> (b -> Void) -> Void`
+#### `value :: Future a b ~> (b -> ()) -> () -> ()`
 
 Extracts the value from a resolved Future by forking it. Only use this function
 if you are sure the Future is going to be resolved, for example; after using
@@ -389,7 +395,7 @@ Future.of('Hello').promise().then(console.log);
 
 ### Dispatcher API
 
-#### `fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
+#### `fork :: (a -> ()) -> (b -> ()) -> Future a b -> () -> ()`
 
 Dispatches the first and second arguments to the `fork` method of the third argument.
 
@@ -452,9 +458,57 @@ program('first chance')
 
 Dispatches the first and second arguments to the `fold` method of the third argument.
 
-#### `value :: (b -> Void) -> Future a b -> Void`
+#### `value :: (b -> ()) -> Future a b -> () -> ()`
 
 Dispatches the first argument to the `value` method of the second argument.
+
+### Cancellation and resource disposal
+
+When a Future is created, it is given the `fork` function. This `fork` function
+somes creates resources, like `setTimeout`s in the event loop or database
+connections. In order to deal with the disposal of these resources, one may
+*return* a function from `fork`, which will be automatically called after the
+Future has forked. This function is expected to be idempotent.
+
+```js
+const createDatabaseConnection = settings => Future((rej, res) => {
+  const conn = mysql.connect(settings, res);
+  return () => conn.hasEnded || conn.end();
+});
+
+createDatabaseConnection()
+.chain(conn => conn.query('SELECT 1 + 1 AS two'))
+
+ //When we `fork`, all of the resource disposers will be automatically called.
+.fork(console.error, console.log);
+```
+
+Besides resource disposal, this function can also be used to cancel running
+Futures. Both `.fork()` and `.value()` return the function and you can call it
+at any time to prematurely dispose of resources and cause the whole pipeline to
+come to a halt:
+
+```js
+const loadPage = url => Future((rej, res) => {
+  const req = new XMLHttpRequest();
+  req.addEventListener('load', res);
+  req.addEventListener('error', rej);
+  req.open('GET', url);
+  req.send();
+  return () => (req.readyState < 4) && req.abort();
+});
+
+const cancel = loadPage('https://github.com').fork(onFailure, onSuccess);
+
+//Cancel the Future immediately. Nothing will happen; `onFailure` nor
+//`onSuccess` will ever be called anymore because `cancel` called `req.abort()`.
+cancel();
+```
+
+It's the responsibility of the `fork` function with which the
+Future was constructed to prevent `rej` or `res` to be called anymore after
+its returned `clear` function has been called. All internal Fluture functions,
+for example `Fluture.after`, play by these rules.
 
 ### Futurization
 

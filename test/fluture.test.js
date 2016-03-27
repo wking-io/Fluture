@@ -6,7 +6,7 @@ const jsc = require('jsverify');
 
 const noop = () => {};
 const add = a => b => a + b;
-const error = new Error('It broke');
+const error = new Error('Intentional error for unit testing');
 
 const repeat = (n, x) => {
   const out = new Array(n);
@@ -244,6 +244,9 @@ describe('Constructors', () => {
 
   describe('.parallel()', () => {
 
+    const delayedRes = Future((rej, res) => setTimeout(res, 20, 1));
+    const delayedRej = Future(rej => setTimeout(rej, 20, 1));
+
     it('is curried', () => {
       expect(Future.parallel(1)).to.be.a('function');
     });
@@ -312,11 +315,35 @@ describe('Constructors', () => {
       return assertRejected(actual, 'err');
     });
 
+    it('clears all Futures when cleared', done => {
+      const m = Future(() => done);
+      const clear = Future.parallel(1, [m]).fork(noop, noop);
+      setTimeout(clear, 20);
+    });
+
+    it('does not resolve after being cleared', done => {
+      const clear = Future.parallel(1, [delayedRes, delayedRes]).fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 50);
+    });
+
+    it('does not reject after being cleared', done => {
+      const clear = Future.parallel(1, [delayedRej, delayedRej]).fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 50);
+    });
+
   });
 
 });
 
 describe('Future', () => {
+
+  const immediateRes = Future.of(1);
+  const immediateRej = Future.reject(1);
+  const delayedRes = Future((rej, res) => setTimeout(res, 20, 1));
+  const delayedRej = Future(rej => setTimeout(rej, 20, 1));
+  const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
   describe('#fork()', () => {
 
@@ -359,62 +386,127 @@ describe('Future', () => {
 
   describe('#chain()', () => {
 
-    const m = Future.of(1);
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-
     it('throws when invoked out of context', () => {
-      const f = () => Future.of(1).chain.call(null, noop);
+      const f = () => immediateRes.chain.call(null, noop);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('throws TypeError when not given a function', () => {
-      const fs = xs.map(x => () => m.chain(x));
+      const fs = xs.map(x => () => immediateRes.chain(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws TypeError when the given function does not return Future', () => {
-      const fs = xs.map(x => () => m.chain(() => x).fork(noop, noop));
+      const fs = xs.map(x => () => immediateRes.chain(() => x).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('calls the given function with the inner of the Future', () => {
-      m.chain(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
+      immediateRes.chain(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
     });
 
     it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = m.chain(() => Future.of(2));
+      const actual = immediateRes.chain(() => Future.of(2));
       return assertResolved(actual, 2);
+    });
+
+    it('maintains rejected state', () => {
+      const actual = immediateRej.chain(() => immediateRes);
+      return assertRejected(actual, 1);
+    });
+
+    it('assumes rejected state', () => {
+      const actual = immediateRes.chain(() => immediateRej);
+      return assertRejected(actual, 1);
+    });
+
+    it('does not chain after being cleared', done => {
+      delayedRes.chain(failRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cleared', done => {
+      delayedRej.chain(failRes).fork(failRej, failRes)();
+      immediateRes.chain(() => delayedRej).fork(failRej, failRes)();
+      setTimeout(done, 25);
     });
 
   });
 
   describe('#chainRej()', () => {
 
-    const m = Future.reject(1);
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-
     it('throws when invoked out of context', () => {
-      const f = () => Future.of(1).chainRej.call(null, noop);
+      const f = () => immediateRej.chainRej.call(null, noop);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('throws TypeError when not given a function', () => {
-      const fs = xs.map(x => () => m.chainRej(x));
+      const fs = xs.map(x => () => immediateRej.chainRej(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws TypeError when the given function does not return Future', () => {
-      const fs = xs.map(x => () => m.chainRej(() => x).fork(noop, noop));
+      const fs = xs.map(x => () => immediateRej.chainRej(() => x).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('calls the given function with the inner of the Future', () => {
-      m.chainRej(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
+      immediateRej.chainRej(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
     });
 
     it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = m.chainRej(() => Future.of(2));
+      const actual = immediateRej.chainRej(() => Future.of(2));
       return assertResolved(actual, 2);
+    });
+
+    it('maintains resolved state', () => {
+      const actual = immediateRes.chainRej(() => immediateRes);
+      return assertResolved(actual, 1);
+    });
+
+    it('assumes rejected state', () => {
+      const actual = immediateRej.chainRej(() => immediateRej);
+      return assertRejected(actual, 1);
+    });
+
+    it('does not chain after being cleared', done => {
+      delayedRej.chainRej(failRej).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+  });
+
+  describe('#map()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).map.call(null, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.of(1).map(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('applies the given function to its inner', () => {
+      const actual = Future.of(1).map(add(1));
+      return assertResolved(actual, 2);
+    });
+
+    it('does not map rejected state', () => {
+      const actual = immediateRej.map(x => x + 1);
+      return assertRejected(actual, 1);
+    });
+
+    it('does not resolve after being cleared', done => {
+      delayedRes.map(failRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cleared', done => {
+      delayedRej.map(failRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
     });
 
   });
@@ -469,24 +561,14 @@ describe('Future', () => {
       return assertResolved(actual, 2);
     });
 
-  });
-
-  describe('#map()', () => {
-
-    it('throws when invoked out of context', () => {
-      const f = () => Future.of(1).map.call(null, noop);
-      expect(f).to.throw(TypeError, /Future/);
+    it('does not resolve after being cleared', done => {
+      delayedRes.ap(delayedRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
     });
 
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.of(1).map(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('applies the given function to its inner', () => {
-      const actual = Future.of(1).map(add(1));
-      return assertResolved(actual, 2);
+    it('does not reject after being cleared', done => {
+      delayedRej.ap(delayedRej).fork(failRej, failRes)();
+      setTimeout(done, 25);
     });
 
   });
@@ -779,6 +861,30 @@ describe('Lawfulness', function(){
     const right = law.rightIdentity(Future)(assertEqual);
     jsc.property('leftIdentity', 'number | string', x => left(Future.of(x)));
     jsc.property('rightIdentity', 'number | string', right);
+  });
+
+});
+
+describe('Clear feature', () => {
+
+  describe('Automatic cleanup', () => {
+
+    it('when forked', done => {
+      Future((rej, res) => (res(), done)).fork(noop, noop);
+    });
+
+    it('when forked with delay', done => {
+      Future((rej, res) => (setTimeout(res, 20), done)).fork(noop, noop);
+    });
+
+    it('when forked using .value', done => {
+      Future((rej, res) => (res(), done)).value(noop);
+    });
+
+    it('when forked using .promise', done => {
+      Future((rej, res) => (res(), done)).promise();
+    });
+
   });
 
 });
