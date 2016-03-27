@@ -221,6 +221,9 @@ Returns a Future which caches the resolution value of the given Future so that
 whenever it's forked, it can load the value from cache rather than reexecuting
 the chain.
 
+Please note that cached Futures cannot be
+[cancelled or disposed](#cancellation-and-resource-disposal).
+
 ```js
 const eventualPackage = Future.cache(
   Future.node(done => {
@@ -465,7 +468,7 @@ Dispatches the first argument to the `value` method of the second argument.
 ### Cancellation and resource disposal
 
 When a Future is created, it is given the `fork` function. This `fork` function
-somes creates resources, like `setTimeout`s in the event loop or database
+sometimes creates resources, like `setTimeout`s in the event loop or database
 connections. In order to deal with the disposal of these resources, one may
 *return* a function from `fork`, which will be automatically called after the
 Future has forked. This function is expected to be idempotent.
