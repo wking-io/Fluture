@@ -554,7 +554,13 @@
     }
     check$cast(m);
     return new FutureClass(function Future$cast$fork(rej, res){
-      m.fork(rej, res);
+      let cleared = false;
+      m.fork(function Future$cast$rej(x){
+        cleared || rej(x);
+      }, function Future$cast$res(x){
+        cleared || res(x);
+      });
+      return () => (cleared = true);
     });
   };
 
@@ -580,7 +586,9 @@
   Future.node = function Future$node(f){
     check$node(f);
     return new FutureClass(function Future$node$fork(rej, res){
-      f((a, b) => a ? rej(a) : res(b));
+      let cleared = false;
+      f((a, b) => cleared || (a ? rej(a) : res(b)));
+      return () => (cleared = true);
     });
   };
 

@@ -144,6 +144,20 @@ describe('Constructors', () => {
       return assertResolved(Future.cast(forkable), 1);
     });
 
+    it('does not resolve after being cleared', done => {
+      const forkable = {fork: (l, r) => setTimeout(r, 20, 1)};
+      const clear = Future.cast(forkable).fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cleared', done => {
+      const forkable = {fork: (l, r) => (r, setTimeout(l, 20, 1))};
+      const clear = Future.cast(forkable).fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 25);
+    });
+
   });
 
   describe('.encase()', () => {
@@ -215,6 +229,20 @@ describe('Constructors', () => {
     it('returns a Future which resolves when the callback is called with (null, a)', () => {
       const f = done => done(null, 'a');
       return assertResolved(Future.node(f), 'a');
+    });
+
+    it('does not resolve after being cleared', done => {
+      const f = done => setTimeout(done, 20, null, 1);
+      const clear = Future.node(f).fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cleared', done => {
+      const f = done => setTimeout(done, 20, 1);
+      const clear = Future.node(f).fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 25);
     });
 
   });
