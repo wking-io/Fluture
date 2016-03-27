@@ -851,6 +851,27 @@ describe('Future', () => {
       setTimeout(done, 25);
     });
 
+    it('does not autoclear', done => {
+      const throws = () => { throw error };
+      const m = Future((rej, res) => (res(1), throws)).cache()
+      m.fork(noop, noop);
+      m.fork(noop, noop);
+      setTimeout(done, 25);
+    });
+
+    it('it forks the internal Future again when forked after having been cleared', done => {
+      const m = Future((rej, res) => {
+        const o = {cleared: false};
+        const id = setTimeout(res, 20, o);
+        return () => (o.cleared = true, clearTimeout(id));
+      }).cache();
+      const clear = m.fork(noop, noop);
+      setTimeout(() => {
+        clear();
+        m.fork(noop, v => (expect(v).to.have.property('cleared', false), done()));
+      }, 10);
+    });
+
   });
 
 });
