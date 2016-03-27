@@ -352,8 +352,10 @@ the value from cache rather than reexecuting the chain. This means you can use
 the same Future in multiple `chain`s, without having to worry that it's going
 to re-execute the computation every time.
 
-Please note that cached Futures cannot be
-[cancelled or disposed](#cancellation-and-resource-disposal).
+Please note that [cancelling or disposing](#cancellation-and-resource-disposal)
+a cached Future will cause it to clear its internal cache. The next time it's
+forked *after* that, it will re-execute the underlying Future to populate its
+cache again.
 
 ```js
 const eventualPackage = Future.node(done => {
@@ -484,11 +486,18 @@ Future.promise(Future.after(300, 'Hello')).then(console.log);
 
 ### Cancellation and resource disposal
 
+#### Automatic resource disposal
+
 When a Future is created, it is given the `fork` function. This `fork` function
 sometimes creates resources, like `setTimeout`s in the event loop or database
 connections. In order to deal with the disposal of these resources, one may
 *return* a function from `fork`, which will be automatically called after the
 Future has forked. This function is expected to be idempotent.
+
+It's the responsibility of the `fork` function with which the
+Future was constructed to prevent `rej` or `res` to be called anymore after
+its returned disposal function has been called. All internal Fluture functions,
+for example `Future.after`, play by these rules.
 
 ```js
 const createDatabaseConnection = settings => Future((rej, res) => {
@@ -503,10 +512,31 @@ createDatabaseConnection()
 .fork(console.error, console.log);
 ```
 
+If you don't want a particular Future to automatically dispose of its resources,
+you can construct it with `false` passed as its second argument:
+
+```js
+Future(
+  rej => {
+    const id = setTimeout(rej, 2000, 'timed out')
+    return () => clearTimeout(id);
+  },
+  false //<---
+)
+```
+
+This Future, and any Future's derrived from it through `map`, `chain`, etc. will
+no longer automatically dispose of their resources after being forked. This
+allows resources to only be disposed manually.
+
+#### Manual resource disposal and cancellation
+
+Both `.fork()` and `.value()` return the disposal function and you can call it
+at any time to manually dispose of resources.
+
 Besides resource disposal, this function can also be used to cancel running
-Futures. Both `.fork()` and `.value()` return the function and you can call it
-at any time to prematurely dispose of resources and cause the whole pipeline to
-come to a halt:
+Futures. When called prematurely it will dispose the resources and cause the
+whole pipeline to come to a halt:
 
 ```js
 const loadPage = url => Future((rej, res) => {
@@ -524,11 +554,6 @@ const cancel = loadPage('https://github.com').fork(onFailure, onSuccess);
 //`onSuccess` will ever be called anymore because `cancel` called `req.abort()`.
 cancel();
 ```
-
-It's the responsibility of the `fork` function with which the
-Future was constructed to prevent `rej` or `res` to be called anymore after
-its returned `clear` function has been called. All internal Fluture functions,
-for example `Fluture.after`, play by these rules.
 
 ### Futurization
 

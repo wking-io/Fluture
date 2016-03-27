@@ -16,13 +16,9 @@ const repeat = (n, x) => {
   return out;
 };
 
-const failRes = x => {
-  throw new Error(`Invalidly entered resolution branch with value ${x}`);
-};
+const failRes = x => { throw new Error(`Invalidly entered resolution branch with value ${x}`) };
 
-const failRej = x => {
-  throw new Error(`Invalidly entered rejection branch with value ${x}`);
-};
+const failRej = x => { throw new Error(`Invalidly entered rejection branch with value ${x}`) };
 
 const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 
@@ -45,14 +41,20 @@ describe('Constructors', () => {
 
   describe('Future', () => {
 
-    it('is a unary function', () => {
+    it('is a binary function', () => {
       expect(Future).to.be.a('function');
-      expect(Future.length).to.equal(1);
+      expect(Future.length).to.equal(2);
     });
 
-    it('throws TypeError when not given a function', () => {
+    it('throws TypeError when not given a function as first argument', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
       const fs = xs.map(x => () => Future(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when not given a boolean as second argument', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future(noop, x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
@@ -162,9 +164,7 @@ describe('Constructors', () => {
     });
 
     it('returns a Future which rejects with the exception thrown by the function', () => {
-      const actual = Future.encase(() => {
-        throw error;
-      })(1);
+      const actual = Future.encase(() => { throw error })(1);
       return assertRejected(actual, error);
     });
 
@@ -172,9 +172,7 @@ describe('Constructors', () => {
       const f = () =>
         Future.of('null')
         .chain(Future.encase(JSON.parse))
-        .map(() => {
-          throw error;
-        })
+        .map(() => { throw error })
         .fork(noop, noop)
       expect(f).to.throw(error);
     });
@@ -195,9 +193,7 @@ describe('Constructors', () => {
     });
 
     it('returns a Future which rejects with the exception thrown by the function', () => {
-      const actual = Future.try(() => {
-        throw error;
-      });
+      const actual = Future.try(() => { throw error });
       return assertRejected(actual, error);
     });
 
@@ -238,6 +234,12 @@ describe('Constructors', () => {
     it('returns a Future which eventually resolves with the given value', () => {
       const actual = Future.after(20)(1);
       return assertResolved(actual, 1);
+    });
+
+    it('does not resolve after being cleared', done => {
+      const clear = Future.after(20, 1).fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 25);
     });
 
   });
@@ -706,6 +708,16 @@ describe('Future', () => {
       return assertResolved(Future.of(1).fold(add(1), add(1)), 2);
     });
 
+    it('does not resolve after being cleared', done => {
+      delayedRes.fold(add(1), add(1)).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cleared', done => {
+      delayedRej.fold(add(1), add(1)).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
   });
 
   describe('#value()', () => {
@@ -827,6 +839,18 @@ describe('Future', () => {
       return assertRejected(m, 'err');
     });
 
+    it('does not resolve after being cleared', done => {
+      const clear = delayedRes.cache().fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cleared', done => {
+      const clear = delayedRej.cache().fork(failRej, failRes);
+      setTimeout(clear, 10);
+      setTimeout(done, 25);
+    });
+
   });
 
 });
@@ -883,6 +907,12 @@ describe('Clear feature', () => {
 
     it('when forked using .promise', done => {
       Future((rej, res) => (res(), done)).promise();
+    });
+
+    it('does not happen if the Future is construted with a second argument of false', done => {
+      const throws = () => { throw error };
+      Future((rej, res) => (res(1), throws), false).fork(noop, noop);
+      setTimeout(done, 25);
     });
 
   });

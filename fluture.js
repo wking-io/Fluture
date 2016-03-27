@@ -50,6 +50,10 @@
     return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
   }
 
+  function isBoolean(b){
+    return typeof b === 'boolean';
+  }
+
   ////////////////////
   // Error handling //
   ////////////////////
@@ -95,8 +99,9 @@
     )
   }
 
-  function check$Future(fork){
-    if(!isFunction(fork)) error$invalidArgument('Future', 0, 'be a function', fork);
+  function check$Future(f, b){
+    if(!isFunction(f)) error$invalidArgument('Future', 0, 'be a function', f);
+    if(!isBoolean(b)) error$invalidArgument('Future', 0, 'be a boolean', b);
   }
 
   function check$fork(it, rej, res){
@@ -216,13 +221,15 @@
   // Future //
   ////////////
 
-  function FutureClass(f){
+  function FutureClass(f, b){
     this._f = f;
+    this._b = b;
   }
 
-  function Future(f){
-    check$Future(f);
-    return new FutureClass(f);
+  function Future(f, b){
+    if(arguments.length < 2) b = true;
+    check$Future(f, b);
+    return new FutureClass(f, b);
   }
 
   function Future$of(x){
@@ -234,14 +241,15 @@
   function Future$fork(rej, res){
     check$fork(this, rej, res);
     let immediate = false, clear;
+    const autoclear = this._b;
     clear = fork(this, function Future$fork$rej(x){
       rej(x);
-      clear ? clear() : (immediate = true);
+      autoclear && clear ? clear() : (immediate = true);
     }, function Future$fork$res(x){
       res(x);
-      clear ? clear() : (immediate = true);
+      autoclear && clear ? clear() : (immediate = true);
     });
-    immediate && clear();
+    autoclear && immediate && clear();
     return clear;
   }
 
@@ -263,7 +271,7 @@
         clearThis();
         clearThat();
       };
-    });
+    }, this._b);
   }
 
   function Future$chainRej(f){
@@ -284,7 +292,7 @@
         clearThis();
         clearThat();
       };
-    });
+    }, _this._b);
   }
 
   function Future$map(f){
@@ -301,7 +309,7 @@
         cleared = true;
         clear();
       };
-    });
+    }, _this._b);
   }
 
   function Future$ap(m){
@@ -327,7 +335,7 @@
         clearThis();
         clearThat();
       };
-    });
+    }, _this._b);
   }
 
   function Future$toString(){
@@ -347,7 +355,7 @@
         clearThis();
         clearThat();
       };
-    });
+    }, _this._b);
   }
 
   function Future$or(m){
@@ -368,7 +376,7 @@
         clearThis();
         clearThat();
       };
-    });
+    }, _this._b);
   }
 
   function Future$fold(f, g){
@@ -376,12 +384,16 @@
     const _this = this;
     return new FutureClass(function Future$fold$fork(rej, res){
       let cleared = false;
-      const clear = fork(_this, e => cleared || res(f(e)), x => cleared || res(g(x)));
+      const clear = fork(_this, function Future$fold$rej(e){
+        cleared || res(f(e));
+      }, function Future$fold$res(x){
+        cleared || res(g(x));
+      });
       return function Future$fold$clear(){
         cleared = true;
         clear();
-      }
-    });
+      };
+    }, _this._b);
   }
 
   function Future$value(f){
@@ -409,6 +421,7 @@
     const _this = this;
     let que = [], value, state = 'idle';
     const settleWith = newState => function Future$cache$settle(newValue){
+      if(state === 'idle') return;
       check$cache$settle(state, newState, value, newValue);
       value = newValue; state = newState;
       for(let i = 0, l = que.length; i < l; i++){
@@ -418,6 +431,7 @@
       que = undefined;
     };
     return new FutureClass(function Future$cache$fork(rej, res){
+      let clear = noop;
       switch(state){
         case 'pending': que.push({rejected: rej, resolved: res}); break;
         case 'rejected': rej(value); break;
@@ -425,9 +439,15 @@
         case 'idle':
           state = 'pending';
           que.push({rejected: rej, resolved: res});
-          _this._f(settleWith('rejected'), settleWith('resolved'));
+          clear = fork(_this, settleWith('rejected'), settleWith('resolved'));
       }
-    });
+      return function Future$cache$clear(){
+        state = 'idle';
+        value = undefined;
+        que = [];
+        clear();
+      };
+    }, false);
   }
 
   //Give Future a prototype.

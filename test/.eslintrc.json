@@ -3,7 +3,8 @@
     "strict": 0,
     "no-unused-expressions": 0,
     "no-invalid-this": 0,
-    "no-var": 0
+    "no-var": 0,
+    "brace-style": 0
   },
   "env": {
     "mocha": true
