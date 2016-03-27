@@ -507,10 +507,9 @@ connections. In order to deal with the disposal of these resources, one may
 *return* a function from `fork`, which will be automatically called after the
 Future has forked. This function is expected to be idempotent.
 
-It's the responsibility of the `fork` function with which the
-Future was constructed to prevent `rej` or `res` to be called anymore after
-its returned disposal function has been called. All internal Fluture functions,
-for example `Future.after`, play by these rules.
+It's the responsibility of this `fork` function  to prevent `rej` or `res` from
+being called after its returned disposal function has been called. All internal
+Fluture functions, for example `Future.after`, play by these rules.
 
 ```js
 const createDatabaseConnection = settings => Future((rej, res) => {
