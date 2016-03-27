@@ -365,10 +365,11 @@ the value from cache rather than reexecuting the chain. This means you can use
 the same Future in multiple `chain`s, without having to worry that it's going
 to re-execute the computation every time.
 
-Please note that [cancelling or disposing](#cancellation-and-resource-disposal)
-a cached Future will cause it to clear its internal cache. The next time it's
-forked *after* that, it will re-execute the underlying Future to populate its
-cache again.
+Please note that cached Futures, and Futures derived from them do not
+automatically [dispose of resources](#automatic-resource-disposal). When the
+cached Future is [cancelled or disposed manually](#manual-resource-disposal-and-cancellation),
+it will clear its internal cache. The next time it's forked *after* that, it
+must re-execute the underlying Future to populate its cache again.
 
 ```js
 const eventualPackage = Future.node(done => {
@@ -537,7 +538,7 @@ Future(
 )
 ```
 
-This Future, and any Future's derrived from it through `map`, `chain`, etc. will
+This Future, and any Future's derived from it through `map`, `chain`, etc. will
 no longer automatically dispose of their resources after being forked. This
 allows resources to only be disposed manually.
 
