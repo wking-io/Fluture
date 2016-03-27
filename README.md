@@ -215,31 +215,6 @@ Future.parallel(2, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
 ```
 
-#### `cache :: Future a b -> Future a b`
-
-Returns a Future which caches the resolution value of the given Future so that
-whenever it's forked, it can load the value from cache rather than reexecuting
-the chain.
-
-Please note that cached Futures cannot be
-[cancelled or disposed](#cancellation-and-resource-disposal).
-
-```js
-const eventualPackage = Future.cache(
-  Future.node(done => {
-    console.log('Reading some big data');
-    fs.readFile('package.json', 'utf8', done)
-  })
-);
-
-eventualPackage.fork(console.error, console.log);
-//> "Reading some big data"
-//> "{...}"
-
-eventualPackage.fork(console.error, console.log);
-//> "{...}"
-```
-
 ### Method API
 
 #### `fork :: Future a b ~> (a -> ()), (b -> ()) -> () -> ()`
@@ -370,6 +345,31 @@ Future.reject('it broke')
 //> Left('it broke')
 ```
 
+#### `cache :: Future a b ~> Future a b`
+
+Returns a cached version of the Future so that whenever it's forked, it can load
+the value from cache rather than reexecuting the chain. This means you can use
+the same Future in multiple `chain`s, without having to worry that it's going
+to re-execute the computation every time.
+
+Please note that cached Futures cannot be
+[cancelled or disposed](#cancellation-and-resource-disposal).
+
+```js
+const eventualPackage = Future.node(done => {
+  console.log('Reading some big data');
+  fs.readFile('package.json', 'utf8', done)
+})
+.cache();
+
+eventualPackage.fork(console.error, console.log);
+//> "Reading some big data"
+//> "{...}"
+
+eventualPackage.fork(console.error, console.log);
+//> "{...}"
+```
+
 #### `value :: Future a b ~> (b -> ()) -> () -> ()`
 
 Extracts the value from a resolved Future by forking it. Only use this function
@@ -461,9 +461,26 @@ program('first chance')
 
 Dispatches the first and second arguments to the `fold` method of the third argument.
 
+#### `cache :: Future a b -> Future a b`
+
+Dispatches to the `cache` method.
+
+```js
+const cachedConnection = Future.cache(mysqlConnect());
+```
+
 #### `value :: (b -> ()) -> Future a b -> () -> ()`
 
 Dispatches the first argument to the `value` method of the second argument.
+
+#### `promise :: Future a b -> Promise b a`
+
+Dispatches to the `promise` method.
+
+```js
+Future.promise(Future.after(300, 'Hello')).then(console.log);
+//> "Hello"
+```
 
 ### Cancellation and resource disposal
 
