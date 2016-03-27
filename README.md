@@ -53,9 +53,9 @@ an effort to provide **great error messages** when something goes wrong. Some
 other features include:
 
 * Plenty of async control utilities, like
-  [`Future.parallel`][#parallel--positiveinteger---future-a-b---future-a-b]
-  and [`Future#or`][#or--future-a-b--future-a-b---future-a-b].
-* [Process cancellation and automatic resource disposal][#cancellation-and-resource-disposal].
+  [`Future.parallel`](#parallel--positiveinteger---future-a-b---future-a-b)
+  and [`Future#or`](#or--future-a-b--future-a-b---future-a-b).
+* [Process cancellation and automatic resource disposal](#cancellation-and-resource-disposal).
 * High performance.
 
 For an overview of differences between Fluture and other Future implementations,
