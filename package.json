@@ -1,6 +1,6 @@
 {
   "name": "fluture",
-  "version": "0.6.0-beta1",
+  "version": "0.6.0-beta2",
   "description": "A mathematically correct alternative to Promises for asynchronous control flow",
   "main": "fluture.js",
   "repository": "https://github.com/Avaq/fluture.git",
