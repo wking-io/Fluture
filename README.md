@@ -21,7 +21,7 @@ are *lazy* and *logical* by design. They have a predictable API governed by the
 - [Motivation and Features](#motivation-and-features)
 - [Documentation](#documentation)
   - [Type signatures](#type-signatures)
-  - [Constructors](#constructors)
+  - [Creation](#creation)
   - [Method API](#method-api)
   - [Dispatcher API](#dispatcher-api)
   - [Cancellation and resource disposal](#cancellation-and-resource-disposal)
@@ -92,17 +92,25 @@ all types used within these signatures follows:
 - **Apply** - Any object with an `ap` method which satisfies the
   [Fantasy Land Apply specification][14].
 
-### Constructors
+### Creation
 
-#### `Future :: ((a -> ()), (b -> ()) -> ?(() -> ())) -> Future a b`
+#### `Future :: ((a -> ()), (b -> ()) -> ?(() -> ())) -> ?Bool -> Future a b`
 
-A (monadic) container which represents an eventual value. A lot like Promise but
-more principled in that it follows the [Fantasy Land][1] algebraic JavaScript
-specification.
+The Future constructor. Creates a new instance of Future. Takes two parameters:
+
+* `fork`: A function which takes two callbacks. Both are continuations for an
+  asynchronous computation. The first is `reject`, commonly abreviated to `rej`.
+  The second `resolve`, which abreviates to `res`. The `fork` function is
+  expected to call `rej` once an error occurs, or `res` with the result of the
+  asynchronous computation. Additionally, another function *may* be returned to
+  be used for [cancellation or resource disposal](#cancellation-and-resource-disposal).
+* `autoclear`: Whether to [automatically dispose of resources](#automatic-resource-disposal)
+  when a resource disposal function is returned from `fork`. Defaults to true.
+  It's quite likely you'll never need to override this.
 
 ```js
-const eventualThing = Future((reject, resolve) => {
-  setTimeout(resolve, 500, 'world');
+const eventualThing = Future((rej, res) => {
+  setTimeout(res, 500, 'world');
 });
 
 eventualThing.fork(
@@ -112,9 +120,11 @@ eventualThing.fork(
 //> "Hello world!"
 ```
 
-#### `of :: b -> Future a b`
+#### `of :: a -> Future _ a`
 
-A constructor that creates a Future containing the given value.
+Creates a Future which immediately resolves with the given value. This function
+is compliant with the [Fantasy Land Applicative specification][16] and is
+also available on the prototype.
 
 ```js
 const eventualThing = Future.of('world');
@@ -125,9 +135,14 @@ eventualThing.fork(
 //> "Hello world!"
 ```
 
+#### `reject :: a -> Future a _`
+
+Creates a Future which immediately rejects with the given value. Just like `of`
+but for the rejection branch.
+
 #### `after :: Number -> b -> Future a b`
 
-A constructor that creates a Future containing the given value after n milliseconds.
+Creates a Future which resolves with the given value after n milliseconds.
 
 ```js
 const eventualThing = Future.after(500, 'world');
@@ -158,8 +173,8 @@ parseJson('a').fork(console.error, console.log)
 
 #### `try :: (() -> !a | b) -> Future a b`
 
-A constructor that creates a Future which resolves with the result of calling
-the given function, or rejects with the error thrown by the given function.
+Creates a Future which resolves with the result of calling the given function,
+or rejects with the error thrown by the given function.
 
 Sugar for `Future.encase(f, undefined)`.
 
@@ -172,11 +187,12 @@ Future.try(() => data.foo.bar.baz)
 
 #### `node :: ((a, b -> ()) -> ()) -> Future a b`
 
-A constructor that creates a Future which rejects with the first argument given
-to the function, or resolves with the second if the first is not present.
+Creates a Future which rejects with the first argument given to the function,
+or resolves with the second if the first is not present.
 
 This is a convenience for NodeJS users who wish to easily obtain a Future from
-a node style callback API.
+a node style callback API. To permanently turn a function into one that returns
+a Future, check out [futurization](#futurization).
 
 ```js
 Future.node(done => fs.readFile('package.json', 'utf8', done))
@@ -232,11 +248,10 @@ Future.parallel(2, stabalizedFutures).fork(console.error, console.log);
 
 #### `fork :: Future a b ~> (a -> ()), (b -> ()) -> () -> ()`
 
-Execute the Future (which up until now was merely a container for its
-computation), and get at the result or error.
-
-It is the return from Fantasy Land to the real world. This function best shows
-the fundamental difference between Promises and Futures.
+Execute the Future by calling the `fork` function that was passed to it at
+[construction](#creation) with the `reject` and `resolve` callbacks. Futures are
+*lazy*, which means even if you've `map`ped or `chain`ed over them, they'll do
+*nothing* if you don't eventually fork them.
 
 ```js
 Future.of('world').fork(
@@ -254,8 +269,12 @@ Future.reject(new Error('It broke!')).fork(
 
 #### `map :: Future a b ~> (b -> c) -> Future a c`
 
-Map over the value inside the Future. If the Future is rejected, mapping is not
-performed.
+Transforms the resolution value inside the Future, and returns a new Future with
+the transformed value. This is like doing `promise.then(x => x + 1)`, except
+that it's lazy, so the transformation will not be applied before the Future is
+forked. The transformation is only applied to the resolution branch. So if the
+Future is rejected, the transformation is ignored. To learn more about the exact
+behaviour of `map`, check out its [spec][12].
 
 ```js
 Future.of(1)
@@ -266,8 +285,11 @@ Future.of(1)
 
 #### `chain :: Future a b ~> (b -> Future a c) -> Future a c`
 
-FlatMap over the value inside the Future. If the Future is rejected, chaining is
-not performed.
+Allows the creation of a new Future based on the resolution value. This is like
+doing `promise.then(x => Promise.resolve(x + 1))`, except that it's lazy, so the
+new Future will not be created until the other one is forked. The function is
+only ever applied to the resolution value, so is ignored when the Future was
+rejected. To learn more about the exact behaviour of `chain`, check out its [spec][13].
 
 ```js
 Future.of(1)
@@ -278,8 +300,8 @@ Future.of(1)
 
 #### `chainRej :: Future a b ~> (a -> Future a c) -> Future a c`
 
-FlatMap over the **rejection** value inside the Future. If the Future is
-resolved, chaining is not performed.
+Chain over the **rejection** reason of the Future. This is like `chain`, but for
+the rejection branch.
 
 ```js
 Future.reject(new Error('It broke!')).chainRej(err => {
@@ -292,8 +314,11 @@ Future.reject(new Error('It broke!')).chainRej(err => {
 
 #### `ap :: Future a (b -> c) ~> Future a b -> Future a c`
 
-Apply the value in the Future to the value in the given Future. If the Future is
-rejected, applying is not performed.
+Apply the resolution value, which is expected to be a function (as in
+`Future.of(a_function)`), to the resolution value in the given Future. Both
+Futures involved will run in parallel, and if one rejects the resulting Future
+will also be rejected. To learn more about the exact behaviour of `ap`, check
+out its [spec][14].
 
 ```js
 Future.of(x => x + 1)
@@ -509,8 +534,8 @@ connections. In order to deal with the disposal of these resources, one may
 Future has forked. This function is expected to be idempotent.
 
 It's the responsibility of this `fork` function  to prevent `rej` or `res` from
-being called after its returned disposal function has been called. All internal
-Fluture functions, for example `Future.after`, play by these rules.
+being called after its returned disposal function has been called. All of the
+functions in Fluture play by these rules.
 
 ```js
 const createDatabaseConnection = settings => Future((rej, res) => {
@@ -618,3 +643,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [13]: https://github.com/fantasyland/fantasy-land#chain
 [14]: https://github.com/fantasyland/fantasy-land#apply
 [15]: https://github.com/Avaq/Fluture/wiki/Comparison-of-Future-Implementations
+[16]: https://github.com/fantasyland/fantasy-land#applicative
