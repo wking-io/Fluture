@@ -141,7 +141,7 @@ eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 
 #### `cast :: Forkable a b -> Future a b`
 
-Cast any [Forkable](#forkable) to a [Future](#future).
+Cast any [Forkable](#type-signatures) to a [Future](#type-signatures).
 
 ```js
 Future.cast(require('data.task').of('hello')).value(console.log);
@@ -502,11 +502,11 @@ Future.promise(Future.after(300, 'Hello')).then(console.log);
 
 #### `isFuture :: a -> Boolean`
 
-Returns true for [Futures](#future) and false for everything else.
+Returns true for [Futures](#type-signatures) and false for everything else.
 
 #### `isForkable :: a -> Boolean`
 
-Returns true for [Forkables](#forkable) and false for everything else.
+Returns true for [Forkables](#type-signatures) and false for everything else.
 
 ### Futurization
 
