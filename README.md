@@ -24,6 +24,7 @@ are *lazy* and *logical* by design. They have a predictable API governed by the
   - [Creation](#creation)
   - [Method API](#method-api)
   - [Dispatcher API](#dispatcher-api)
+  - [Utility functions](#utility-functions)
   - [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
 - [The name](#the-name)
@@ -496,6 +497,16 @@ Dispatches to the `promise` method.
 Future.promise(Future.after(300, 'Hello')).then(console.log);
 //> "Hello"
 ```
+
+### Utility functions
+
+#### `isFuture :: a -> Boolean`
+
+Returns true for [Futures](#future) and false for everything else.
+
+#### `isForkable :: a -> Boolean`
+
+Returns true for [Forkables](#forkable) and false for everything else.
 
 ### Futurization
 

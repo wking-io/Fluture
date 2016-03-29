@@ -25,10 +25,10 @@
   ///////////////////
 
   function isForkable(m){
-    return m && typeof m.fork === 'function' && m.fork.length >= 2;
+    return Boolean(m) && typeof m.fork === 'function' && m.fork.length >= 2;
   }
 
-  function isFluture(m){
+  function isFuture(m){
     return m instanceof FutureClass;
   }
 
@@ -90,43 +90,43 @@
   }
 
   function check$fork(it, rej, res){
-    if(!isFluture(it)) error$invalidContext('Future#fork', it);
+    if(!isFuture(it)) error$invalidContext('Future#fork', it);
     if(!isFunction(rej)) error$invalidArgument('Future#fork', 0, 'be a function', rej);
     if(!isFunction(res)) error$invalidArgument('Future#fork', 1, 'be a function', res);
   }
 
   function check$chain(it, f){
-    if(!isFluture(it)) error$invalidContext('Future#chain', it);
+    if(!isFuture(it)) error$invalidContext('Future#chain', it);
     if(!isFunction(f)) error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
   function check$chain$f(m, f, x){
-    if(!isFluture(m)) throw new TypeError(
+    if(!isFuture(m)) throw new TypeError(
       'Future#chain expects the function its given to return a Future'
       + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
     );
   }
 
   function check$chainRej(it, f){
-    if(!isFluture(it)) error$invalidContext('Future.chainRej', it);
+    if(!isFuture(it)) error$invalidContext('Future.chainRej', it);
     if(!isFunction(f)) error$invalidArgument('Future.chainRej', 0, 'a function', f);
   }
 
   function check$chainRej$f(m, f, x){
-    if(!isFluture(m)) throw new TypeError(
+    if(!isFuture(m)) throw new TypeError(
       'Future.chainRej expects the function its given to return a Future'
       + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
     );
   }
 
   function check$map(it, f){
-    if(!isFluture(it)) error$invalidContext('Future#map', it);
+    if(!isFuture(it)) error$invalidContext('Future#map', it);
     if(!isFunction(f)) error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
   function check$ap(it, m){
-    if(!isFluture(it)) error$invalidContext('Future#ap', it);
-    if(!isFluture(m)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
+    if(!isFuture(it)) error$invalidContext('Future#ap', it);
+    if(!isFuture(m)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
   }
 
   //Check resolution value of the Future on which #ap was called.
@@ -137,32 +137,32 @@
   }
 
   function check$race(it, m){
-    if(!isFluture(it)) error$invalidContext('Future#race', it);
-    if(!isFluture(m)) error$invalidArgument('Future#race', 0, 'be a Future', m);
+    if(!isFuture(it)) error$invalidContext('Future#race', it);
+    if(!isFuture(m)) error$invalidArgument('Future#race', 0, 'be a Future', m);
   }
 
   function check$or(it, m){
-    if(!isFluture(it)) error$invalidContext('Future#or', it);
-    if(!isFluture(m)) error$invalidArgument('Future#or', 0, 'be a Future', m);
+    if(!isFuture(it)) error$invalidContext('Future#or', it);
+    if(!isFuture(m)) error$invalidArgument('Future#or', 0, 'be a Future', m);
   }
 
   function check$fold(it, f, g){
-    if(!isFluture(it)) error$invalidContext('Future#fold', it);
+    if(!isFuture(it)) error$invalidContext('Future#fold', it);
     if(!isFunction(f)) error$invalidArgument('Future#fold', 0, 'be a function', f);
     if(!isFunction(g)) error$invalidArgument('Future#fold', 1, 'be a function', g);
   }
 
   function check$value(it, f){
-    if(!isFluture(it)) error$invalidContext('Future#value', it);
+    if(!isFuture(it)) error$invalidContext('Future#value', it);
     if(!isFunction(f)) error$invalidArgument('Future#value', 0, 'be a function', f);
   }
 
   function check$promise(it){
-    if(!isFluture(it)) error$invalidContext('Future#promise', it);
+    if(!isFuture(it)) error$invalidContext('Future#promise', it);
   }
 
   function check$cache(it){
-    if(!isFluture(it)) error$invalidContext('Future#cache', it);
+    if(!isFuture(it)) error$invalidContext('Future#cache', it);
   }
 
   function check$cache$settle(oldState, newState, oldValue, newValue){
@@ -197,7 +197,7 @@
   }
 
   function check$parallel$m(m, i){
-    if(!isFluture(m)) throw new TypeError(
+    if(!isFuture(m)) throw new TypeError(
       'Future.parallel expects argument 1 to be an array of Futures.'
       + ` The value at position ${i} in the array was not a Future.\n  Actual: ${show(m)}`
     );
@@ -466,9 +466,13 @@
   //cache :: Future a b -> Future a b
   Future.cache = createNullaryDispatcher('cache');
 
-  //////////////////
-  // Constructors //
-  //////////////////
+  /////////////////////
+  // Other functions //
+  /////////////////////
+
+  //Type checks.
+  Future.isFuture = isFuture;
+  Future.isForkable = isForkable;
 
   //Create a Future which rejects witth the given value.
   Future.reject = function Future$reject(x){

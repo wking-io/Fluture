@@ -991,3 +991,37 @@ describe('Dispatchers', () => {
   });
 
 });
+
+describe('Utility functions', () => {
+
+  describe('.isFuture()', () => {
+
+    const ms = [Future.of(1), Future.after(10, 1)];
+    const xs = [NaN, 1, true, undefined, null, [], {}, {fork: (a, b) => ({a, b})}];
+
+    it('returns true when given a Future', () => {
+      ms.forEach(m => expect(Future.isFuture(m)).to.equal(true));
+    });
+
+    it('returns false when not given a Future', () => {
+      xs.forEach(x => expect(Future.isFuture(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isForkable()', () => {
+
+    const ms = [{fork: (a, b) => ({a, b})}, {fork: (a, b, c) => ({a, b, c})}];
+    const xs = [NaN, 1, true, undefined, null, [], {}, {fork: true}, {fork: () => {}}];
+
+    it('returns true when given a Forkable', () => {
+      ms.forEach(m => expect(Future.isForkable(m)).to.equal(true));
+    });
+
+    it('returns false when not given a Forkable', () => {
+      xs.forEach(x => expect(Future.isForkable(x)).to.equal(false));
+    });
+
+  });
+
+});
