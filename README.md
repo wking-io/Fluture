@@ -59,14 +59,19 @@ program('package.json')
 //> "fluture"
 ```
 
-## Motivation
+## Motivation and Features
 
 Existing implementations of Future are a pain to debug. This library was made in
-an effort to provide **great error messages** when something goes wrong. The
-library also comes bundled with many **async control utilities**. To prevent
-these features from coming at the cost of performance, Fluture was optimized to
-operate at **high performance**. For an overview of differences between Fluture
-and other Future implementations, look at [this wiki article][15].
+an effort to provide **great error messages** when something goes wrong. Other
+features include:
+
+* Plenty of async control utilites like
+  [Future.parallel](#parallel--positiveinteger---future-a-b---future-a-b) and
+  [Future#race](#race--future-a-b--future-a-b---future-a-b).
+* High performance.
+
+To learn more about the differences between Fluture and other Future
+implementations, take a look at [this wiki page][15].
 
 ## Documentation
 
