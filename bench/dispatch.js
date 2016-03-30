@@ -33,8 +33,7 @@ suite.add('Dispatch API', () => {
 
 suite.add('Curried dispatch API', () => {
   Fluture.fork
-    (noop)
-    (noop)
+    (noop, noop)
     (Fluture.ap
       (Fluture.of(x => x + 1))
       (Fluture.chain

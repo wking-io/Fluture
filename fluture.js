@@ -40,9 +40,9 @@
     return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
   }
 
-  ////////////////////
-  // Error handling //
-  ////////////////////
+  ///////////////
+  // Utilities //
+  ///////////////
 
   //A small string representing a value, but not containing the whole value.
   const preview = x =>
@@ -70,7 +70,29 @@
     : x.toString()
     : preview(x);
 
-  const showf = f => inspectf(2, f).replace(/^/gm, '  ').trim();
+  const padf = (sf, s) => s.replace(/^/gm, sf).trim();
+  const showf = f => padf('  ', inspectf(2, f));
+  const fid = f => f.name ? f.name : /*istanbul ignore next*/ '<anonymous>';
+
+  //Partially apply a function with a single argument.
+  function unaryPartial(f, a){
+    const g = function partial(b, c){ return arguments.length > 1 ? f(a, b, c) : f(a, b) };
+    g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)})`;
+    g.inspect = () => `[Function: unaryPartial$${fid(f)}]`;
+    return g;
+  }
+
+  //Partially apply a function with two arguments.
+  function binaryPartial(f, a, b){
+    const g = function partial(c){ return f(a, b, c) };
+    g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)}, ${show(b)})`;
+    g.inspect = () => `[Function: binaryPartial$${fid(f)}]`;
+    return g;
+  }
+
+  ////////////
+  // Errors //
+  ////////////
 
   function error$invalidArgument(it, at, expected, actual){
     throw new TypeError(
@@ -404,29 +426,50 @@
 
   //Creates a dispatcher for a nullary method.
   function createNullaryDispatcher(method){
-    return function dispatch(m){
+    const f = function nullaryDispatch(m){
       if(m && typeof m[method] === 'function') return m[method]();
       error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
     };
+    f.toString = () => `function dispatch$${method}(m){ m.${method}() }`;
+    f.inspect = () => `[Function: dispatch$${method}]`;
+    return f;
   }
 
   //Creates a dispatcher for a unary method.
   function createUnaryDispatcher(method){
-    return function dispatch(a, m){
-      if(arguments.length === 1) return m => dispatch(a, m);
+    const f = function unaryDispatch(a, m){
+      if(arguments.length === 1) return unaryPartial(f, a);
       if(m && typeof m[method] === 'function') return m[method](a);
       error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
     };
+    f.toString = () => `function dispatch$${method}(a, m){ m.${method}(a) }`;
+    f.inspect = () => `[Function: dispatch$${method}]`;
+    return f;
+  }
+
+  //Creates a dispatcher for a unary method, but takes the object first rather than last.
+  function createInvertedUnaryDispatcher(method){
+    const f = function invertedUnaryDispatch(m, a){
+      if(arguments.length === 1) return unaryPartial(f, m);
+      if(m && typeof m[method] === 'function') return m[method](a);
+      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+    };
+    f.toString = () => `function dispatch$${method}(m, a){ m.${method}(a) }`;
+    f.inspect = () => `[Function: dispatch$${method}]`;
+    return f;
   }
 
   //Creates a dispatcher for a binary method.
   function createBinaryDispatcher(method){
-    return function dispatch(a, b, m){
-      if(arguments.length === 1) return (b, m) => m ? dispatch(a, b, m) : dispatch(a, b);
-      if(arguments.length === 2) return m => dispatch(a, b, m);
+    const f = function binaryDispatch(a, b, m){
+      if(arguments.length === 1) return unaryPartial(f, a);
+      if(arguments.length === 2) return binaryPartial(f, a, b);
       if(m && typeof m[method] === 'function') return m[method](a, b);
       error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
     };
+    f.toString = () => `function dispatch$${method}(a, b, m){ m.${method}(a, b) }`;
+    f.inspect = () => `[Function: dispatch$${method}]`;
+    return f;
   }
 
   //chain :: Chain m => (a -> m b) -> m a -> m b
@@ -439,11 +482,7 @@
   Future.map = createUnaryDispatcher('map');
 
   //ap :: Apply m => m (a -> b) -> m a -> m b
-  Future.ap = function dispatch$ap(m, a){
-    if(arguments.length === 1) return a => dispatch$ap(m, a);
-    if(m && typeof m.ap === 'function') return m.ap(a);
-    error$invalidArgument('Future.ap', 0, 'have a "ap" method', m);
-  };
+  Future.ap = createInvertedUnaryDispatcher('ap');
 
   //fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void
   Future.fork = createBinaryDispatcher('fork');
@@ -483,7 +522,7 @@
 
   //Create a Future which resolves after the given time with the given value.
   Future.after = function Future$after(n, x){
-    if(arguments.length === 1) return x => Future$after(n, x);
+    if(arguments.length === 1) return unaryPartial(Future.after, n);
     check$after(n);
     return new FutureClass(function Future$after$fork(rej, res){
       setTimeout(res, n, x);
@@ -502,7 +541,7 @@
 
   //encase :: (a -> !b | c) -> a -> Future b c
   Future.encase = function Future$encase(f, x){
-    if(arguments.length === 1) return x => Future$encase(f, x);
+    if(arguments.length === 1) return unaryPartial(Future.encase, f);
     check$encase(f);
     return new FutureClass(function Future$encase$fork(rej, res){
       let y;
@@ -532,7 +571,7 @@
 
   //parallel :: PositiveInteger -> [Future a b] -> Future a [b]
   Future.parallel = function Future$parallel(i, ms){
-    if(arguments.length === 1) return ms => Future$parallel(i, ms);
+    if(arguments.length === 1) return unaryPartial(Future.parallel, i);
     check$parallel(i, ms);
     const l = ms.length;
     return l < 1 ? Future$of([]) : new FutureClass(function Future$parallel$fork(rej, res){

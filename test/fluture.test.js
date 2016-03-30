@@ -785,6 +785,41 @@ describe('Lawfulness', function(){
 
 describe('Dispatchers', () => {
 
+  describe('in general', () => {
+
+    it('have custom toString functions', () => {
+      expect(Future.promise.toString()).to.equal('function dispatch$promise(m){ m.promise() }');
+      expect(Future.value.toString()).to.equal('function dispatch$value(a, m){ m.value(a) }');
+      expect(Future.ap.toString()).to.equal('function dispatch$ap(m, a){ m.ap(a) }');
+      expect(Future.fork.toString()).to.equal('function dispatch$fork(a, b, m){ m.fork(a, b) }');
+    });
+
+    it('have custom inspect functions', () => {
+      expect(Future.promise.inspect()).to.equal('[Function: dispatch$promise]');
+      expect(Future.value.inspect()).to.equal('[Function: dispatch$value]');
+      expect(Future.ap.inspect()).to.equal('[Function: dispatch$ap]');
+      expect(Future.fork.inspect()).to.equal('[Function: dispatch$fork]');
+    });
+
+    it('have custom toString functions when partially applied', () => {
+      const f = function myFunc(){};
+      expect(Future.value(f).toString()).to.equal(
+        'function dispatch$value(a, m){ m.value(a) }.bind(null, function myFunc(){})'
+      );
+      expect(Future.fork(f, f).toString()).to.equal(
+        'function dispatch$fork(a, b, m){ m.fork(a, b) }'
+        + '.bind(null, function myFunc(){}, function myFunc(){})'
+      );
+    });
+
+    it('have custom inspect functions when partially applied', () => {
+      const f = function myFunc(){};
+      expect(Future.value(f).inspect()).to.equal('[Function: unaryPartial$unaryDispatch]');
+      expect(Future.fork(f, f).inspect()).to.equal('[Function: binaryPartial$binaryDispatch]');
+    });
+
+  });
+
   describe('.map()', () => {
 
     it('is curried', () => {
