@@ -53,17 +53,17 @@ printStatus(m.fork);
 
 console.log('--- cache fork ---');
 
-Future.cache(Future.of(1)).fork(noop, noop);
+Future.of(1).cache().fork(noop, noop);
 
-%OptimizeFunctionOnNextCall(Future.cache);
+%OptimizeFunctionOnNextCall(Future.prototype.cache);
 %OptimizeFunctionOnNextCall(Future.prototype.fork);
 
-printStatus(Future.cache);
+printStatus(Future.prototype.cache);
 printStatus(Future.prototype.fork);
 
-Future.cache(Future.of(1)).fork(noop, noop);
+Future.of(1).cache().fork(noop, noop);
 
-printStatus(Future.cache);
+printStatus(Future.prototype.cache);
 printStatus(Future.prototype.fork);
 
 
