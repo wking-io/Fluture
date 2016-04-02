@@ -27,3 +27,6 @@ coverage/
 
 # Test file - who doesn't have a test file?
 test.js
+
+# Heap snapshots
+*.heapsnapshot
