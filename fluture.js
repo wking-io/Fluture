@@ -36,6 +36,14 @@
     return typeof f === 'function';
   }
 
+  function isBinary(f){
+    return f.length >= 2;
+  }
+
+  function isTernary(f){
+    return f.length >= 3;
+  }
+
   function isPositiveInteger(n){
     return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
   }
@@ -220,19 +228,21 @@
   }
 
   function check$encase(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.encase', 0, 'be a function', f);
+    if(!isFunction(f)) error$invalidArgument('Future.encase', 0, 'be a function', f);
   }
 
   function check$encase2(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.encase2', 0, 'be a function', f);
+    if(!isFunction(f)) error$invalidArgument('Future.encase2', 0, 'be a function', f);
+    if(!isBinary(f)) error$invalidArgument('Future.encase2', 0, 'take at least two arguments', f);
   }
 
   function check$encase3(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.encase3', 0, 'be a function', f);
+    if(!isFunction(f)) error$invalidArgument('Future.encase3', 0, 'be a function', f);
+    if(!isTernary(f)) error$invalidArgument('Future.encase3', 0, 'take at least three arguments', f);
   }
 
   function check$node(f){
-    if(typeof f !== 'function') error$invalidArgument('Future.node', 0, 'be a function', f);
+    if(!isFunction(f)) error$invalidArgument('Future.node', 0, 'be a function', f);
   }
 
   function check$parallel(i, ms){
@@ -447,6 +457,8 @@
     isForkable,
     isFuture,
     isFunction,
+    isBinary,
+    isTernary,
     isPositiveInteger,
     preview,
     show,

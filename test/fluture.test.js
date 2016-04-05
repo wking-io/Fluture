@@ -180,12 +180,12 @@ describe('Constructors', () => {
   describe('.encase2()', () => {
 
     it('is curried', () => {
-      expect(Future.encase2(noop)).to.be.a('function');
-      expect(Future.encase2(noop)(1)).to.be.a('function');
+      expect(Future.encase2((a, b) => b)).to.be.a('function');
+      expect(Future.encase2((a, b) => b)(1)).to.be.a('function');
     });
 
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    it('throws TypeError when not given a binary function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, noop, a => a];
       const fs = xs.map(x => () => Future.encase2(x)(1)(2));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
@@ -196,8 +196,8 @@ describe('Constructors', () => {
     });
 
     it('returns a Future which rejects with the exception thrown by the function', () => {
-      const actual = Future.encase2(() => {
-        throw error;
+      const actual = Future.encase2((a, b) => {
+        throw (b, error);
       })(1)(2);
       return assertRejected(actual, error);
     });
@@ -214,29 +214,29 @@ describe('Constructors', () => {
   describe('.encase3()', () => {
 
     it('is curried', () => {
-      expect(Future.encase3(noop)).to.be.a('function');
-      expect(Future.encase3(noop)(1)).to.be.a('function');
-      expect(Future.encase3(noop, 1)).to.be.a('function');
-      expect(Future.encase3(noop)(1)(2)).to.be.a('function');
-      expect(Future.encase3(noop, 1)(2)).to.be.a('function');
-      expect(Future.encase3(noop)(1, 2)).to.be.a('function');
-      expect(Future.encase3(noop, 1, 2)).to.be.a('function');
+      expect(Future.encase3((a, b, c) => c)).to.be.a('function');
+      expect(Future.encase3((a, b, c) => c)(1)).to.be.a('function');
+      expect(Future.encase3((a, b, c) => c, 1)).to.be.a('function');
+      expect(Future.encase3((a, b, c) => c)(1)(2)).to.be.a('function');
+      expect(Future.encase3((a, b, c) => c, 1)(2)).to.be.a('function');
+      expect(Future.encase3((a, b, c) => c)(1, 2)).to.be.a('function');
+      expect(Future.encase3((a, b, c) => c, 1, 2)).to.be.a('function');
     });
 
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    it('throws TypeError when not given a ternary function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, noop, a => a, (a, b) => b];
       const fs = xs.map(x => () => Future.encase3(x)(1)(2)(3));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('returns a Future which resolves with the return value of the function', () => {
-      const actual = Future.encase3((x, y) => x + y + 1)(1)(2)(3);
-      return assertResolved(actual, 4);
+      const actual = Future.encase3((x, y, z) => x + y + z + 1)(1)(2)(3);
+      return assertResolved(actual, 7);
     });
 
     it('returns a Future which rejects with the exception thrown by the function', () => {
-      const actual = Future.encase3(() => {
-        throw error;
+      const actual = Future.encase3((a, b, c) => {
+        throw (c, error);
       })(1)(2)(3);
       return assertRejected(actual, error);
     });
@@ -1141,6 +1141,36 @@ describe('Utility functions', () => {
 
     it('returns false when not given a Function', () => {
       xs.forEach(x => expect(util.isFunction(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isBinary()', () => {
+
+    const fs = [(a, b) => b, (a, b, c) => c];
+    const xs = [noop, a => a];
+
+    it('returns true when given a binary Function', () => {
+      fs.forEach(f => expect(util.isBinary(f)).to.equal(true));
+    });
+
+    it('returns false when not given a binary Function', () => {
+      xs.forEach(x => expect(util.isBinary(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isTernary()', () => {
+
+    const fs = [(a, b, c) => c, (a, b, c, d) => d];
+    const xs = [noop, a => a, (a, b) => b];
+
+    it('returns true when given a ternary Function', () => {
+      fs.forEach(f => expect(util.isTernary(f)).to.equal(true));
+    });
+
+    it('returns false when not given a ternary Function', () => {
+      xs.forEach(x => expect(util.isTernary(x)).to.equal(false));
     });
 
   });
