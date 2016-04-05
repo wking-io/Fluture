@@ -74,7 +74,7 @@ describe('Constructors', () => {
         function nyerk(){}
         const data = {foo: nyerk};
         const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Function nyerk\]/);
+        expect(f).to.throw(TypeError, /\[Function: nyerk\]/);
       });
 
       it('displays nested anonymous functions', () => {
@@ -86,7 +86,7 @@ describe('Constructors', () => {
       it('displays nested arrays', () => {
         const data = {foo: ['a', 'b', 'c']};
         const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Array 3\]/);
+        expect(f).to.throw(TypeError, /\[Array: 3\]/);
       });
 
     });
@@ -170,12 +170,81 @@ describe('Constructors', () => {
 
     it('does not swallow errors from subsequent maps and such', () => {
       const f = () =>
-        Future.of('null')
-        .chain(Future.encase(JSON.parse))
-        .map(() => {
-          throw error;
-        })
-        .fork(noop, noop)
+        Future.of(1).chain(Future.encase(x => x))
+        .map(() => { throw error }).fork(noop, noop)
+      expect(f).to.throw(error);
+    });
+
+  });
+
+  describe('.encase2()', () => {
+
+    it('is curried', () => {
+      expect(Future.encase2(noop)).to.be.a('function');
+      expect(Future.encase2(noop)(1)).to.be.a('function');
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.encase2(x)(1)(2));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which resolves with the return value of the function', () => {
+      const actual = Future.encase2((x, y) => x + y + 1)(1)(2);
+      return assertResolved(actual, 4);
+    });
+
+    it('returns a Future which rejects with the exception thrown by the function', () => {
+      const actual = Future.encase2(() => {
+        throw error;
+      })(1)(2);
+      return assertRejected(actual, error);
+    });
+
+    it('does not swallow errors from subsequent maps and such', () => {
+      const f = () =>
+        Future.of(1).chain(Future.encase2((y, x) => x)(1))
+        .map(() => { throw error }).fork(noop, noop)
+      expect(f).to.throw(error);
+    });
+
+  });
+
+  describe('.encase3()', () => {
+
+    it('is curried', () => {
+      expect(Future.encase3(noop)).to.be.a('function');
+      expect(Future.encase3(noop)(1)).to.be.a('function');
+      expect(Future.encase3(noop, 1)).to.be.a('function');
+      expect(Future.encase3(noop)(1)(2)).to.be.a('function');
+      expect(Future.encase3(noop, 1)(2)).to.be.a('function');
+      expect(Future.encase3(noop)(1, 2)).to.be.a('function');
+      expect(Future.encase3(noop, 1, 2)).to.be.a('function');
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.encase3(x)(1)(2)(3));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which resolves with the return value of the function', () => {
+      const actual = Future.encase3((x, y) => x + y + 1)(1)(2)(3);
+      return assertResolved(actual, 4);
+    });
+
+    it('returns a Future which rejects with the exception thrown by the function', () => {
+      const actual = Future.encase3(() => {
+        throw error;
+      })(1)(2)(3);
+      return assertRejected(actual, error);
+    });
+
+    it('does not swallow errors from subsequent maps and such', () => {
+      const f = () =>
+        Future.of(1).chain(Future.encase3((z, y, x) => x)(1)(2))
+        .map(() => { throw error }).fork(noop, noop)
       expect(f).to.throw(error);
     });
 
@@ -1029,20 +1098,7 @@ describe('Dispatchers', () => {
 
 describe('Utility functions', () => {
 
-  describe('.isFuture()', () => {
-
-    const ms = [Future.of(1), Future.after(10, 1)];
-    const xs = [NaN, 1, true, undefined, null, [], {}, {fork: (a, b) => ({a, b})}];
-
-    it('returns true when given a Future', () => {
-      ms.forEach(m => expect(Future.isFuture(m)).to.equal(true));
-    });
-
-    it('returns false when not given a Future', () => {
-      xs.forEach(x => expect(Future.isFuture(x)).to.equal(false));
-    });
-
-  });
+  const {util} = Future;
 
   describe('.isForkable()', () => {
 
@@ -1050,11 +1106,192 @@ describe('Utility functions', () => {
     const xs = [NaN, 1, true, undefined, null, [], {}, {fork: true}, {fork: () => {}}];
 
     it('returns true when given a Forkable', () => {
-      ms.forEach(m => expect(Future.isForkable(m)).to.equal(true));
+      ms.forEach(m => expect(util.isForkable(m)).to.equal(true));
     });
 
     it('returns false when not given a Forkable', () => {
-      xs.forEach(x => expect(Future.isForkable(x)).to.equal(false));
+      xs.forEach(x => expect(util.isForkable(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isFuture()', () => {
+
+    const ms = [Future.of(1), Future.after(10, 1)];
+    const xs = [NaN, 1, true, undefined, null, [], {}, {fork: (a, b) => ({a, b})}];
+
+    it('returns true when given a Future', () => {
+      ms.forEach(m => expect(util.isFuture(m)).to.equal(true));
+    });
+
+    it('returns false when not given a Future', () => {
+      xs.forEach(x => expect(util.isFuture(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isFunction()', () => {
+
+    const fs = [() => {}, function(){}, Future];
+    const xs = [NaN, 1, true, undefined, null, [], {}];
+
+    it('returns true when given a Function', () => {
+      fs.forEach(f => expect(util.isFunction(f)).to.equal(true));
+    });
+
+    it('returns false when not given a Function', () => {
+      xs.forEach(x => expect(util.isFunction(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isPositiveInteger()', () => {
+
+    const is = [1, 2, 99999999999999999999, Infinity];
+    const xs = [NaN, 0, -0, -1, -99999999999999999, -Infinity, '1', [], {}];
+
+    it('returns true when given a PositiveInteger', () => {
+      is.forEach(i => expect(util.isPositiveInteger(i)).to.equal(true));
+    });
+
+    it('returns false when not given a PositiveInteger', () => {
+      xs.forEach(x => expect(util.isPositiveInteger(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.preview()', () => {
+
+    it('represents values as strings', () => {
+      const tests = {
+        '"foo"': 'foo',
+        '[Array: 1]': ['a'],
+        '[Function: foo]': function foo(){},
+        '[Function]': function(){},
+        '[Object: foo, bar]': {foo: 1, bar: 2},
+        '1': 1,
+        'undefined': undefined};
+      Object.keys(tests).forEach(k => expect(util.preview(tests[k])).to.equal(k));
+    });
+
+  });
+
+  describe('.show()', () => {
+
+    it('casts values to strings', () => {
+      const tests = {
+        '"foo"': 'foo',
+        '["a"]': ['a'],
+        'function foo(){}': function foo(){},
+        'function (){}': function(){},
+        '{"foo": 1, "bar": 2}': {foo: 1, bar: 2},
+        'Hello world': {toString: () => 'Hello world'},
+        '1': 1,
+        'undefined': undefined};
+      Object.keys(tests).forEach(k => expect(util.show(tests[k])).to.equal(k));
+    });
+
+    it('casts nested values using preview()', () => {
+      const recursive = {x: 1}; recursive.recursive = recursive;
+      const array = [{a: 1}, {b: 1}];
+      expect(util.show(recursive)).to.equal('{"x": 1, "recursive": [Object: x, recursive]}');
+      expect(util.show(array)).to.equal('[[Object: a], [Object: b]]');
+    });
+
+  });
+
+  describe('.padf()', () => {
+
+    it('left-pads string representations of functions', () => {
+      const f = () => {
+        return 42;
+      }
+      const input = f.toString()
+      const inputLines = input.split('\n');
+      const actualLines = util.padf('--', input).split('\n');
+      expect(actualLines[0]).to.equal(inputLines[0]);
+      expect(actualLines[1]).to.equal('--' + inputLines[1]);
+      expect(actualLines[2]).to.equal('--' + inputLines[2]);
+    });
+
+  });
+
+  describe('.fid()', () => {
+
+    it('returns the name of a function', () => {
+      function foo(){}
+      expect(util.fid(foo)).to.equal('foo');
+    });
+
+    it('returns <anonymous> for unnamed functions', () => {
+      expect(util.fid(() => {})).to.equal('<anonymous>');
+    });
+
+  });
+
+  describe('.unaryPartial()', () => {
+
+    it('can partially apply binary functions', () => {
+      function binary(a, b){ return a + b }
+      expect(util.unaryPartial(binary, 1)(1)).to.equal(2);
+    });
+
+    it('can partially apply ternary functions', () => {
+      function ternary(a, b, c){ return a + b + c }
+      expect(util.unaryPartial(ternary, 1)(1, 1)).to.equal(3);
+    });
+
+    it('can partially apply quaternary functions', () => {
+      function quaternary(a, b, c, d){ return a + b + c + d }
+      expect(util.unaryPartial(quaternary, 1)(1, 1, 1)).to.equal(4);
+    });
+
+    it('creates custom toString and inspect methods', () => {
+      function binary(a, b){ return a + b }
+      const partial = util.unaryPartial(binary, 1);
+      expect(partial.toString()).to.equal('function binary(a, b){ return a + b }.bind(null, 1)');
+      expect(partial.inspect()).to.equal('[Function: unaryPartial$binary]');
+    });
+
+  });
+
+  describe('.binaryPartial()', () => {
+
+    it('can partially apply ternary functions', () => {
+      function ternary(a, b, c){ return a + b + c }
+      expect(util.binaryPartial(ternary, 1, 1)(1)).to.equal(3);
+    });
+
+    it('can partially apply quaternary functions', () => {
+      function quaternary(a, b, c, d){ return a + b + c + d }
+      expect(util.binaryPartial(quaternary, 1, 1)(1, 1)).to.equal(4);
+    });
+
+    it('creates custom toString and inspect methods', () => {
+      function ternary(a, b, c){ return a + b + c }
+      const partial = util.binaryPartial(ternary, 1, 1);
+      expect(partial.toString()).to.equal(
+        'function ternary(a, b, c){ return a + b + c }.bind(null, 1, 1)'
+      );
+      expect(partial.inspect()).to.equal('[Function: binaryPartial$ternary]');
+    });
+
+  });
+
+  describe('.ternaryPartial()', () => {
+
+    it('can partially apply quaternary functions', () => {
+      function quaternary(a, b, c, d){ return a + b + c + d }
+      expect(util.ternaryPartial(quaternary, 1, 1, 1)(1)).to.equal(4);
+    });
+
+    it('creates custom toString and inspect methods', () => {
+      function quaternary(a, b, c, d){ return a + b + c + d }
+      const partial = util.ternaryPartial(quaternary, 1, 1, 1);
+      expect(partial.toString()).to.equal(
+        'function quaternary(a, b, c, d){ return a + b + c + d }.bind(null, 1, 1, 1)'
+      );
+      expect(partial.inspect()).to.equal('[Function: ternaryPartial$quaternary]');
     });
 
   });

@@ -153,18 +153,6 @@ Future.cast(require('data.task').of('hello')).value(console.log);
 //> "hello"
 ```
 
-#### `encase :: (a -> !b | c) -> a -> Future b c`
-
-Creates a Future which resolves with the result of calling the given function
-with the given value, or rejects with the error thrown by the function.
-
-```js
-const data = '{"foo" = "bar"}';
-const parseJson = Future.encase(JSON.parse);
-parseJson('a').fork(console.error, console.log)
-//> [SyntaxError: Unexpected token =]
-```
-
 #### `try :: (Void -> !a | b) -> Future a b`
 
 Creates a Future which resolves with the result of calling the given function,
@@ -178,6 +166,26 @@ Future.try(() => data.foo.bar.baz)
 .fork(console.error, console.log)
 //> [TypeError: Cannot read property 'baz' of undefined]
 ```
+
+#### `encase :: (a -> !e | r) -> a -> Future e r`
+
+Creates a Future which resolves with the result of calling the given function
+with the given value, or rejects with the error thrown by the function.
+
+```js
+const data = '{"foo" = "bar"}';
+const parseJson = Future.encase(JSON.parse);
+parseJson('a').fork(console.error, console.log)
+//> [SyntaxError: Unexpected token =]
+```
+
+#### `encase2 :: (a, b -> !e | r) -> a -> b -> Future e r`
+
+Binary version of `Future.encase`.
+
+#### `encase3 :: (a, b, c -> !e | r) -> a -> b -> c -> Future e r`
+
+Ternary version of `Future.encase`.
 
 #### `node :: ((a, b -> Void) -> Void) -> Future a b`
 

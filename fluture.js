@@ -49,13 +49,13 @@
     typeof x === 'string'
     ? JSON.stringify(x)
     : Array.isArray(x)
-    ? `[Array ${x.length}]`
+    ? `[Array: ${x.length}]`
     : typeof x === 'function'
     ? typeof x.name === 'string' && x.name.length > 0
-    ? `[Function ${x.name}]`
+    ? `[Function: ${x.name}]`
     : '[Function]'
     : x && x.toString === Object.prototype.toString
-    ? `[Object ${Object.keys(x).map(String).join(', ')}]`
+    ? `[Object: ${Object.keys(x).map(String).join(', ')}]`
     : String(x);
 
   //A show function to provide a slightly more meaningful representation of values.
@@ -70,13 +70,19 @@
     : x.toString()
     : preview(x);
 
-  const padf = (sf, s) => s.replace(/^/gm, sf).trim();
+  const padf = (sf, s) => s.replace(/^/gm, sf).replace(sf, '');
   const showf = f => padf('  ', inspectf(2, f));
-  const fid = f => f.name ? f.name : /*istanbul ignore next*/ '<anonymous>';
+  const fid = f => f.name ? f.name : '<anonymous>';
 
   //Partially apply a function with a single argument.
   function unaryPartial(f, a){
-    const g = function partial(b, c){ return arguments.length > 1 ? f(a, b, c) : f(a, b) };
+    const g = function partial(b, c, d){
+      switch(arguments.length){
+        case 1: return f(a, b);
+        case 2: return f(a, b, c);
+        default: return f(a, b, c, d);
+      }
+    };
     g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)})`;
     g.inspect = () => `[Function: unaryPartial$${fid(f)}]`;
     return g;
@@ -84,9 +90,17 @@
 
   //Partially apply a function with two arguments.
   function binaryPartial(f, a, b){
-    const g = function partial(c){ return f(a, b, c) };
+    const g = function partial(c, d){ return arguments.length === 1 ? f(a, b, c) : f(a, b, c, d) };
     g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)}, ${show(b)})`;
     g.inspect = () => `[Function: binaryPartial$${fid(f)}]`;
+    return g;
+  }
+
+  //Partially apply a function with three arguments.
+  function ternaryPartial(f, a, b, c){
+    const g = function partial(d){ return f(a, b, c, d) };
+    g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)}, ${show(b)}, ${show(c)})`;
+    g.inspect = () => `[Function: ternaryPartial$${fid(f)}]`;
     return g;
   }
 
@@ -207,6 +221,14 @@
 
   function check$encase(f){
     if(typeof f !== 'function') error$invalidArgument('Future.encase', 0, 'be a function', f);
+  }
+
+  function check$encase2(f){
+    if(typeof f !== 'function') error$invalidArgument('Future.encase2', 0, 'be a function', f);
+  }
+
+  function check$encase3(f){
+    if(typeof f !== 'function') error$invalidArgument('Future.encase3', 0, 'be a function', f);
   }
 
   function check$node(f){
@@ -420,6 +442,22 @@
   //Expose Future statically for ease of destructuring.
   Future.Future = Future;
 
+  //Expose utilities, mainly for unit testing.
+  Future.util = {
+    isForkable,
+    isFuture,
+    isFunction,
+    isPositiveInteger,
+    preview,
+    show,
+    padf,
+    showf,
+    fid,
+    unaryPartial,
+    binaryPartial,
+    ternaryPartial
+  };
+
   /////////////////
   // Dispatchers //
   /////////////////
@@ -539,19 +577,54 @@
     });
   };
 
-  //encase :: (a -> !b | c) -> a -> Future b c
+  //encase :: (a -> !e | r) -> a -> Future e r
   Future.encase = function Future$encase(f, x){
-    if(arguments.length === 1) return unaryPartial(Future.encase, f);
     check$encase(f);
+    if(arguments.length === 1) return unaryPartial(Future.encase, f);
     return new FutureClass(function Future$encase$fork(rej, res){
-      let y;
+      let r;
       try{
-        y = f(x);
+        r = f(x);
       }
-      catch(err){
-        return void rej(err);
+      catch(e){
+        return void rej(e);
       }
-      res(y);
+      res(r);
+    });
+  };
+
+  //encase2 :: (a, b -> !e | r) -> a -> b -> Future e r
+  Future.encase2 = function Future$encase2(f, x, y){
+    check$encase2(f);
+    if(arguments.length === 1) return unaryPartial(Future.encase2, f);
+    if(arguments.length === 2) return binaryPartial(Future.encase2, f, x);
+    return new FutureClass(function Future$encase2$fork(rej, res){
+      let r;
+      try{
+        r = f(x, y);
+      }
+      catch(e){
+        return void rej(e);
+      }
+      res(r);
+    });
+  };
+
+  //encase3 :: (a, b, c -> !e | r) -> a -> b -> c -> Future e r
+  Future.encase3 = function Future$encase3(f, x, y, z){
+    check$encase3(f);
+    if(arguments.length === 1) return unaryPartial(Future.encase3, f);
+    if(arguments.length === 2) return binaryPartial(Future.encase3, f, x);
+    if(arguments.length === 3) return ternaryPartial(Future.encase3, f, x, y);
+    return new FutureClass(function Future$encase3$fork(rej, res){
+      let r;
+      try{
+        r = f(x, y, z);
+      }
+      catch(e){
+        return void rej(e);
+      }
+      res(r);
     });
   };
 
