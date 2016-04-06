@@ -425,6 +425,7 @@
 
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
+    '@@type': 'fluture/Future',
     _f: null,
     fork: Future$fork,
     [FL.of]: Future$of,

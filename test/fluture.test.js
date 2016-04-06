@@ -3,6 +3,7 @@
 const expect = require('chai').expect;
 const Future = require('../fluture');
 const jsc = require('jsverify');
+const S = require('sanctuary');
 
 const noop = () => {};
 const add = a => b => a + b;
@@ -59,6 +60,12 @@ describe('Constructors', () => {
     it('returns a Future when given a function', () => {
       const actual = Future(noop);
       expect(actual).to.be.an.instanceof(Future);
+    });
+
+    it('instances are considered members of Future through @@type', () => {
+      const m = Future(noop);
+      expect(S.type(m)).to.equal('fluture/Future');
+      expect(S.is(Future, m)).to.equal(true);
     });
 
     describe('error message', () => {

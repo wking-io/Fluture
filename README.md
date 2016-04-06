@@ -517,6 +517,11 @@ Future.promise(Future.after(300, 'Hello')).then(console.log);
 
 Returns true for [Futures](#type-signatures) and false for everything else.
 
+```js
+const m = Future(rej => rej());
+Future.isFuture(m) === (m instanceof Future) === S.is(Future, m);
+```
+
 #### `isForkable :: a -> Boolean`
 
 Returns true for [Forkables](#type-signatures) and false for everything else.

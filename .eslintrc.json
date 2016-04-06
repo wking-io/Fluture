@@ -124,7 +124,6 @@
     "object-curly-spacing": [2, "never"],
     "operator-linebreak": [2, "before"],
     "padded-blocks": 0,
-    "quote-props": [2, "consistent-as-needed"],
     "semi-spacing": [2, {"before": false, "after": true}],
     "space-before-blocks": [2, "never"],
     "space-before-function-paren": [2, "never"],
