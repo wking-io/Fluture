@@ -62,6 +62,11 @@ describe('Constructors', () => {
       expect(actual).to.be.an.instanceof(Future);
     });
 
+    it('can be called with "new", for those feeling particularly OO', () => {
+      const actual = new Future(noop);
+      expect(actual).to.be.an.instanceof(Future);
+    });
+
     it('instances are considered members of Future through @@type', () => {
       const m = Future(noop);
       expect(S.type(m)).to.equal('fluture/Future');
