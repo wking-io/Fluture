@@ -515,11 +515,21 @@ Future.promise(Future.after(300, 'Hello')).then(console.log);
 
 #### `isFuture :: a -> Boolean`
 
-Returns true for [Futures](#type-signatures) and false for everything else.
+Returns true for [Futures](#type-signatures) and false for everything else. This
+function (and [`S.is`][17]) also return `true` for instances of Future that were
+created within other contexts. It is therefore recommended to use this over
+`instanceof`, unless your intent is to explicitly check for Futures created
+using the exact `Future` constructor you're testing against.
 
 ```js
-const m = Future(rej => rej());
-Future.isFuture(m) === (m instanceof Future) === S.is(Future, m);
+const Future1 = require('/path/to/fluture');
+const Future2 = require('/other/path/to/fluture');
+
+const m1 = Future1(noop);
+Future1.isFuture(m1) === (m1 instanceof Future1);
+
+const m2 = Future2(noop);
+Future1.isFuture(m2) !== (m2 instanceof Future1);
 ```
 
 #### `isForkable :: a -> Boolean`
@@ -577,3 +587,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [14]: https://github.com/fantasyland/fantasy-land#apply
 [15]: https://github.com/Avaq/Fluture/wiki/Comparison-of-Future-Implementations
 [16]: https://github.com/fantasyland/fantasy-land#applicative
+[17]: http://sanctuary.js.org/#is

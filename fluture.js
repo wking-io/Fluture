@@ -24,12 +24,14 @@
   // Type checking //
   ///////////////////
 
+  const TYPEOF_FUTURE = 'fluture/Future';
+
   function isForkable(m){
     return Boolean(m) && typeof m.fork === 'function' && m.fork.length >= 2;
   }
 
   function isFuture(m){
-    return m instanceof FutureClass;
+    return (m instanceof FutureClass) || Boolean(m) && m['@@type'] === TYPEOF_FUTURE;
   }
 
   function isFunction(f){
@@ -425,7 +427,7 @@
 
   //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
-    '@@type': 'fluture/Future',
+    '@@type': TYPEOF_FUTURE,
     _f: null,
     fork: Future$fork,
     [FL.of]: Future$of,
@@ -582,9 +584,6 @@
 
   Future.cast = function Future$cast(m){
     check$cast(m);
-    if(m instanceof FutureClass){
-      return m;
-    }
     return new FutureClass(function Future$cast$fork(rej, res){
       m.fork(rej, res);
     });
