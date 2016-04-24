@@ -170,6 +170,12 @@
     if(!isFunction(f)) error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
+  function check$bimap(it, f, g){
+    if(!isFuture(it)) error$invalidContext('Future#bimap', it);
+    if(!isFunction(f)) error$invalidArgument('Future#bimap', 0, 'be a function', f);
+    if(!isFunction(g)) error$invalidArgument('Future#bimap', 1, 'be a function', g);
+  }
+
   function check$ap(it, m){
     if(!isFuture(it)) error$invalidContext('Future#ap', it);
     if(!isFuture(m)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
@@ -320,6 +326,18 @@
     });
   }
 
+  function Future$bimap(f, g){
+    check$bimap(this, f, g);
+    const _this = this;
+    return new FutureClass(function Future$bimap$fork(rej, res){
+      _this._f(function Future$bimap$rej(x){
+        rej(f(x));
+      }, function Future$bimap$res(x){
+        res(g(x));
+      });
+    });
+  }
+
   function Future$ap(m){
     check$ap(this, m);
     const _this = this;
@@ -437,6 +455,7 @@
     chainRej: Future$chainRej,
     [FL.map]: Future$map,
     map: Future$map,
+    bimap: Future$bimap,
     [FL.ap]: Future$ap,
     ap: Future$ap,
     toString: Future$toString,
@@ -533,6 +552,9 @@
 
   //map :: Functor m => (a -> b) -> m a -> m b
   Future.map = createUnaryDispatcher('map');
+
+  //bimap :: Bifunctor m => (a -> b) -> (c -> d) -> m a c -> m b d
+  Future.bimap = createBinaryDispatcher('bimap');
 
   //ap :: Apply m => m (a -> b) -> m a -> m b
   Future.ap = createInvertedUnaryDispatcher('ap');

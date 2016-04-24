@@ -285,6 +285,23 @@ Future.of(1)
 //> 2
 ```
 
+#### `bimap :: Future a b ~> (a -> c) -> (b -> d) -> Future c d`
+
+Maps the left function over the rejection value, or the right function over the
+resolution value, depending on which is present.
+
+```js
+Future.of(1)
+.bimap(x => x + !, x => x + 1)
+.fork(console.error, console.log);
+//> 2
+
+Future.reject('error')
+.bimap(x => x + !, x => x + 1)
+.fork(console.error, console.log);
+//> "error!"
+```
+
 #### `chain :: Future a b ~> (b -> Future a c) -> Future a c`
 
 Allows the creation of a new Future based on the resolution value. This is like
@@ -449,6 +466,10 @@ consoleFork(of('Hello'));
 
 Dispatches the first argument to the `map` method of the second argument.
 Has the same effect as [`R.map`][3].
+
+#### `bimap :: Bifunctor m => (a -> b) -> (c -> d) -> m a c -> m b d`
+
+Dispatches the first two arguments to the `bimap` method of the third argument.
 
 #### `chain :: Chain m => (a -> m b) -> m a -> m b`
 

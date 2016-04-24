@@ -29,7 +29,10 @@ const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 
 const assertEqual = (a, b) => new Promise(done => {
   if(!(a instanceof Future && b instanceof Future)) return done(false);
-  a.fork(failRej, a => b.fork(failRej, b => done(a === b)));
+  a.fork(failRej, a => b.fork(failRej, b => {
+    expect(a).to.equal(b);
+    done(true);
+  }));
 });
 
 const assertResolved = (m, x) => new Promise(done => {
@@ -567,6 +570,37 @@ describe('Future', () => {
 
   });
 
+  describe('#bimap', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).bimap.call(null, noop, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws TypeError when not given a function as first argument', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.of(1).bimap(x, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when not given a function as second argument', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.of(1).bimap(noop, x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('applies the first function to the value in the rejection branch', () => {
+      const actual = Future.reject(1).bimap(add(1), failRes);
+      return assertRejected(actual, 2);
+    });
+
+    it('applies the second function to the value in the resolution branch', () => {
+      const actual = Future.of(1).bimap(failRej, add(1));
+      return assertResolved(actual, 2);
+    });
+
+  });
+
   describe('#toString()', () => {
 
     it('returns a string representation', () => {
@@ -834,6 +868,22 @@ describe('Lawfulness', function(){
     Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future.of)(assertEqual)));
   });
 
+  describe('Bifunctor', () => {
+    const of = require('fantasy-land').of;
+    const id = x => x;
+    const B = f => g => x => f(g(x));
+    const law = {
+      identity: t => eq => x => eq(t[of](x), t[of](x).bimap(id, id)),
+      composition: t => eq => ({value}) => {
+        const f1 = add(value);
+        const f2 = add(value + '!');
+        const f3 = B(f2)(f1);
+        return eq(t[of](value).bimap(f3, f3), t[of](value).bimap(f1, f1).bimap(f2, f2));
+      }
+    };
+    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
+  });
+
   describe('Apply', () => {
     const law = require('fantasy-land/laws/apply');
     Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
@@ -910,6 +960,25 @@ describe('Dispatchers', () => {
 
     it('dispatches to #map', () => {
       return assertResolved(Future.map(add(1))(Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.bimap()', () => {
+
+    it('is curried', () => {
+      expect(Future.bimap).to.be.a('function');
+      expect(Future.bimap(noop)).to.be.a('function');
+      expect(Future.bimap(noop)(noop)).to.be.a('function');
+    });
+
+    it('throws when not given a Future', () => {
+      const f = () => Future.bimap(add(1), add(1))(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('dispatches to #bimap', () => {
+      return assertResolved(Future.bimap(add(1), add(1))(Future.of(1)), 2);
     });
 
   });
