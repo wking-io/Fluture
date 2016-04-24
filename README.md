@@ -202,7 +202,7 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 //> "{...}"
 ```
 
-#### `parallel :: PositiveInteger -> [Future a b] -> Future a [b]`
+#### `parallel :: PositiveInteger -> Array (Future a b) -> Future a (Array b)`
 
 Creates a Future which when forked runs all Futures in the given `array` in
 parallel, ensuring no more than `limit` Futures are running at once.

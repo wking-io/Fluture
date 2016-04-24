@@ -181,7 +181,6 @@
     if(!isFuture(m)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
   }
 
-  //Check resolution value of the Future on which #ap was called.
   function check$ap$f(f){
     if(!isFunction(f)) throw new TypeError(
       `Future#ap can only be used on Future<Function> but was used on a Future of: ${show(f)}`
@@ -269,18 +268,15 @@
   // Future //
   ////////////
 
-  //Constructor.
   function FutureClass(f){
     this._f = f;
   }
 
-  //A createFuture function which pretends to be Future.
   function Future(f){
     check$Future(f);
     return new FutureClass(f);
   }
 
-  //The of method.
   function Future$of(x){
     return new FutureClass(function Future$of$fork(rej, res){
       res(x);
@@ -443,7 +439,6 @@
     });
   }
 
-  //Give Future a prototype.
   FutureClass.prototype = Future.prototype = {
     '@@type': TYPEOF_FUTURE,
     _f: null,
@@ -468,13 +463,9 @@
     cache: Future$cache
   };
 
-  //Expose `of` statically as well.
   Future[FL.of] = Future.of = Future$of;
-
-  //Expose Future statically for ease of destructuring.
   Future.Future = Future;
 
-  //Expose utilities, mainly for unit testing.
   Future.util = {
     isForkable,
     isFuture,
@@ -544,58 +535,32 @@
     return f;
   }
 
-  //chain :: Chain m => (a -> m b) -> m a -> m b
   Future.chain = createUnaryDispatcher('chain');
-
-  //chainRej :: (a -> Future a c) -> Future a b -> Future a c
   Future.chainRej = createUnaryDispatcher('chainRej');
-
-  //map :: Functor m => (a -> b) -> m a -> m b
   Future.map = createUnaryDispatcher('map');
-
-  //bimap :: Bifunctor m => (a -> b) -> (c -> d) -> m a c -> m b d
   Future.bimap = createBinaryDispatcher('bimap');
-
-  //ap :: Apply m => m (a -> b) -> m a -> m b
   Future.ap = createInvertedUnaryDispatcher('ap');
-
-  //fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void
   Future.fork = createBinaryDispatcher('fork');
-
-  //race :: Future a b -> Future a b -> Future a b
   Future.race = createUnaryDispatcher('race');
-
-  //or :: Future a b -> Future a b -> Future a b
   Future.or = createUnaryDispatcher('or');
-
-  //fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c
   Future.fold = createBinaryDispatcher('fold');
-
-  //value :: (b -> Void) -> Future a b -> Void
   Future.value = createUnaryDispatcher('value');
-
-  //promise :: Future a b -> Promise b a
   Future.promise = createNullaryDispatcher('promise');
-
-  //cache :: Future a b -> Future a b
   Future.cache = createNullaryDispatcher('cache');
 
   /////////////////////
   // Other functions //
   /////////////////////
 
-  //Type checks.
   Future.isFuture = isFuture;
   Future.isForkable = isForkable;
 
-  //Create a Future which rejects witth the given value.
   Future.reject = function Future$reject(x){
     return new FutureClass(function Future$reject$fork(rej){
       rej(x);
     });
   };
 
-  //Create a Future which resolves after the given time with the given value.
   Future.after = function Future$after(n, x){
     if(arguments.length === 1) return unaryPartial(Future.after, n);
     check$after(n);
@@ -611,7 +576,6 @@
     });
   };
 
-  //encase :: (a -> !e | r) -> a -> Future e r
   Future.encase = function Future$encase(f, x){
     check$encase(f);
     if(arguments.length === 1) return unaryPartial(Future.encase, f);
@@ -627,7 +591,6 @@
     });
   };
 
-  //encase2 :: (a, b -> !e | r) -> a -> b -> Future e r
   Future.encase2 = function Future$encase2(f, x, y){
     check$encase2(f);
     if(arguments.length === 1) return unaryPartial(Future.encase2, f);
@@ -644,7 +607,6 @@
     });
   };
 
-  //encase3 :: (a, b, c -> !e | r) -> a -> b -> c -> Future e r
   Future.encase3 = function Future$encase3(f, x, y, z){
     check$encase3(f);
     if(arguments.length === 1) return unaryPartial(Future.encase3, f);
@@ -662,13 +624,10 @@
     });
   };
 
-  //Create a Future which resolves with the return value of the given function,
-  //or rejects with the exception thrown by the given function.
   Future.try = function Future$try(f){
     return Future.encase(f, undefined);
   };
 
-  //node :: ((err, a) -> Void) -> Future[Error, a]
   Future.node = function Future$node(f){
     check$node(f);
     return new FutureClass(function Future$node$fork(rej, res){
@@ -676,7 +635,6 @@
     });
   };
 
-  //parallel :: PositiveInteger -> [Future a b] -> Future a [b]
   Future.parallel = function Future$parallel(i, ms){
     if(arguments.length === 1) return unaryPartial(Future.parallel, i);
     check$parallel(i, ms);
@@ -694,7 +652,6 @@
     });
   };
 
-  //Export Future factory.
   return Future;
 
 }));
