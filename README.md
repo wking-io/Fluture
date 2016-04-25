@@ -90,6 +90,7 @@ all types used within these signatures follows:
   [Fantasy Land Chain specification][13].
 - **Apply** - Any object with an `ap` method which satisfies the
   [Fantasy Land Apply specification][14].
+- **Iterator** - Any object which conforms to the [Iterator protocol][18].
 
 ### Creation
 
@@ -557,6 +558,29 @@ Future1.isFuture(m2) !== (m2 instanceof Future1);
 
 Returns true for [Forkables](#type-signatures) and false for everything else.
 
+#### `do :: (() -> Iterator) -> Future a b`
+
+A specialized version of [fantasy-do][19] which works only for Futures, but has
+the advantage of type-checking and not having to pass `Future.of`.
+
+Takes a function which returns an [Iterator][#type-signatures], commonly a
+generator-function, and chains every produced Future over the previous.
+
+This allows for writing sequential asynchronous code without the pyramid of
+doom. It's known as "coroutines" in Promise land, and "do-notation" in Haskell
+land.
+
+```js
+Future.do(function*(){
+  const thing = yield Future.after(300, 'world');
+  const message = yield Future.after(300, 'Hello ' + thing);
+  return message + '!';
+})
+.fork(console.error, console.log)
+//After 600ms:
+//> "Hello world!"
+```
+
 ### Futurization
 
 To reduce the boilerplate of making Node or Promise functions return Futures
@@ -609,3 +633,5 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [15]: https://github.com/Avaq/Fluture/wiki/Comparison-of-Future-Implementations
 [16]: https://github.com/fantasyland/fantasy-land#applicative
 [17]: http://sanctuary.js.org/#is
+[18]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterator
+[19]: https://github.com/russellmcc/fantasydo

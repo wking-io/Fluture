@@ -1266,6 +1266,52 @@ describe('Utility functions', () => {
 
   });
 
+  describe('.isObject()', () => {
+
+    function O(){}
+    const os = [{}, {foo: 1}, Object.create(null), new O, []];
+    const xs = [1, true, NaN, null, undefined, ''];
+
+    it('returns true when given an Object', () => {
+      os.forEach(i => expect(util.isObject(i)).to.equal(true));
+    });
+
+    it('returns false when not given an Object', () => {
+      xs.forEach(x => expect(util.isObject(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isIterator()', () => {
+
+    const is = [{next: () => {}}, {next: x => x}, (function*(){}())];
+    const xs = [1, true, NaN, null, undefined, '', {}, {next: 1}];
+
+    it('returns true when given an Iterator', () => {
+      is.forEach(i => expect(util.isIterator(i)).to.equal(true));
+    });
+
+    it('returns false when not given an Iterator', () => {
+      xs.forEach(x => expect(util.isIterator(x)).to.equal(false));
+    });
+
+  });
+
+  describe('.isIteration()', () => {
+
+    const is = [{value: 1, done: true}, {value: 2, done: false}, (function*(){}()).next()];
+    const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
+
+    it('returns true when given an Iteration', () => {
+      is.forEach(i => expect(util.isIteration(i)).to.equal(true));
+    });
+
+    it('returns false when not given an Iteration', () => {
+      xs.forEach(x => expect(util.isIteration(x)).to.equal(false));
+    });
+
+  });
+
   describe('.preview()', () => {
 
     it('represents values as strings', () => {
@@ -1398,6 +1444,47 @@ describe('Utility functions', () => {
         'function quaternary(a, b, c, d){ return a + b + c + d }.bind(null, 1, 1, 1)'
       );
       expect(partial.inspect()).to.equal('[Function: ternaryPartial$quaternary]');
+    });
+
+  });
+
+});
+
+describe('Other', () => {
+
+  describe('.do()', () => {
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.do(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the given function does not return an interator', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, () => {}, {next: 'hello'}];
+      const fs = xs.map(x => () => Future.do(() => x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the returned iterator does not return a valid iteration', () => {
+      const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
+      const fs = xs.map(x => () => Future.do(() => ({next: () => x})));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the returned iterator produces something other than a Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.do(() => ({next: () => ({done: false, value: x})})));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('can be used to chain Futures in do-notation', () => {
+      const actual = Future.do(function*(){
+        const a = yield Future.of(1);
+        const b = yield Future.of(2);
+        return a + b;
+      });
+      return assertResolved(actual, 3);
     });
 
   });

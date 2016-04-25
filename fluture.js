@@ -50,6 +50,18 @@
     return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
   }
 
+  function isObject(x){
+    return typeof x === 'object' && x !== null;
+  }
+
+  function isIterator(i){
+    return isObject(i) && typeof i.next === 'function';
+  }
+
+  function isIteration(o){
+    return isObject(o) && 'value' in o && 'done' in o && typeof o.done === 'boolean';
+  }
+
   ///////////////
   // Utilities //
   ///////////////
@@ -264,6 +276,29 @@
     );
   }
 
+  function check$do(f){
+    if(!isFunction(f)) error$invalidArgument('Future.do', 0, 'be a function', f);
+  }
+
+  function check$do$g(g){
+    if(!isIterator(g)) error$invalidArgument(
+      'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
+    );
+  }
+
+  function check$do$next(o){
+    if(!isIteration(o)) throw new TypeError(
+      'Future.do was given an invalid generator:'
+      + ' Its iterator did not return a valid iteration from iterator.next()'
+      + `\n  Actual: ${show(o)}`
+    );
+    if(!o.done && !isFuture(o.value)) throw new TypeError(
+      'A non-Future was produced by iterator.next() in Future.do.'
+      + ' If you\'re using a generator, make sure you always `yield` a Future'
+      + `\n  Actual: ${o.value}`
+    );
+  }
+
   ////////////
   // Future //
   ////////////
@@ -473,6 +508,9 @@
     isBinary,
     isTernary,
     isPositiveInteger,
+    isObject,
+    isIterator,
+    isIteration,
     preview,
     show,
     padf,
@@ -650,6 +688,18 @@
       ));
       ms.slice(0, i).forEach(fork);
     });
+  };
+
+  Future.do = function Future$do(f){
+    check$do(f);
+    const g = f();
+    check$do$g(g);
+    const next = function Future$do$next(x){
+      const o = g.next(x);
+      check$do$next(o);
+      return o.done ? Future$of(o.value) : o.value.chain(next);
+    };
+    return next();
   };
 
   return Future;
