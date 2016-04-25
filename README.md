@@ -286,6 +286,19 @@ Future.of(1)
 //> 2
 ```
 
+#### `mapRej :: Future a b ~> (a -> c) -> Future c b`
+
+Map over the **rejection** reason of the Future. This is like `map`, but for the
+rejection branch.
+
+```js
+Future.reject(new Error('It broke!')).mapRej(err => {
+  return new Error('Some extra info: ' + err.message);
+})
+.fork(console.error, console.log)
+//! [Some extra info: It broke!]
+```
+
 #### `bimap :: Future a b ~> (a -> c) -> (b -> d) -> Future c d`
 
 Maps the left function over the rejection value, or the right function over the
@@ -467,6 +480,10 @@ consoleFork(of('Hello'));
 
 Dispatches the first argument to the `map` method of the second argument.
 Has the same effect as [`R.map`][3].
+
+#### `mapRej :: (a -> b) -> Future a c -> Future b c`
+
+Dispatches the first argument to the `mapRej` method of the second argument.
 
 #### `bimap :: Bifunctor m => (a -> b) -> (c -> d) -> m a c -> m b d`
 

@@ -182,6 +182,11 @@
     if(!isFunction(f)) error$invalidArgument('Future#map', 0, 'be a function', f);
   }
 
+  function check$mapRej(it, f){
+    if(!isFuture(it)) error$invalidContext('Future#mapRej', it);
+    if(!isFunction(f)) error$invalidArgument('Future#mapRej', 0, 'be a function', f);
+  }
+
   function check$bimap(it, f, g){
     if(!isFuture(it)) error$invalidContext('Future#bimap', it);
     if(!isFunction(f)) error$invalidArgument('Future#bimap', 0, 'be a function', f);
@@ -357,6 +362,16 @@
     });
   }
 
+  function Future$mapRej(f){
+    check$mapRej(this, f);
+    const _this = this;
+    return new FutureClass(function Future$mapRej$fork(rej, res){
+      _this._f(function Future$mapRej$rej(x){
+        rej(f(x));
+      }, res);
+    });
+  }
+
   function Future$bimap(f, g){
     check$bimap(this, f, g);
     const _this = this;
@@ -485,6 +500,7 @@
     chainRej: Future$chainRej,
     [FL.map]: Future$map,
     map: Future$map,
+    mapRej: Future$mapRej,
     bimap: Future$bimap,
     [FL.ap]: Future$ap,
     ap: Future$ap,
@@ -576,6 +592,7 @@
   Future.chain = createUnaryDispatcher('chain');
   Future.chainRej = createUnaryDispatcher('chainRej');
   Future.map = createUnaryDispatcher('map');
+  Future.mapRej = createUnaryDispatcher('mapRej');
   Future.bimap = createBinaryDispatcher('bimap');
   Future.ap = createInvertedUnaryDispatcher('ap');
   Future.fork = createBinaryDispatcher('fork');
