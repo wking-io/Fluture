@@ -306,12 +306,12 @@ resolution value, depending on which is present.
 
 ```js
 Future.of(1)
-.bimap(x => x + !, x => x + 1)
+.bimap(x => x + '!', x => x + 1)
 .fork(console.error, console.log);
 //> 2
 
 Future.reject('error')
-.bimap(x => x + !, x => x + 1)
+.bimap(x => x + '!', x => x + 1)
 .fork(console.error, console.log);
 //> "error!"
 ```
@@ -580,7 +580,7 @@ Returns true for [Forkables](#type-signatures) and false for everything else.
 A specialized version of [fantasy-do][19] which works only for Futures, but has
 the advantage of type-checking and not having to pass `Future.of`.
 
-Takes a function which returns an [Iterator][#type-signatures], commonly a
+Takes a function which returns an [Iterator](#type-signatures), commonly a
 generator-function, and chains every produced Future over the previous.
 
 This allows for writing sequential asynchronous code without the pyramid of
