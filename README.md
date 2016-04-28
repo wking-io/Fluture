@@ -5,7 +5,7 @@
 [![NPM Version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
 [![Dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
 [![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
-[![Code Coverage](https://codecov.io/github/Avaq/Fluture/coverage.svg?branch=master)](https://codecov.io/github/Avaq/Fluture/fluture.js?branch=master)
+[![Code Coverage](https://codecov.io/gh/Avaq/Fluture/branch/master/graph/badge.svg)](https://codecov.io/gh/Avaq/Fluture)
 
 Futures are containers which represent some eventual value as a result of an
 asynchronous computation, much like Promises. Unlike Promises, however, Futures
