@@ -94,7 +94,6 @@
     "no-const-assign": 2,
     "no-dupe-class-members": 2,
     "prefer-const": 1,
-    "prefer-spread": 1,
     "require-yield": 2,
     "array-bracket-spacing": [2, "never"],
     "camelcase": 2,

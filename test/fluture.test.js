@@ -818,7 +818,7 @@ describe('Future', () => {
       return function(){
         if(called) throw new Error(`Function ${f} was called twice`);
         called = true;
-        f(...arguments);
+        f.apply(null, arguments);
       }
     };
 

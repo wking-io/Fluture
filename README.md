@@ -12,8 +12,8 @@ asynchronous computation, much like Promises. Unlike Promises, however, Futures
 are *lazy* and *logical* by design. They have a predictable API governed by the
 [Fantasy Land][1] algebraic JavaScript specification.
 
-> `npm install --save fluture` <sup>Requires a node 5.0.0 compatible environment
-  like modern browsers, transpilers or Node 5+</sup>
+> `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment
+  like modern browsers, transpilers or Node 4+</sup>
 
 ## Table of contents
 

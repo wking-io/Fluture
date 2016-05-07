@@ -5,8 +5,6 @@
 ////    | |   | || |_| || || |_| || | |  __/
 ////    |_|   |_| \__,_||_| \__,_||_|  \___\
 ////
-
-/*global define FantasyLand inspectf*/
 (function(global, f){
 
   'use strict';
@@ -16,12 +14,12 @@
     module.exports = f(require('fantasy-land'), require('inspect-f'));
   }
 
-  else if(typeof define === 'function' && define.amd){
-    define(['fantasy-land', 'inspect-x', 'inspect-f'], f);
+  else if(typeof global.define === 'function' && global.define.amd){
+    global.define(['fantasy-land', 'inspect-f'], f);
   }
 
   else{
-    global.Fluture = f(FantasyLand, inspectf);
+    global.Fluture = f(global.FantasyLand, global.inspectf);
   }
 
 }(/*istanbul ignore next*/(global || window || this), function(FL, inspectf){
