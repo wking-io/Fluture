@@ -84,8 +84,11 @@ implementations, take a look at [this wiki page][15].
 
 ### Type signatures
 
-[Hindley-Milner][9] type signatures are used to document functions. A list of
-all types used within these signatures follows:
+[Hindley-Milner][9] type signatures are used to document functions. Signatures
+starting with a `.` refer to "static" functions, whereas signatures starting
+with a `#` refer to functions on the prototype.
+
+A list of all types used within the signatures follows:
 
 - **Forkable** - Any Object with a `fork` method that takes at least two
   arguments. This includes instances of Fluture, instances of Task from
@@ -124,6 +127,7 @@ eventualThing.fork(
 ```
 
 #### of
+##### `#of :: a -> Future _ a`
 ##### `.of :: a -> Future _ a`
 
 Creates a Future which immediately resolves with the given value. This function
@@ -574,6 +578,24 @@ Future.do(function*(){
 .fork(console.error, console.log)
 //After 600ms:
 //> "Hello world!"
+```
+
+Error handling is slightly different in do-notation, you need to [`fold`](#fold)
+the error into your control domain, I recommend folding into an [`Either`][7]:
+
+```js
+const attempt = Future.fold(S.Left, S.Right);
+const ajaxGet = url => Future.reject('Failed to load ' + url);
+Future.do(function*(){
+  const e = yield attempt(ajaxGet('/message'));
+  return S.either(
+    e => `Oh no! ${e}`,
+    x => `Yippee! ${x}`,
+    e
+  );
+})
+.fork(console.error, console.log);
+//> "Oh no! Failed to load /message"
 ```
 
 ### Futurization
