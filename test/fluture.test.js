@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 const Future = require('../fluture');
 const jsc = require('jsverify');
 const S = require('sanctuary');
+const FL = require('fantasy-land');
 
 const noop = () => {};
 const add = a => b => a + b;
@@ -879,52 +880,80 @@ describe('Future', () => {
 
 });
 
-describe('Lawfulness', function(){
+describe('Fantasy-Land Compliance', function(){
 
   this.slow(200);
 
+  const test = (name, f) => jsc.property(name, 'number | nat', o => f(o.value));
+  const eq = assertEqual;
+  const of = Future[FL.of];
+
+  const I = x => x;
+  const B = f => g => x => f(g(x));
+
+  const sub3 = x => x - 3;
+  const mul3 = x => x * 3;
+
   describe('Functor', () => {
-    const law = require('fantasy-land/laws/functor');
-    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future.of)(assertEqual)));
+    test('identity', x => eq(
+      of(x),
+      of(x)[FL.map](I))
+    );
+    test('composition', x => eq(
+      of(x)[FL.map](B(sub3)(mul3)),
+      of(x)[FL.map](mul3)[FL.map](sub3))
+    );
   });
 
   describe('Bifunctor', () => {
-    const of = require('fantasy-land').of;
-    const id = x => x;
-    const B = f => g => x => f(g(x));
-    const law = {
-      identity: t => eq => x => eq(t[of](x), t[of](x).bimap(id, id)),
-      composition: t => eq => ({value}) => {
-        const f1 = add(value);
-        const f2 = add(value + '!');
-        const f3 = B(f2)(f1);
-        return eq(t[of](value).bimap(f3, f3), t[of](value).bimap(f1, f1).bimap(f2, f2));
-      }
-    };
-    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
+    test('identity', x => eq(
+      of(x),
+      of(x).bimap(I, I)
+    ));
+    test('composition', x => eq(
+      of(x).bimap(B(mul3)(sub3), B(mul3)(sub3)),
+      of(x).bimap(sub3, sub3).bimap(mul3, mul3))
+    );
   });
 
   describe('Apply', () => {
-    const law = require('fantasy-land/laws/apply');
-    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
+    test('composition', x => eq(
+      of(sub3)[FL.map](B)[FL.ap](of(mul3))[FL.ap](of(x)),
+      of(sub3)[FL.ap](of(mul3)[FL.ap](of(x)))
+    ));
   });
 
   describe('Applicative', () => {
-    const law = require('fantasy-land/laws/applicative');
-    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
+    test('identity', x => eq(
+      of(x),
+      of(I)[FL.ap](of(x))
+    ));
+    test('homomorphism', x => eq(
+      of(sub3(x)),
+      of(sub3)[FL.ap](of(x))
+    ));
+    test('interchange', x => eq(
+      of(sub3)[FL.ap](of(x)),
+      of(f => f(x))[FL.ap](of(sub3))
+    ));
   });
 
   describe('Chain', () => {
-    const law = require('fantasy-land/laws/chain');
-    Object.keys(law).forEach(k => jsc.property(k, 'number | string', law[k](Future)(assertEqual)));
+    test('associativity', x => eq(
+      of(x)[FL.chain](B(of)(sub3))[FL.chain](B(of)(mul3)),
+      of(x)[FL.chain](y => B(of)(sub3)(y)[FL.chain](B(of)(mul3)))
+    ));
   });
 
   describe('Monad', () => {
-    const law = require('fantasy-land/laws/monad');
-    const left = law.leftIdentity(Future)(assertEqual);
-    const right = law.rightIdentity(Future)(assertEqual);
-    jsc.property('leftIdentity', 'number | string', x => left(Future.of(x)));
-    jsc.property('rightIdentity', 'number | string', right);
+    test('left identity', x => eq(
+      B(of)(sub3)(x),
+      of(x)[FL.chain](B(of)(sub3))
+    ));
+    test('right identity', x => eq(
+      of(x),
+      of(x)[FL.chain](of)
+    ));
   });
 
 });
@@ -1212,7 +1241,7 @@ describe('Dispatchers', () => {
 
 describe('Utility functions', () => {
 
-  const {util} = Future;
+  const util = Future.util;
 
   describe('.isForkable()', () => {
 
