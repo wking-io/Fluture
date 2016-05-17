@@ -756,6 +756,48 @@ describe('Future', () => {
 
   });
 
+  describe('#finally()', () => {
+
+    it('throws TypeError when invoked out of context', () => {
+      const f = () => Future.of(1).finally.call(null, Future.of(1));
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throw TypeError when not given a Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.of(1).finally(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('runs the second Future when the first resolves', done => {
+      Future.of(1).finally(Future.of(null).map(done)).fork(noop, noop);
+    });
+
+    it('runs the second Future when the first rejects', done => {
+      Future.reject(1).finally(Future.of(null).map(done)).fork(noop, noop);
+    });
+
+    it('resolves with the resolution value of the first', () => {
+      const actual = Future.of(1).finally(Future.of(2));
+      return assertResolved(actual, 1);
+    });
+
+    it('rejects with the rejection reason of the first if the second resolves', () => {
+      const actual = Future.reject(1).finally(Future.of(2));
+      return assertRejected(actual, 1);
+    });
+
+    it('always rejects with the rejection reason of the second', () => {
+      const actualResolved = Future.of(1).finally(Future.reject(2));
+      const actualRejected = Future.reject(1).finally(Future.reject(2));
+      return Promise.all([
+        assertRejected(actualResolved, 2),
+        assertRejected(actualRejected, 2)
+      ]);
+    });
+
+  });
+
   describe('#value()', () => {
 
     it('throws when invoked out of context', () => {
@@ -1160,6 +1202,24 @@ describe('Dispatchers', () => {
 
     it('can take (a)(b, c)', () => {
       return assertResolved(Future.fold(add(1))(add(1), Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.finally()', () => {
+
+    it('is curried', () => {
+      expect(Future.finally).to.be.a('function');
+      expect(Future.finally(Future.of(1))).to.be.a('function');
+    });
+
+    it('throws when not given a Future', () => {
+      const f = () => Future.finally(Future.of(1))(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('dispatches to #finally', () => {
+      return assertResolved(Future.finally(Future.of(1))(Future.of(2)), 2);
     });
 
   });

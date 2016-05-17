@@ -350,6 +350,36 @@ Future.reject('it broke')
 //> Left('it broke')
 ```
 
+#### finally
+##### `#finally :: Future a b ~> Future a c -> Future a b`
+##### `.finally :: Future a c -> Future a b -> Future a b`
+
+Run a second Future after the first settles (successfully or unsuccessfully).
+Rejects with the rejection reason from the first or second Future, or resolves
+with the resolution value from the first Future.
+
+```js
+Future.of('Hello')
+.finally(Future.of('All done!').map(console.log))
+.fork(console.error, console.log)
+//> "All done!"
+//> "Hello"
+```
+
+Note that the *first* Future is given as the *last* argument to `Future.finally()`:
+
+```js
+const program = S.pipe([
+  Future.of,
+  Future.finally(Future.of('All done!').map(console.log)),
+  Future.fork(console.error, console.log)
+])
+
+program('Hello')
+//> "All done!"
+//> "Hello"
+```
+
 ### Consuming Futures
 
 #### fork
