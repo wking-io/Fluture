@@ -226,6 +226,11 @@
     if(!isFunction(g)) error$invalidArgument('Future#fold', 1, 'be a function', g);
   }
 
+  function check$finally(it, m){
+    if(!isFuture(it)) error$invalidContext('Future#finally', it);
+    if(!isFuture(m)) error$invalidArgument('Future#finally', 0, 'be a Future', m);
+  }
+
   function check$value(it, f){
     if(!isFuture(it)) error$invalidContext('Future#value', it);
     if(!isFunction(f)) error$invalidArgument('Future#value', 0, 'be a function', f);
@@ -448,6 +453,22 @@
     });
   }
 
+  function Future$finally(m){
+    check$finally(this, m);
+    const _this = this;
+    return new FutureClass(function Future$finally$fork(rej, res){
+      _this._f(function Future$finally$rej(e){
+        m._f(rej, function Future$finally$rej$res(){
+          rej(e);
+        });
+      }, function Future$finally$res(x){
+        m._f(rej, function Future$finally$res$res(){
+          res(x);
+        });
+      });
+    });
+  }
+
   function Future$value(f){
     check$value(this, f);
     this._f(
@@ -515,6 +536,7 @@
     race: Future$race,
     or: Future$or,
     fold: Future$fold,
+    finally: Future$finally,
     value: Future$value,
     promise: Future$promise,
     cache: Future$cache
@@ -605,6 +627,7 @@
   Future.race = createUnaryDispatcher('race');
   Future.or = createUnaryDispatcher('or');
   Future.fold = createBinaryDispatcher('fold');
+  Future.finally = createUnaryDispatcher('finally');
   Future.value = createUnaryDispatcher('value');
   Future.promise = createNullaryDispatcher('promise');
   Future.cache = createNullaryDispatcher('cache');
