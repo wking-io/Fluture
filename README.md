@@ -64,6 +64,7 @@ getPackageName('package.json')
   1. [Utility functions](#utility-functions)
     * [isFuture](#isfuture)
     * [isForkable](#isforkable)
+    * [cache](#cache)
     * [do](#do)
   1. [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
@@ -568,6 +569,7 @@ Future1.isFuture(m2) !== (m2 instanceof Future1);
 
 Returns true for [Forkables](#type-signatures) and false for everything else.
 
+#### cache
 ##### `.cache :: Future a b -> Future a b`
 
 Returns a Future which caches the resolution value of the given Future so that
