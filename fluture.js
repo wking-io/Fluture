@@ -226,6 +226,26 @@
     if(!isFunction(g)) error$invalidArgument('Future#fold', 1, 'be a function', g);
   }
 
+  function check$hook(it, f, g){
+    if(!isFuture(it)) error$invalidContext('Future#hook', it);
+    if(!isFunction(f)) error$invalidArgument('Future#hook', 0, 'be a function', f);
+    if(!isFunction(g)) error$invalidArgument('Future#hook', 1, 'be a function', g);
+  }
+
+  function check$hook$f(m, f, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future#hook expects the first function its given to return a Future'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+    );
+  }
+
+  function check$hook$g(m, g, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future#hook expects the second function its given to return a Future'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(g)}\n  With: ${show(x)}`
+    );
+  }
+
   function check$finally(it, m){
     if(!isFuture(it)) error$invalidContext('Future#finally', it);
     if(!isFuture(m)) error$invalidArgument('Future#finally', 0, 'be a Future', m);
@@ -453,6 +473,26 @@
     });
   }
 
+  function Future$hook(f, g){
+    check$hook(this, f, g);
+    const _this = this;
+    return new FutureClass(function Future$hook$fork(rej, res){
+      _this.fork(rej, function Future$hook$res(r){
+        const m = g(r);
+        check$hook$g(m, g, r);
+        m._f(e => {
+          const c = f(r);
+          check$hook$f(c, f, r);
+          c._f(rej, _ => rej(e))
+        }, x => {
+          const c = f(r);
+          check$hook$f(c, f, r);
+          c._f(rej, _ => res(x))
+        })
+      });
+    });
+  }
+
   function Future$finally(m){
     check$finally(this, m);
     const _this = this;
@@ -536,6 +576,7 @@
     race: Future$race,
     or: Future$or,
     fold: Future$fold,
+    hook: Future$hook,
     finally: Future$finally,
     value: Future$value,
     promise: Future$promise,
@@ -597,7 +638,7 @@
     const f = function invertedUnaryDispatch(m, a){
       if(arguments.length === 1) return unaryPartial(f, m);
       if(m && typeof m[method] === 'function') return m[method](a);
-      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+      error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
     };
     f.toString = () => `function dispatch$${method}(m, a){ m.${method}(a) }`;
     f.inspect = () => `[Function: dispatch$${method}]`;
@@ -617,6 +658,19 @@
     return f;
   }
 
+  //Creates a dispatcher for a binary method, but takes the object first rather than last.
+  function createInvertedBinaryDispatcher(method){
+    const f = function invertedBinaryDispatch(m, a, b){
+      if(arguments.length === 1) return unaryPartial(f, m);
+      if(arguments.length === 2) return binaryPartial(f, m, a);
+      if(m && typeof m[method] === 'function') return m[method](a, b);
+      error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
+    };
+    f.toString = () => `function dispatch$${method}(m, a, b){ m.${method}(a, b) }`;
+    f.inspect = () => `[Function: dispatch$${method}]`;
+    return f;
+  }
+
   Future.chain = createUnaryDispatcher('chain');
   Future.chainRej = createUnaryDispatcher('chainRej');
   Future.map = createUnaryDispatcher('map');
@@ -627,6 +681,7 @@
   Future.race = createUnaryDispatcher('race');
   Future.or = createUnaryDispatcher('or');
   Future.fold = createBinaryDispatcher('fold');
+  Future.hook = createInvertedBinaryDispatcher('hook');
   Future.finally = createUnaryDispatcher('finally');
   Future.value = createUnaryDispatcher('value');
   Future.promise = createNullaryDispatcher('promise');

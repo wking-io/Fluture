@@ -757,6 +757,77 @@ describe('Future', () => {
 
   });
 
+  describe('#hook()', () => {
+
+    const m = Future.of(1);
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).hook.call(null, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws when first argument is not a function', () => {
+      const fs = xs.map(x => () => m.hook(x, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws when second argument is not a function', () => {
+      const fs = xs.map(x => () => m.hook(noop, x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws when the first function does not return Future', () => {
+      const fs = xs.map(x => () => m.hook(() => x, () => m).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws when the second function does not return Future', () => {
+      const fs = xs.map(x => () => m.hook(() => m, () => x).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('runs the first computation after the second, both with the resource', done => {
+      let ran = false;
+      m.hook(
+        x => {
+          expect(x).to.equal(1)
+          return Future((rej, res) => res(done(ran ? null : new Error('Second did not run'))))
+        },
+        x => {
+          expect(x).to.equal(1)
+          return Future((rej, res) => res(ran = true))
+        }
+      ).fork(done, noop);
+    });
+
+    it('runs the first even if the second rejects', done => {
+      m.hook(
+        _ => Future(_ => done()),
+        _ => Future.reject(2)
+      ).fork(noop, noop);
+    });
+
+    it('rejects with the rejection reason of the first', () => {
+      const rejected = m.hook(_ => Future.reject(1), _ => Future.reject(2));
+      const resolved = m.hook(_ => Future.reject(1), _ => Future.of(2));
+      return Promise.all([
+        assertRejected(rejected, 1),
+        assertRejected(resolved, 1)
+      ]);
+    });
+
+    it('assumes the state of the second if the first resolves', () => {
+      const rejected = m.hook(_ => Future.of(1), _ => Future.reject(2));
+      const resolved = m.hook(_ => Future.of(1), _ => Future.of(2));
+      return Promise.all([
+        assertRejected(rejected, 2),
+        assertResolved(resolved, 2)
+      ]);
+    });
+
+  });
+
   describe('#finally()', () => {
 
     it('throws TypeError when invoked out of context', () => {
@@ -1009,6 +1080,7 @@ describe('Dispatchers', () => {
       expect(Future.value.toString()).to.equal('function dispatch$value(a, m){ m.value(a) }');
       expect(Future.ap.toString()).to.equal('function dispatch$ap(m, a){ m.ap(a) }');
       expect(Future.fork.toString()).to.equal('function dispatch$fork(a, b, m){ m.fork(a, b) }');
+      expect(Future.hook.toString()).to.equal('function dispatch$hook(m, a, b){ m.hook(a, b) }');
     });
 
     it('have custom inspect functions', () => {
@@ -1016,6 +1088,7 @@ describe('Dispatchers', () => {
       expect(Future.value.inspect()).to.equal('[Function: dispatch$value]');
       expect(Future.ap.inspect()).to.equal('[Function: dispatch$ap]');
       expect(Future.fork.inspect()).to.equal('[Function: dispatch$fork]');
+      expect(Future.hook.inspect()).to.equal('[Function: dispatch$hook]');
     });
 
     it('have custom toString functions when partially applied', () => {
@@ -1231,6 +1304,25 @@ describe('Dispatchers', () => {
 
     it('can take (a)(b, c)', () => {
       return assertResolved(Future.fold(add(1))(add(1), Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.hook()', () => {
+
+    it('is curried', () => {
+      expect(Future.hook).to.be.a('function');
+      expect(Future.hook(Future.of(1))).to.be.a('function');
+      expect(Future.hook(Future.of(1), noop)).to.be.a('function');
+    });
+
+    it('throws when not given a Future', () => {
+      const f = () => Future.hook(1)(noop)(noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('dispatches to #hook', () => {
+      return assertResolved(Future.hook(Future.of(1))(_ => Future.of(1))(_ => Future.of(2)), 2);
     });
 
   });
