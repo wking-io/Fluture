@@ -101,6 +101,7 @@
   const padf = (sf, s) => s.replace(/^/gm, sf).replace(sf, '');
   const showf = f => padf('  ', inspectf(2, f));
   const fid = f => f.name ? f.name : '<anonymous>';
+  const ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
 
   //Partially apply a function with a single argument.
   function unaryPartial(f, a){
@@ -138,7 +139,7 @@
 
   function error$invalidArgument(it, at, expected, actual){
     throw new TypeError(
-      `${it} expects argument ${at} to ${expected}\n  Actual: ${show(actual)}`
+      `${it} expects its ${ordinal[at]} argument to ${expected}\n  Actual: ${show(actual)}`
     );
   }
 
