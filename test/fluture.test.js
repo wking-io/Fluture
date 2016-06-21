@@ -591,7 +591,7 @@ describe('Future', () => {
 
   });
 
-  describe('#bimap', () => {
+  describe('#bimap()', () => {
 
     it('throws when invoked out of context', () => {
       const f = () => Future.of(1).bimap.call(null, noop, noop);
@@ -618,6 +618,25 @@ describe('Future', () => {
     it('applies the second function to the value in the resolution branch', () => {
       const actual = Future.of(1).bimap(failRej, add(1));
       return assertResolved(actual, 2);
+    });
+
+  });
+
+  describe('#swap()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).swap.call(null);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('reject with the resolution value', () => {
+      const actual = Future.of(1).swap();
+      return assertRejected(actual, 1);
+    });
+
+    it('reject with the resolution value', () => {
+      const actual = Future.reject(1).swap();
+      return assertResolved(actual, 1);
     });
 
   });
@@ -1142,6 +1161,19 @@ describe('Dispatchers', () => {
 
     it('dispatches to #ap', () => {
       return assertResolved(Future.ap(Future.of(add(1)))(Future.of(1)), 2);
+    });
+
+  });
+
+  describe('.swap()', () => {
+
+    it('throws when not given a Future', () => {
+      const f = () => Future.swap(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('dispatches to #swap', () => {
+      return assertResolved(Future.swap(Future.reject(1)), 1);
     });
 
   });

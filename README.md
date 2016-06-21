@@ -49,6 +49,7 @@ getPackageName('package.json')
     * [bimap](#bimap)
     * [chain](#chain)
     * [ap](#ap)
+    * [swap](#swap)
   1. [Error handling](#error-handling)
     * [mapRej](#maprej)
     * [chainRej](#chainrej)
@@ -289,6 +290,20 @@ Future.of(x => x + 1)
 .ap(Future.of(1))
 .fork(console.error, console.log);
 //> 2
+```
+
+#### swap
+##### `#swap :: Future a b ~> Future b a`
+##### `.swap :: Future a b -> Future b a`
+
+Resolve with the rejection reason, or reject with the resolution value.
+
+```js
+Future.of(new Error('It broke')).swap().fork(console.error, console.log);
+//! [It broke]
+
+Future.reject('Nothing broke').swap().fork(console.error, console.log);
+//> "Nothing broke"
 ```
 
 ### Error handling

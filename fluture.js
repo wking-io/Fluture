@@ -210,6 +210,10 @@
     );
   }
 
+  function check$swap(it){
+    if(!isFuture(it)) error$invalidContext('Future#swap', it);
+  }
+
   function check$race(it, m){
     if(!isFuture(it)) error$invalidContext('Future#race', it);
     if(!isFuture(m)) error$invalidArgument('Future#race', 0, 'be a Future', m);
@@ -414,6 +418,14 @@
     });
   }
 
+  function Future$swap(){
+    check$swap(this);
+    const _this = this;
+    return new FutureClass(function Future$swap$fork(rej, res){
+      _this._f(res, rej);
+    });
+  }
+
   function Future$toString(){
     return `Future(${this._f.toString()})`;
   }
@@ -531,6 +543,7 @@
     bimap: Future$bimap,
     [FL.ap]: Future$ap,
     ap: Future$ap,
+    swap: Future$swap,
     toString: Future$toString,
     inspect: Future$toString,
     race: Future$race,
@@ -623,6 +636,7 @@
   Future.mapRej = createUnaryDispatcher('mapRej');
   Future.bimap = createBinaryDispatcher('bimap');
   Future.ap = createInvertedUnaryDispatcher('ap');
+  Future.swap = createNullaryDispatcher('swap');
   Future.fork = createBinaryDispatcher('fork');
   Future.race = createUnaryDispatcher('race');
   Future.or = createUnaryDispatcher('or');
