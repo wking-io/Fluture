@@ -54,6 +54,9 @@ getPackageName('package.json')
     * [mapRej](#maprej)
     * [chainRej](#chainrej)
     * [fold](#fold)
+  1. [Resource management](#resource-management)
+    * [hook](#hook)
+    * [finally](#finally)
   1. [Consuming Futures](#consuming-futures)
     * [fork](#fork)
     * [value](#value)
@@ -365,6 +368,34 @@ Future.reject('it broke')
 .value(console.log);
 //> Left('it broke')
 ```
+
+### Resource management
+
+Functions listed under this category allow for more fine-grained control over
+the flow of acquired values.
+
+#### hook
+##### `#hook :: Future a b ~> (b -> Future a c) -> (b -> Future a d) -> Future a d`
+##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
+
+Much like [`chain`](#chain), but takes a "cleanup" computation first, which runs
+*after* the second settles (successfully or unsuccessfully). This allows for
+acquired resources to be disposed, connections to be closed, etc.
+
+```js
+const withConnection = Future.hook(
+  openConnection('localhost'),
+  closeConnection
+);
+
+withConnection(
+  conn => query(conn, 'EAT * cakes FROM bakery')
+)
+.fork(console.error, console.log)
+```
+
+Take care when using this in combination with [`cache`](#cache). Hooking relies
+on the first computation providing a fresh resource every time it's forked.
 
 #### finally
 ##### `#finally :: Future a b ~> Future a c -> Future a b`

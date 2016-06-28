@@ -83,7 +83,7 @@
     "no-label-var": 2,
     "no-shadow-restricted-names": 2,
     "no-undef": 2,
-    "no-unused-vars": 2,
+    "no-unused-vars": [2, {"argsIgnorePattern": "^_$"}],
     "no-sync": 2,
     "arrow-spacing": [2, {"before": true, "after": true}],
     "constructor-super": 2,
