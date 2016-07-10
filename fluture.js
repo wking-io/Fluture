@@ -353,6 +353,24 @@
     return new FutureClass(f);
   }
 
+  function Guarded(f){
+    check$Future(f);
+    return new FutureClass(function Guarded$fork(rej, res){
+      let open = true;
+      f(function Guarded$rej(x){
+        if(open){
+          open = false;
+          rej(x);
+        }
+      }, function Guarded$res(x){
+        if(open){
+          open = false;
+          res(x);
+        }
+      })
+    });
+  }
+
   function Future$of(x){
     return new FutureClass(function Future$of$fork(rej, res){
       res(x);
@@ -706,6 +724,7 @@
   // Other functions //
   /////////////////////
 
+  Future.Guarded = Guarded;
   Future.isFuture = isFuture;
   Future.isForkable = isForkable;
 

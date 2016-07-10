@@ -37,6 +37,7 @@ getPackageName('package.json')
   1. [Type signatures](#type-signatures)
   1. [Creating Futures](#creating-futures)
     * [Future](#future)
+    * [Guarded](#guarded)
     * [of](#of)
     * [reject](#reject)
     * [after](#after)
@@ -130,6 +131,23 @@ eventualThing.fork(
   thing => console.log(`Hello ${thing}!`)
 );
 //> "Hello world!"
+```
+
+#### Guarded
+##### `.Guarded :: ((a -> Void), (b -> Void) -> Void) -> Future a b`
+
+A slight variation to the Future constructor. It guarantees that neither of the
+continuations will be called after the first has been called. This is useful
+in cases where the continuations are passed into API's that might call them
+multiple times. For example an event emitter:
+
+```js
+const eventualData = Future.Guarded((rej, res) => {
+  stream.on('data', res).on('error', rej);
+});
+
+//"continuation" will only be called once, even if the stream produces multiple events
+eventualData.fork(console.error, continuation);
 ```
 
 #### of

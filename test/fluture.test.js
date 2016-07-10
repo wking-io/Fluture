@@ -109,6 +109,39 @@ describe('Constructors', () => {
 
   });
 
+  describe('Guarded', () => {
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.Guarded(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future when given a function', () => {
+      const actual = Future.Guarded(noop);
+      expect(actual).to.be.an.instanceof(Future);
+    });
+
+    it('ensures no continuations are called after the first resolve', done => {
+      const actual = Future.Guarded((rej, res) => {
+        res(1);
+        res(2);
+        rej(3);
+      });
+      actual.fork(failRej, _ => done());
+    });
+
+    it('ensures no continuations are called after the first reject', done => {
+      const actual = Future.Guarded((rej, res) => {
+        rej(1);
+        rej(2);
+        res(3);
+      });
+      actual.fork(_ => done(), failRes);
+    });
+
+  });
+
   describe('.of()', () => {
 
     it('returns an instance of Future', () => {
