@@ -220,7 +220,7 @@ with the given value, or rejects with the error thrown by the function.
 ```js
 const data = '{"foo" = "bar"}';
 const parseJson = Future.encase(JSON.parse);
-parseJson('a').fork(console.error, console.log)
+parseJson(data).fork(console.error, console.log)
 //> [SyntaxError: Unexpected token =]
 ```
 
