@@ -30,6 +30,7 @@
     "fluture.js"
   ],
   "keywords": [
+    "algebraic",
     "async",
     "asynchronous",
     "browser",
@@ -41,6 +42,7 @@
     "future",
     "library",
     "monad",
+    "monadic",
     "node",
     "parallel",
     "promise",
