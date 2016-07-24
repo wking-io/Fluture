@@ -7,13 +7,26 @@
 [![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
 [![Code Coverage](https://codecov.io/gh/Avaq/Fluture/branch/master/graph/badge.svg)](https://codecov.io/gh/Avaq/Fluture)
 
-Futures are containers which represent some eventual value as a result of an
-asynchronous computation, much like Promises. Unlike Promises, however, Futures
-are *lazy* and *logical* by design. They have a predictable API governed by the
-[Fantasy Land][1] algebraic JavaScript specification.
+Fluture offers a control structure similar to Promises, Tasks, Deferreds, and
+what-have-you. Let's call them Futures.
 
-> `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment
-  like modern browsers, transpilers or Node 4+</sup>
+Much like Promises, Futures represent the value arising from the success or
+failure of an asynchronous operation (I/O). Though unlike Promises Futures are
+*lazy* and *monadic* by means of conforming to the [Fantasy Land][1] algebraic
+JavaScript specification.
+
+Fluture boasts the following features:
+
+* Fine-grained control over asynchronous flow through generic monadic
+  transformations and an array of control utilities.
+* Plays nicely with functional libraries such as [Ramda][20] and [Sanctuary][21].
+* Provides a pleasant debugging experience through informative error messages.
+* Considerable performance benefits over Promises and the likes.
+
+For more information about the differences between Promises, Futures and the
+rest; [compare Futures to Promises](22) or [compare Fluture to similar libraries][15].
+
+> `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment</sup>
 
 ## Usage
 
@@ -32,7 +45,7 @@ getPackageName('package.json')
 
 ## Table of contents
 
-- [Motivation and Features](#motivation-and-features)
+- [Usage](#usage)
 - [Documentation](#documentation)
   1. [Type signatures](#type-signatures)
   1. [Creating Futures](#creating-futures)
@@ -75,18 +88,6 @@ getPackageName('package.json')
 - [Benchmarks](#benchmarks)
 - [The name](#the-name)
 
-## Motivation and Features
-
-Existing implementations of Future are a pain to debug. This library was made in
-an effort to provide **great error messages** when something goes wrong. Other
-features include:
-
-* Plenty of async control utilites like [Future.parallel](#parallel) and [Future#race](#race).
-* High performance.
-
-To learn more about the differences between Fluture and other Future
-implementations, take a look at [this wiki page][15].
-
 ## Documentation
 
 ### Type signatures
@@ -116,10 +117,10 @@ A list of all types used within the signatures follows:
 
 The Future constructor. Creates a new instance of Future by taking a single
 parameter `fork`: A function which takes two callbacks. Both are continuations
-for an asynchronous computation. The first is `reject`, commonly abbreviated to
+for an asynchronous operation. The first is `reject`, commonly abbreviated to
 `rej`. The second `resolve`, which abbreviates to `res`. The `fork` function is
 expected to call `rej` once an error occurs, or `res` with the result of the
-asynchronous computation.
+asynchronous operation.
 
 ```js
 const eventualThing = Future((rej, res) => {
@@ -249,7 +250,7 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 Transforms the resolution value inside the Future, and returns a new Future with
 the transformed value. This is like doing `promise.then(x => x + 1)`, except
 that it's lazy, so the transformation will not be applied before the Future is
-forked. The transformation is only applied to the resolution branch. So if the
+forked. The transformation is only applied to the resolution branch: If the
 Future is rejected, the transformation is ignored. To learn more about the exact
 behaviour of `map`, check out its [spec][12].
 
@@ -286,7 +287,7 @@ Future.reject('error')
 Allows the creation of a new Future based on the resolution value. This is like
 doing `promise.then(x => Promise.resolve(x + 1))`, except that it's lazy, so the
 new Future will not be created until the other one is forked. The function is
-only ever applied to the resolution value, so is ignored when the Future was
+only ever applied to the resolution value; it's ignored when the Future was
 rejected. To learn more about the exact behaviour of `chain`, check out its [spec][13].
 
 ```js
@@ -396,7 +397,7 @@ the flow of acquired values.
 ##### `#hook :: Future a b ~> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 ##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 
-Much like [`chain`](#chain), but takes a "cleanup" computation first, which runs
+Much like [`chain`](#chain), but takes a "cleanup" operation first, which runs
 *after* the second settles (successfully or unsuccessfully). This allows for
 acquired resources to be disposed, connections to be closed, etc.
 
@@ -413,7 +414,7 @@ withConnection(
 ```
 
 Take care when using this in combination with [`cache`](#cache). Hooking relies
-on the first computation providing a fresh resource every time it's forked.
+on the first operation providing a fresh resource every time it's forked.
 
 #### finally
 ##### `#finally :: Future a b ~> Future a c -> Future a b`
@@ -755,3 +756,6 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [17]: http://sanctuary.js.org/#is
 [18]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterator
 [19]: https://github.com/russellmcc/fantasydo
+[20]: http://ramdajs.com/
+[21]: http://sanctuary.js.org/
+[22]: https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
