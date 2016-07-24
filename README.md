@@ -24,7 +24,7 @@ Fluture boasts the following features:
 * Considerable performance benefits over Promises and the likes.
 
 For more information about the differences between Promises, Futures and the
-rest; [compare Futures to Promises](22) or [compare Fluture to similar libraries][15].
+rest; [compare Futures to Promises][22] or [compare Fluture to similar libraries][15].
 
 > `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment</sup>
 
