@@ -113,7 +113,7 @@ A list of all types used within the signatures follows:
 ### Creating Futures
 
 #### Future
-##### `Future :: ((a -> Void), (b -> Void) -> Void) -> Future a b`
+##### `Future :: ((a -> ()), (b -> ()) -> ()) -> Future a b`
 
 The Future constructor. Creates a new instance of Future by taking a single
 parameter `fork`: A function which takes two callbacks. Both are continuations
@@ -135,7 +135,7 @@ eventualThing.fork(
 ```
 
 #### Guarded
-##### `.Guarded :: ((a -> Void), (b -> Void) -> Void) -> Future a b`
+##### `.Guarded :: ((a -> ()), (b -> ()) -> ()) -> Future a b`
 
 A slight variation to the Future constructor. It guarantees that neither of the
 continuations will be called after the first has been called. This is useful
@@ -196,7 +196,7 @@ Future.cast(require('data.task').of('hello')).value(console.log);
 ```
 
 #### try
-##### `.try :: (Void -> !a | b) -> Future a b`
+##### `.try :: (() -> !a | b) -> Future a b`
 
 Creates a Future which resolves with the result of calling the given function,
 or rejects with the error thrown by the given function.
@@ -226,7 +226,7 @@ parseJson(data).fork(console.error, console.log)
 ```
 
 #### node
-##### `.node :: ((a, b -> Void) -> Void) -> Future a b`
+##### `.node :: ((a, b -> ()) -> ()) -> Future a b`
 
 Creates a Future which rejects with the first argument given to the function,
 or resolves with the second if the first is not present.
@@ -449,8 +449,8 @@ program('Hello')
 ### Consuming Futures
 
 #### fork
-##### `#fork :: Future a b ~> (a -> Void), (b -> Void) -> Void`
-##### `.fork :: (a -> Void) -> (b -> Void) -> Future a b -> Void`
+##### `#fork :: Future a b ~> (a -> ()), (b -> ()) -> ()`
+##### `.fork :: (a -> ()) -> (b -> ()) -> Future a b -> ()`
 
 Execute the Future by calling the `fork` function that was passed to it at
 [construction](#creation) with the `reject` and `resolve` callbacks. Futures are
@@ -476,8 +476,8 @@ consoleFork(Future.of('Hello'));
 ```
 
 #### value
-##### `#value :: Future a b ~> (b -> Void) -> Void`
-##### `.value :: (b -> Void) -> Future a b -> Void`
+##### `#value :: Future a b ~> (b -> ()) -> ()`
+##### `.value :: (b -> ()) -> Future a b -> ()`
 
 Extracts the value from a resolved Future by forking it. Only use this function
 if you are sure the Future is going to be resolved, for example; after using
