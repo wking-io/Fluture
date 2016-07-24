@@ -1,7 +1,7 @@
 {
   "name": "fluture",
   "version": "1.2.0",
-  "description": "A mathematically correct alternative to Promises for asynchronous control flow",
+  "description": "FantasyLand compliant (monadic) alternative to Promises",
   "main": "fluture.js",
   "repository": "https://github.com/Avaq/fluture.git",
   "scripts": {
