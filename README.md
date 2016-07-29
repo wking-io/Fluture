@@ -12,7 +12,7 @@ what-have-you. Let's call them Futures.
 
 Much like Promises, Futures represent the value arising from the success or
 failure of an asynchronous operation (I/O). Though unlike Promises Futures are
-*lazy* and *monadic* by means of conforming to the [Fantasy Land][1] algebraic
+*lazy* and *monadic* by design. They conform to the [Fantasy Land][1] algebraic
 JavaScript specification.
 
 Fluture boasts the following features:
@@ -23,8 +23,11 @@ Fluture boasts the following features:
 * Provides a pleasant debugging experience through informative error messages.
 * Considerable performance benefits over Promises and the likes.
 
-For more information about the differences between Promises, Futures and the
-rest; [compare Futures to Promises][22] or [compare Fluture to similar libraries][15].
+For more information:
+
+* [Wiki: Compare Futures to Promises][22]
+* [Wiki: Compare Fluture to similar libraries][15]
+* [Video: Monad a Day by @DrBoolean - Futures][23]
 
 > `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment</sup>
 
@@ -759,3 +762,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [20]: http://ramdajs.com/
 [21]: http://sanctuary.js.org/
 [22]: https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
+[23]: https://vimeo.com/106008027
