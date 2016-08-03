@@ -29,9 +29,9 @@ For more information:
 * [Wiki: Compare Fluture to similar libraries][15]
 * [Video: Monad a Day by @DrBoolean - Futures][23]
 
-> `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment</sup>
-
 ## Usage
+
+> `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment</sup>
 
 ```js
 const Future = require('fluture');
