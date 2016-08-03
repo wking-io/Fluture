@@ -105,13 +105,11 @@ A list of all types used within the signatures follows:
   arguments. This includes instances of Fluture, instances of Task from
   [`data.task`][10] or instances of Future from [`ramda-fantasy`][11].
 - **Future** - Instances of Future provided by Fluture.
-- **Functor** - Any object with a `map` method which satisfies the
-  [Fantasy Land Functor specification][12].
-- **Chain** - Any object with a `chain` method which satisfies the
-  [Fantasy Land Chain specification][13].
-- **Apply** - Any object with an `ap` method which satisfies the
-  [Fantasy Land Apply specification][14].
-- **Iterator** - Any object which conforms to the [Iterator protocol][18].
+- **Functor** - Values which conform to the [Fantasy Land Functor specification][12].
+- **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][24].
+- **Chain** - Values which conform to the [Fantasy Land Chain specification][13].
+- **Apply** - Values which conform to the [Fantasy Land Apply specification][14].
+- **Iterator** - Values which conform to the [Iterator protocol][18].
 
 ### Creating Futures
 
@@ -763,3 +761,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [21]: http://sanctuary.js.org/
 [22]: https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
 [23]: https://vimeo.com/106008027
+[24]: https://github.com/fantasyland/fantasy-land#bifunctor
