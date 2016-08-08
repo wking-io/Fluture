@@ -1073,11 +1073,11 @@ describe('Fantasy-Land Compliance', function(){
   describe('Bifunctor', () => {
     test('identity', x => eq(
       of(x),
-      of(x).bimap(I, I)
+      of(x)[FL.bimap](I, I)
     ));
     test('composition', x => eq(
-      of(x).bimap(B(mul3)(sub3), B(mul3)(sub3)),
-      of(x).bimap(sub3, sub3).bimap(mul3, mul3))
+      of(x)[FL.bimap](B(mul3)(sub3), B(mul3)(sub3)),
+      of(x)[FL.bimap](sub3, sub3)[FL.bimap](mul3, mul3))
     );
   });
 

@@ -599,6 +599,7 @@
     [FL.map]: Future$map,
     map: Future$map,
     mapRej: Future$mapRej,
+    [FL.bimap]: Future$bimap,
     bimap: Future$bimap,
     [FL.ap]: Future$ap,
     ap: Future$ap,
