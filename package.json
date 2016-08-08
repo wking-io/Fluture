@@ -62,10 +62,10 @@
     "jsverify": "^0.7.1",
     "lazy-either": "^1.0.3",
     "markdown-toc": "^0.12.6",
-    "mocha": "^2.3.3",
+    "mocha": "^3.0.2",
     "nsp": "^2.2.0",
     "pacta": "^0.9.0",
-    "ramda": "^0.21.0",
+    "ramda": "^0.22.1",
     "ramda-fantasy": "^0.6.0",
     "rimraf": "^2.4.3",
     "sanctuary": "^0.11.1"
