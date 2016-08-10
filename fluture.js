@@ -269,16 +269,6 @@
     if(!isFuture(it)) error$invalidContext('Future#cache', it);
   }
 
-  function check$cache$settle(oldState, newState, oldValue, newValue){
-    if(oldState > 1) throw new Error(
-      'Future.cache expects the Future it wraps to only resolve or reject once; '
-      + ' a cached Future tried to ' + (newState === 2 ? 'reject' : 'resolve') + ' a second time.'
-      + ' Please check your cached Future and make sure it does not call res or rej multiple times'
-      + '\n  It was ' + (oldState === 2 ? 'rejected' : 'resolved') + ' with: ' + show(oldValue)
-      + '\n  It got ' + (newState === 2 ? 'rejected' : 'resolved') + ' with: ' + show(newValue)
-    );
-  }
-
   function check$after(n){
     if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
   }
@@ -344,31 +334,14 @@
   // Future //
   ////////////
 
-  function FutureClass(f){
-    this._f = f;
+  function FutureClass(f, guard){
+    this._f = guard === true ? this._guard : f;
+    this._raw = f;
   }
 
   function Future(f){
     check$Future(f);
-    return new FutureClass(f);
-  }
-
-  function Guarded(f){
-    check$Future(f);
-    return new FutureClass(function Guarded$fork(rej, res){
-      let open = true;
-      f(function Guarded$rej(x){
-        if(open){
-          open = false;
-          rej(x);
-        }
-      }, function Guarded$res(x){
-        if(open){
-          open = false;
-          res(x);
-        }
-      })
-    });
+    return new FutureClass(f, true);
   }
 
   function Future$of(x){
@@ -380,6 +353,21 @@
   function Future$fork(rej, res){
     check$fork(this, rej, res);
     this._f(rej, res);
+  }
+
+  function Future$guard(rej, res){
+    let open = true;
+    this._raw(function Future$guard$rej(x){
+      if(open){
+        open = false;
+        rej(x);
+      }
+    }, function Future$guard$res(x){
+      if(open){
+        open = false;
+        res(x);
+      }
+    });
   }
 
   function Future$chain(f){
@@ -466,7 +454,7 @@
   }
 
   function Future$toString(){
-    return `Future(${this._f.toString()})`;
+    return `Future(${this._raw.toString()})`;
   }
 
   function Future$race(m){
@@ -566,7 +554,6 @@
     let que = [];
     let value, state;
     const settleWith = newState => function Future$cache$settle(newValue){
-      check$cache$settle(state, newState, value, newValue);
       value = newValue; state = newState;
       for(let i = 0, l = que.length; i < l; i++){
         que[i][state](value);
@@ -613,7 +600,8 @@
     finally: Future$finally,
     value: Future$value,
     promise: Future$promise,
-    cache: Future$cache
+    cache: Future$cache,
+    _guard: Future$guard
   };
 
   Future[FL.of] = Future.of = Future$of;
@@ -725,7 +713,6 @@
   // Other functions //
   /////////////////////
 
-  Future.Guarded = Guarded;
   Future.isFuture = isFuture;
   Future.isForkable = isForkable;
 
@@ -747,7 +734,7 @@
     check$cast(m);
     return new FutureClass(function Future$cast$fork(rej, res){
       m.fork(rej, res);
-    });
+    }, true);
   };
 
   Future.encase = function Future$encase(f, x){
@@ -805,8 +792,10 @@
   Future.node = function Future$node(f){
     check$node(f);
     return new FutureClass(function Future$node$fork(rej, res){
-      f((a, b) => a ? rej(a) : res(b));
-    });
+      f(function Future$node$done(a, b){
+        a ? rej(a) : res(b);
+      });
+    }, true);
   };
 
   Future.parallel = function Future$parallel(i, ms){
@@ -836,7 +825,7 @@
         check$do$next(o);
         return o.done ? Future$of(o.value) : o.value.chain(Future$do$next);
       };
-      return next().fork(rej, res);
+      return next()._f(rej, res);
     });
   };
 

@@ -77,6 +77,24 @@ describe('Constructors', () => {
       expect(S.is(Future, m)).to.equal(true);
     });
 
+    it('ensures no continuations are called after the first resolve', done => {
+      const actual = Future((rej, res) => {
+        res(1);
+        res(2);
+        rej(3);
+      });
+      actual.fork(failRej, _ => done());
+    });
+
+    it('ensures no continuations are called after the first reject', done => {
+      const actual = Future((rej, res) => {
+        rej(1);
+        rej(2);
+        res(3);
+      });
+      actual.fork(_ => done(), failRes);
+    });
+
     describe('error message', () => {
 
       it('takes it easy with the recursive data structures', () => {
@@ -105,39 +123,6 @@ describe('Constructors', () => {
         expect(f).to.throw(TypeError, /\[Array: 3\]/);
       });
 
-    });
-
-  });
-
-  describe('Guarded', () => {
-
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.Guarded(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('returns a Future when given a function', () => {
-      const actual = Future.Guarded(noop);
-      expect(actual).to.be.an.instanceof(Future);
-    });
-
-    it('ensures no continuations are called after the first resolve', done => {
-      const actual = Future.Guarded((rej, res) => {
-        res(1);
-        res(2);
-        rej(3);
-      });
-      actual.fork(failRej, _ => done());
-    });
-
-    it('ensures no continuations are called after the first reject', done => {
-      const actual = Future.Guarded((rej, res) => {
-        rej(1);
-        rej(2);
-        res(3);
-      });
-      actual.fork(_ => done(), failRes);
     });
 
   });
@@ -184,6 +169,16 @@ describe('Constructors', () => {
     it('resolves if the Forkable calls the right', () => {
       const forkable = {fork: (l, r) => r(1)};
       return assertResolved(Future.cast(forkable), 1);
+    });
+
+    it('ensures no continuations are called after the first resolve', done => {
+      const forkable = {fork: (l, r) => { r(1); r(2); l(3) }};
+      Future.cast(forkable).fork(failRej, _ => done());
+    });
+
+    it('ensures no continuations are called after the first reject', done => {
+      const forkable = {fork: (l, r) => { l(1); r(2); l(3) }};
+      Future.cast(forkable).fork(_ => done(), failRes);
     });
 
   });
@@ -332,6 +327,16 @@ describe('Constructors', () => {
     it('returns a Future which resolves when the callback is called with (null, a)', () => {
       const f = done => done(null, 'a');
       return assertResolved(Future.node(f), 'a');
+    });
+
+    it('ensures no continuations are called after the first resolve', done => {
+      const f = done => { done(null, 'a'); done(null, 'b'); done(error) };
+      Future.node(f).fork(failRej, _ => done());
+    });
+
+    it('ensures no continuations are called after the first reject', done => {
+      const f = done => { done(error); done(null, 'b'); done(error) };
+      Future.node(f).fork(_ => done(), failRes);
     });
 
   });
@@ -1006,17 +1011,6 @@ describe('Future', () => {
       m.fork(noop, noop);
       m.fork(noop, noop);
       return assertResolved(m, 1);
-    });
-
-    it('throws an error if the given Future resolves or rejects multiple times', () => {
-      const ms = [
-        Future((rej, res) => (res(1), res(1))),
-        Future((rej, res) => (res(1), rej(2))),
-        Future((rej) => (rej(2), rej(2))),
-        Future((rej, res) => (rej(2), res(1)))
-      ];
-      const fs = ms.map(m => () => m.cache().fork(noop, noop));
-      fs.forEach(f => expect(f).to.throw(Error, /Future/));
     });
 
     it('resolves all forks once a delayed resolution happens', () => {
@@ -1774,6 +1768,22 @@ describe('Other', () => {
         assertResolved(actual, 3),
         assertResolved(actual, 3)
       ]);
+    });
+
+  });
+
+  describe('Guarded', () => {
+
+    it('prevents chains from running twice', done => {
+      const m = Future((rej, res) => {
+        res(1);
+        res(1);
+      });
+      m.map(x => {
+        done();
+        return x;
+      })
+      .fork(failRej, noop);
     });
 
   });
