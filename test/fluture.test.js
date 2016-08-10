@@ -1119,43 +1119,6 @@ describe('Fantasy-Land Compliance', function(){
 
 describe('Dispatchers', () => {
 
-  describe('in general', () => {
-
-    it('have custom toString functions', () => {
-      expect(Future.promise.toString()).to.equal('function dispatch$promise(m){ m.promise() }');
-      expect(Future.value.toString()).to.equal('function dispatch$value(a, m){ m.value(a) }');
-      expect(Future.ap.toString()).to.equal('function dispatch$ap(m, a){ m.ap(a) }');
-      expect(Future.fork.toString()).to.equal('function dispatch$fork(a, b, m){ m.fork(a, b) }');
-      expect(Future.hook.toString()).to.equal('function dispatch$hook(m, a, b){ m.hook(a, b) }');
-    });
-
-    it('have custom inspect functions', () => {
-      expect(Future.promise.inspect()).to.equal('[Function: dispatch$promise]');
-      expect(Future.value.inspect()).to.equal('[Function: dispatch$value]');
-      expect(Future.ap.inspect()).to.equal('[Function: dispatch$ap]');
-      expect(Future.fork.inspect()).to.equal('[Function: dispatch$fork]');
-      expect(Future.hook.inspect()).to.equal('[Function: dispatch$hook]');
-    });
-
-    it('have custom toString functions when partially applied', () => {
-      const f = function myFunc(){};
-      expect(Future.value(f).toString()).to.equal(
-        'function dispatch$value(a, m){ m.value(a) }.bind(null, function myFunc(){})'
-      );
-      expect(Future.fork(f, f).toString()).to.equal(
-        'function dispatch$fork(a, b, m){ m.fork(a, b) }'
-        + '.bind(null, function myFunc(){}, function myFunc(){})'
-      );
-    });
-
-    it('have custom inspect functions when partially applied', () => {
-      const f = function myFunc(){};
-      expect(Future.value(f).inspect()).to.equal('[Function: unaryPartial$unaryDispatch]');
-      expect(Future.fork(f, f).inspect()).to.equal('[Function: binaryPartial$binaryDispatch]');
-    });
-
-  });
-
   describe('.map()', () => {
 
     it('is curried', () => {
@@ -1676,13 +1639,6 @@ describe('Utility functions', () => {
       expect(util.unaryPartial(quaternary, 1)(1, 1, 1)).to.equal(4);
     });
 
-    it('creates custom toString and inspect methods', () => {
-      function binary(a, b){ return a + b }
-      const partial = util.unaryPartial(binary, 1);
-      expect(partial.toString()).to.equal('function binary(a, b){ return a + b }.bind(null, 1)');
-      expect(partial.inspect()).to.equal('[Function: unaryPartial$binary]');
-    });
-
   });
 
   describe('.binaryPartial()', () => {
@@ -1697,15 +1653,6 @@ describe('Utility functions', () => {
       expect(util.binaryPartial(quaternary, 1, 1)(1, 1)).to.equal(4);
     });
 
-    it('creates custom toString and inspect methods', () => {
-      function ternary(a, b, c){ return a + b + c }
-      const partial = util.binaryPartial(ternary, 1, 1);
-      expect(partial.toString()).to.equal(
-        'function ternary(a, b, c){ return a + b + c }.bind(null, 1, 1)'
-      );
-      expect(partial.inspect()).to.equal('[Function: binaryPartial$ternary]');
-    });
-
   });
 
   describe('.ternaryPartial()', () => {
@@ -1713,15 +1660,6 @@ describe('Utility functions', () => {
     it('can partially apply quaternary functions', () => {
       function quaternary(a, b, c, d){ return a + b + c + d }
       expect(util.ternaryPartial(quaternary, 1, 1, 1)(1)).to.equal(4);
-    });
-
-    it('creates custom toString and inspect methods', () => {
-      function quaternary(a, b, c, d){ return a + b + c + d }
-      const partial = util.ternaryPartial(quaternary, 1, 1, 1);
-      expect(partial.toString()).to.equal(
-        'function quaternary(a, b, c, d){ return a + b + c + d }.bind(null, 1, 1, 1)'
-      );
-      expect(partial.inspect()).to.equal('[Function: ternaryPartial$quaternary]');
     });
 
   });

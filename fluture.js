@@ -105,32 +105,23 @@
 
   //Partially apply a function with a single argument.
   function unaryPartial(f, a){
-    const g = function partial(b, c, d){
+    return function partial(b, c, d){
       switch(arguments.length){
         case 1: return f(a, b);
         case 2: return f(a, b, c);
         default: return f(a, b, c, d);
       }
     };
-    g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)})`;
-    g.inspect = () => `[Function: unaryPartial$${fid(f)}]`;
-    return g;
   }
 
   //Partially apply a function with two arguments.
   function binaryPartial(f, a, b){
-    const g = function partial(c, d){ return arguments.length === 1 ? f(a, b, c) : f(a, b, c, d) };
-    g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)}, ${show(b)})`;
-    g.inspect = () => `[Function: binaryPartial$${fid(f)}]`;
-    return g;
+    return function partial(c, d){ return arguments.length === 1 ? f(a, b, c) : f(a, b, c, d) };
   }
 
   //Partially apply a function with three arguments.
   function ternaryPartial(f, a, b, c){
-    const g = function partial(d){ return f(a, b, c, d) };
-    g.toString = () => `${inspectf(2, f)}.bind(null, ${show(a)}, ${show(b)}, ${show(c)})`;
-    g.inspect = () => `[Function: ternaryPartial$${fid(f)}]`;
-    return g;
+    return function partial(d){ return f(a, b, c, d) };
   }
 
   ////////////
@@ -633,63 +624,48 @@
 
   //Creates a dispatcher for a nullary method.
   function createNullaryDispatcher(method){
-    const f = function nullaryDispatch(m){
+    return function nullaryDispatch(m){
       if(m && typeof m[method] === 'function') return m[method]();
       error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
     };
-    f.toString = () => `function dispatch$${method}(m){ m.${method}() }`;
-    f.inspect = () => `[Function: dispatch$${method}]`;
-    return f;
   }
 
   //Creates a dispatcher for a unary method.
   function createUnaryDispatcher(method){
-    const f = function unaryDispatch(a, m){
-      if(arguments.length === 1) return unaryPartial(f, a);
+    return function unaryDispatch(a, m){
+      if(arguments.length === 1) return unaryPartial(unaryDispatch, a);
       if(m && typeof m[method] === 'function') return m[method](a);
       error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
     };
-    f.toString = () => `function dispatch$${method}(a, m){ m.${method}(a) }`;
-    f.inspect = () => `[Function: dispatch$${method}]`;
-    return f;
   }
 
   //Creates a dispatcher for a unary method, but takes the object first rather than last.
   function createInvertedUnaryDispatcher(method){
-    const f = function invertedUnaryDispatch(m, a){
-      if(arguments.length === 1) return unaryPartial(f, m);
+    return function invertedUnaryDispatch(m, a){
+      if(arguments.length === 1) return unaryPartial(invertedUnaryDispatch, m);
       if(m && typeof m[method] === 'function') return m[method](a);
       error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
     };
-    f.toString = () => `function dispatch$${method}(m, a){ m.${method}(a) }`;
-    f.inspect = () => `[Function: dispatch$${method}]`;
-    return f;
   }
 
   //Creates a dispatcher for a binary method.
   function createBinaryDispatcher(method){
-    const f = function binaryDispatch(a, b, m){
-      if(arguments.length === 1) return unaryPartial(f, a);
-      if(arguments.length === 2) return binaryPartial(f, a, b);
+    return function binaryDispatch(a, b, m){
+      if(arguments.length === 1) return unaryPartial(binaryDispatch, a);
+      if(arguments.length === 2) return binaryPartial(binaryDispatch, a, b);
       if(m && typeof m[method] === 'function') return m[method](a, b);
       error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
     };
-    f.toString = () => `function dispatch$${method}(a, b, m){ m.${method}(a, b) }`;
-    f.inspect = () => `[Function: dispatch$${method}]`;
-    return f;
   }
 
   //Creates a dispatcher for a binary method, but takes the object first rather than last.
   function createInvertedBinaryDispatcher(method){
-    const f = function invertedBinaryDispatch(m, a, b){
-      if(arguments.length === 1) return unaryPartial(f, m);
-      if(arguments.length === 2) return binaryPartial(f, m, a);
+    return function invertedBinaryDispatch(m, a, b){
+      if(arguments.length === 1) return unaryPartial(invertedBinaryDispatch, m);
+      if(arguments.length === 2) return binaryPartial(invertedBinaryDispatch, m, a);
       if(m && typeof m[method] === 'function') return m[method](a, b);
       error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
     };
-    f.toString = () => `function dispatch$${method}(m, a, b){ m.${method}(a, b) }`;
-    f.inspect = () => `[Function: dispatch$${method}]`;
-    return f;
   }
 
   Future.chain = createUnaryDispatcher('chain');
