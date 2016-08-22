@@ -4,6 +4,7 @@ const DataTask = require('data.task');
 const RamdaFuture = require('ramda-fantasy').Future;
 const Fluture = require('..');
 const LazyEither = require('lazy-either');
+const FunTask = require('fun-task');
 
 const noop = () => {};
 
@@ -37,6 +38,14 @@ suite.add('LazyEither', () => {
   .chain(x => LazyEither.of(f => f(x + 1)))
   .ap(LazyEither.of(x => x + 1))
   .value(noop);
+});
+
+suite.add('FunTask', () => {
+  FunTask.of(1)
+  .map(x => x + 1)
+  .chain(x => FunTask.of(f => f(x + 1)))
+  .ap(FunTask.of(x => x + 1))
+  .run({success: noop, failure: noop, catch: noop});
 });
 
 suite.on('complete', require('./_print'))

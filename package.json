@@ -59,6 +59,7 @@
     "codecov": "^1.0.1",
     "data.task": "^3.0.0",
     "eslint": "^3.0.1",
+    "fun-task": "^1.1.1",
     "heapdump": "^0.3.7",
     "istanbul": "^0.4.2",
     "jsverify": "^0.7.1",
