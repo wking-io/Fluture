@@ -36,7 +36,7 @@ const recursive = fd => {
     heapdump.writeSnapshot()
     nextMBThreshold += 100
   }
-  return Future.node(done => fs.read(fd, Buffer(8), 0, 8, 0, done)).chain(() => recursive(fd));
+  return Future.after(1, fd).chain(() => recursive(fd));
 }
 
 const cancel = fileHandler(__filename).chain(recursive).fork(
