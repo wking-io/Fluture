@@ -8,7 +8,7 @@ const FL = require('fantasy-land');
 
 const noop = () => {};
 const add = a => b => a + b;
-const error = new Error('It broke');
+const error = new Error('Intentional error for unit testing');
 
 const repeat = (n, x) => {
   const out = new Array(n);
@@ -358,9 +358,17 @@ describe('Constructors', () => {
       return assertResolved(actual, 1);
     });
 
+    it('clears its internal timeout when cancelled', done => {
+      Future.after(20, 1).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
   });
 
   describe('.parallel()', () => {
+
+    const delayedRes = Future((rej, res) => void setTimeout(res, 20, 1));
+    const delayedRej = Future(rej => void setTimeout(rej, 20, 1));
 
     it('is curried', () => {
       expect(Future.parallel(1)).to.be.a('function');
@@ -430,11 +438,35 @@ describe('Constructors', () => {
       return assertRejected(actual, 'err');
     });
 
+    it('cancels all Futures when cancelled', done => {
+      const m = Future(() => () => done());
+      const cancel = Future.parallel(1, [m]).fork(noop, noop);
+      setTimeout(cancel, 20);
+    });
+
+    it('does not resolve after being cancelled', done => {
+      const cancel = Future.parallel(1, [delayedRes, delayedRes]).fork(failRej, failRes);
+      setTimeout(cancel, 10);
+      setTimeout(done, 50);
+    });
+
+    it('does not reject after being cancelled', done => {
+      const cancel = Future.parallel(1, [delayedRej, delayedRej]).fork(failRej, failRes);
+      setTimeout(cancel, 10);
+      setTimeout(done, 50);
+    });
+
   });
 
 });
 
 describe('Future', () => {
+
+  const immediateRes = Future.of(1);
+  const immediateRej = Future.reject(1);
+  const delayedRes = Future((rej, res) => void setTimeout(res, 20, 1));
+  const delayedRej = Future(rej => void setTimeout(rej, 20, 1));
+  const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
   describe('#fork()', () => {
 
@@ -457,10 +489,24 @@ describe('Future', () => {
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
+    it('throws TypeError when the computation returns nonsense', () => {
+      const xs = [null, 1, (_) => {}, (x, _) => {}, 'hello'];
+      const ms = xs.map(x => Future(_ => x));
+      const fs = ms.map(m => () => m.fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
     it('does not throw when both arguments are functions', () => {
       const m = Future.of(1);
       const f = () => m.fork(noop, noop);
       expect(f).to.not.throw(TypeError);
+    });
+
+    it('does not throw when the computation returns a nullary function or void', () => {
+      const xs = [undefined, () => {}];
+      const ms = xs.map(x => Future(_ => x));
+      const fs = ms.map(m => () => m.fork(noop, noop));
+      fs.forEach(f => expect(f).to.not.throw(TypeError, /Future/));
     });
 
     it('passes rejection value to first argument', () => {
@@ -473,66 +519,137 @@ describe('Future', () => {
       m.fork(failRej, x => expect(x).to.equal(1));
     });
 
+    it('returns a Cancel function', () => {
+      const actual = Future.of(1).fork(noop, noop);
+      expect(actual).to.be.a('function');
+      expect(actual.length).to.equal(0);
+    });
+
   });
 
   describe('#chain()', () => {
 
-    const m = Future.of(1);
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-
     it('throws when invoked out of context', () => {
-      const f = () => Future.of(1).chain.call(null, noop);
+      const f = () => immediateRes.chain.call(null, noop);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('throws TypeError when not given a function', () => {
-      const fs = xs.map(x => () => m.chain(x));
+      const fs = xs.map(x => () => immediateRes.chain(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws TypeError when the given function does not return Future', () => {
-      const fs = xs.map(x => () => m.chain(() => x).fork(noop, noop));
+      const fs = xs.map(x => () => immediateRes.chain(() => x).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('calls the given function with the inner of the Future', () => {
-      m.chain(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
+      immediateRes.chain(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
     });
 
     it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = m.chain(() => Future.of(2));
+      const actual = immediateRes.chain(() => Future.of(2));
       return assertResolved(actual, 2);
+    });
+
+    it('maintains rejected state', () => {
+      const actual = immediateRej.chain(() => immediateRes);
+      return assertRejected(actual, 1);
+    });
+
+    it('assumes rejected state', () => {
+      const actual = immediateRes.chain(() => immediateRej);
+      return assertRejected(actual, 1);
+    });
+
+    it('does not chain after being cancelled', done => {
+      delayedRes.chain(failRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cancelled', done => {
+      delayedRej.chain(failRes).fork(failRej, failRes)();
+      immediateRes.chain(() => delayedRej).fork(failRej, failRes)();
+      setTimeout(done, 25);
     });
 
   });
 
   describe('#chainRej()', () => {
 
-    const m = Future.reject(1);
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-
     it('throws when invoked out of context', () => {
-      const f = () => Future.of(1).chainRej.call(null, noop);
+      const f = () => immediateRej.chainRej.call(null, noop);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('throws TypeError when not given a function', () => {
-      const fs = xs.map(x => () => m.chainRej(x));
+      const fs = xs.map(x => () => immediateRej.chainRej(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws TypeError when the given function does not return Future', () => {
-      const fs = xs.map(x => () => m.chainRej(() => x).fork(noop, noop));
+      const fs = xs.map(x => () => immediateRej.chainRej(() => x).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('calls the given function with the inner of the Future', () => {
-      m.chainRej(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
+      immediateRej.chainRej(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
     });
 
     it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = m.chainRej(() => Future.of(2));
+      const actual = immediateRej.chainRej(() => Future.of(2));
       return assertResolved(actual, 2);
+    });
+
+    it('maintains resolved state', () => {
+      const actual = immediateRes.chainRej(() => immediateRes);
+      return assertResolved(actual, 1);
+    });
+
+    it('assumes rejected state', () => {
+      const actual = immediateRej.chainRej(() => immediateRej);
+      return assertRejected(actual, 1);
+    });
+
+    it('does not chain after being cancelled', done => {
+      delayedRej.chainRej(failRej).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+  });
+
+  describe('#map()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).map.call(null, noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.of(1).map(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('applies the given function to its inner', () => {
+      const actual = Future.of(1).map(add(1));
+      return assertResolved(actual, 2);
+    });
+
+    it('does not map rejected state', () => {
+      const actual = immediateRej.map(x => x + 1);
+      return assertRejected(actual, 1);
+    });
+
+    it('does not resolve after being cancelled', done => {
+      delayedRes.map(failRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cancelled', done => {
+      delayedRej.map(failRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
     });
 
   });
@@ -585,6 +702,13 @@ describe('Future', () => {
       this.timeout(50);
       const actual = Future.after(30, add(1)).ap(Future.after(30, 1));
       return assertResolved(actual, 2);
+    });
+
+    it('creates a cancel function which cancels both Futures', done => {
+      let cancelled = false;
+      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
+      const cancel = m.ap(m).fork(noop, noop);
+      cancel();
     });
 
   });
@@ -702,15 +826,22 @@ describe('Future', () => {
     });
 
     it('returns a Future which rejects when the first one rejects', () => {
-      const m1 = Future((rej, res) => setTimeout(res, 15, 1));
-      const m2 = Future(rej => setTimeout(rej, 5, error));
+      const m1 = Future((rej, res) => void setTimeout(res, 15, 1));
+      const m2 = Future(rej => void setTimeout(rej, 5, error));
       return assertRejected(m1.race(m2), error);
     });
 
     it('returns a Future which resolves when the first one resolves', () => {
-      const m1 = Future((rej, res) => setTimeout(res, 5, 1));
-      const m2 = Future(rej => setTimeout(rej, 15, error));
+      const m1 = Future((rej, res) => void setTimeout(res, 5, 1));
+      const m2 = Future(rej => void setTimeout(rej, 15, error));
       return assertResolved(m1.race(m2), 1);
+    });
+
+    it('creates a cancel function which cancels both Futures', done => {
+      let cancelled = false;
+      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
+      const cancel = m.race(m).fork(noop, noop);
+      cancel();
     });
 
   });
@@ -720,7 +851,7 @@ describe('Future', () => {
     const resolved = Future.of('resolved');
     const resolvedSlow = Future.after(20, 'resolvedSlow');
     const rejected = Future.reject('rejected');
-    const rejectedSlow = Future(rej => setTimeout(rej, 20, 'rejectedSlow'));
+    const rejectedSlow = Future(rej => void setTimeout(rej, 20, 'rejectedSlow'));
 
     it('throws when invoked out of context', () => {
       const f = () => Future.of(1).or.call(null, Future.of(1));
@@ -779,6 +910,13 @@ describe('Future', () => {
         return assertResolved(resolvedSlow.or(rejected), 'resolvedSlow');
       });
 
+    });
+
+    it('creates a cancel function which cancels both Futures', done => {
+      let cancelled = false;
+      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
+      const cancel = m.or(m).fork(noop, noop);
+      cancel();
     });
 
   });
@@ -883,6 +1021,17 @@ describe('Future', () => {
       ]);
     });
 
+    it('does not hook after being cancelled', done => {
+      delayedRes.hook(_ => Future.of('cleanup'), failRes).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cancelled', done => {
+      delayedRej.hook(_ => Future.of('cleanup'), failRes).fork(failRej, failRes)();
+      immediateRes.hook(_ => Future.of('cleanup'), () => delayedRej).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
   });
 
   describe('#finally()', () => {
@@ -925,6 +1074,14 @@ describe('Future', () => {
       ]);
     });
 
+    it('does nothing after being cancelled', done => {
+      delayedRes.finally(immediateRes).fork(failRej, failRes)();
+      immediateRes.finally(delayedRes).fork(failRej, failRes)();
+      delayedRej.finally(immediateRej).fork(failRej, failRes)();
+      immediateRej.finally(delayedRej).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
   });
 
   describe('#value()', () => {
@@ -950,6 +1107,12 @@ describe('Future', () => {
         expect(x).to.equal(1);
         done();
       });
+    });
+
+    it('returns a Cancel function', () => {
+      const actual = Future.of(1).value(noop);
+      expect(actual).to.be.a('function');
+      expect(actual.length).to.equal(0);
     });
 
   });
@@ -1022,7 +1185,7 @@ describe('Future', () => {
     });
 
     it('rejects all forks once a delayed rejection happens', () => {
-      const m = Future(rej => setTimeout(rej, 20, error)).cache();
+      const m = Future(rej => void setTimeout(rej, 20, error)).cache();
       const a = assertRejected(m, error);
       const b = assertRejected(m, error);
       const c = assertRejected(m, error);
@@ -1033,6 +1196,19 @@ describe('Future', () => {
       const m = Future.reject('err').cache();
       m.fork(noop, noop);
       return assertRejected(m, 'err');
+    });
+
+    it('it forks the internal Future again when forked after having been cleared', done => {
+      const m = Future((rej, res) => {
+        const o = {cleared: false};
+        const id = setTimeout(res, 20, o);
+        return () => (o.cleared = true, clearTimeout(id));
+      }).cache();
+      const clear = m.fork(noop, noop);
+      setTimeout(() => {
+        clear();
+        m.fork(noop, v => (expect(v).to.have.property('cleared', false), done()));
+      }, 10);
     });
 
   });

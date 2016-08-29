@@ -110,47 +110,31 @@ A list of all types used within the signatures follows:
 - **Chain** - Values which conform to the [Fantasy Land Chain specification][13].
 - **Apply** - Values which conform to the [Fantasy Land Apply specification][14].
 - **Iterator** - Values which conform to the [Iterator protocol][18].
+- **Cancel** - The nullary cancellation functions returned from computations.
 
 ### Creating Futures
 
 #### Future
-##### `Future :: ((a -> ()), (b -> ()) -> ()) -> Future a b`
+##### `Future :: ((a -> ()), (b -> ()) -> Cancel) -> Future a b`
 
-The Future constructor. Creates a new instance of Future by taking a single
-parameter `fork`: A function which takes two callbacks. Both are continuations
-for an asynchronous operation. The first is `reject`, commonly abbreviated to
-`rej`. The second `resolve`, which abbreviates to `res`. The `fork` function is
-expected to call `rej` once an error occurs, or `res` with the result of the
-asynchronous operation.
-
-```js
-const eventualThing = Future((rej, res) => {
-  setTimeout(res, 500, 'world');
-});
-
-eventualThing.fork(
-  console.error,
-  thing => console.log(`Hello ${thing}!`)
-);
-//> "Hello world!"
-```
-
-#### Guarded
-##### `.Guarded :: ((a -> ()), (b -> ()) -> ()) -> Future a b`
-
-A slight variation to the Future constructor. It guarantees that neither of the
-continuations will be called after the first has been called. This is useful
-in cases where the continuations are passed into API's that might call them
-multiple times. For example an event emitter:
+Creates a Future with the given computation. A computation is a function which
+takes two callbacks. Both are continuations for the computation. The first is
+`reject`, commonly abbreviated to `rej`. The second `resolve`, which abbreviates
+to `res`. When the computation is finished (possibly asynchronously) it may call
+the appropriate continuation with a failure or success value.
 
 ```js
-const eventualData = Future.Guarded((rej, res) => {
-  stream.on('data', res).on('error', rej);
+Future(function computation(reject, resolve){
+  //Asynchronous work:
+  const x = setTimeout(resolve, 3000, 'world');
+  //Cancellation:
+  return () => clearTimeout(x);
 });
-
-//"continuation" will only be called once, even if the stream produces multiple events
-eventualData.fork(console.error, continuation);
 ```
+
+Additionally, the computation may return a nullary function containing
+cancellation logic. This function is executed when the Future is cancelled
+after it's [forked](#fork).
 
 #### of
 ##### `#of :: a -> Future _ a`
@@ -398,9 +382,14 @@ the flow of acquired values.
 ##### `#hook :: Future a b ~> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 ##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 
-Much like [`chain`](#chain), but takes a "cleanup" operation first, which runs
-*after* the second settles (successfully or unsuccessfully). This allows for
-acquired resources to be disposed, connections to be closed, etc.
+Much like [`chain`](#chain), but takes a "dispose" operation first, which runs
+*after* the second settles (successfully or unsuccessfully). So the signature is
+like `hook(acquire, dispose, consume)`, where `acquire` is a Future which might
+create connections, open file handlers, etc. `dispose` is a function that takes
+the result from `acquire` and should be used to clean up (close connections etc)
+and `consume` also takes the result from `acquire`, and may be used to perform
+any arbitrary computations using the resource. The resolution value of `dispose`
+is ignored.
 
 ```js
 const withConnection = Future.hook(
@@ -413,6 +402,11 @@ withConnection(
 )
 .fork(console.error, console.log)
 ```
+
+Be careful when cancelling a hooked Future. If the resource was acquired but not
+yet consumed, it will no longer be disposed. One way to work around this is to
+have the `consume` computation return a cancel function which forcefully
+disposes of the resource.
 
 Take care when using this in combination with [`cache`](#cache). Hooking relies
 on the first operation providing a fresh resource every time it's forked.
@@ -450,13 +444,11 @@ program('Hello')
 ### Consuming Futures
 
 #### fork
-##### `#fork :: Future a b ~> (a -> ()), (b -> ()) -> ()`
-##### `.fork :: (a -> ()) -> (b -> ()) -> Future a b -> ()`
+##### `#fork :: Future a b ~> (a -> ()), (b -> ()) -> Cancel`
+##### `.fork :: (a -> ()) -> (b -> ()) -> Future a b -> Cancel`
 
-Execute the Future by calling the `fork` function that was passed to it at
-[construction](#creation) with the `reject` and `resolve` callbacks. Futures are
-*lazy*, which means even if you've `map`ped or `chain`ed over them, they'll do
-*nothing* if you don't eventually fork them.
+Execute the computation that was passed to the Future at [construction](#Future)
+using the given `reject` and `resolve` callbacks.
 
 ```js
 Future.of('world').fork(
@@ -476,9 +468,19 @@ consoleFork(Future.of('Hello'));
 //> "Hello"
 ```
 
+After you `fork` a Future, the computation will start running. If you wish to
+cancel the computation, you may use the function returned by `fork`:
+
+```js
+const fut = Future.after(300, 'hello');
+const cancel = fut.fork(console.error, console.log);
+cancel();
+//Nothing will happen. The Future was cancelled before it could settle.
+```
+
 #### value
-##### `#value :: Future a b ~> (b -> ()) -> ()`
-##### `.value :: (b -> ()) -> Future a b -> ()`
+##### `#value :: Future a b ~> (b -> ()) -> Cancel`
+##### `.value :: (b -> ()) -> Future a b -> Cancel`
 
 Extracts the value from a resolved Future by forking it. Only use this function
 if you are sure the Future is going to be resolved, for example; after using
@@ -492,6 +494,13 @@ Future.reject(new Error('It broke'))
 //> Left([Error: It broke])
 ```
 
+Just like [fork](#fork), `value` returns the `Cancel` function:
+
+```js
+Future.after(300, 'hello').value(console.log)();
+//Nothing will happen. The Future was cancelled before it could settle.
+```
+
 #### promise
 ##### `#promise :: Future a b ~> Promise b a`
 ##### `.promise :: Future a b -> Promise b a`
@@ -499,7 +508,7 @@ Future.reject(new Error('It broke'))
 An alternative way to `fork` the Future. This eagerly forks the Future and
 returns a Promise of the result. This is useful if some API wants you to give it
 a Promise. It's the only method which forks the Future without a forced way to
-handle the rejection branch, which means it's considered dangerous to use.
+handle the rejection branch, so I recommend against using it for anything else.
 
 ```js
 Future.of('Hello').promise().then(console.log);
