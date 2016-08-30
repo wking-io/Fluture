@@ -200,15 +200,30 @@ Future.try(() => data.foo.bar.baz)
 ##### `.encase2 :: (a, b -> !e | r) -> a -> b -> Future e r`
 ##### `.encase3 :: (a, b, c -> !e | r) -> a -> b -> c -> Future e r`
 
-Creates a Future which resolves with the result of calling the given function
-with the given value, or rejects with the error thrown by the function.
+Takes a function and a value, and returns a Future which when forked calls the
+function with the value and resolves with the result. If the function throws
+an exception, it is caught and the Future will reject with the exception:
 
 ```js
-const data = '{"foo" = "bar"}';
-const parseJson = Future.encase(JSON.parse);
-parseJson(data).fork(console.error, console.log)
-//> [SyntaxError: Unexpected token =]
+const data = '{"foo" = "bar"}'
+Future.encase(JSON.parse, data)
+.fork(console.error, console.log)
+//! [SyntaxError: Unexpected token =]
 ```
+
+Partially applying `encase` with a function `f` allows us to create a "safe"
+version of `f`. Instead of throwing exceptions, the encased version always
+returns a Future when given the remaining argument(s):
+
+```js
+const data = '{"foo" = "bar"}'
+const safeJsonParse = Future.encase(JSON.parse)
+safeJsonParse(data).fork(console.error, console.log)
+//! [SyntaxError: Unexpected token =]
+```
+
+Furthermore; `encase2` and `encase3` are binary and ternary versions of
+`encase`, applying two or three arguments to the given function respectively.
 
 #### node
 ##### `.node :: ((a, b -> ()) -> ()) -> Future a b`
