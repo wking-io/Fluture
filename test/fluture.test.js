@@ -120,7 +120,7 @@ describe('Constructors', () => {
       it('displays nested anonymous functions', () => {
         const data = {foo: () => {}};
         const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Function\]/);
+        expect(f).to.throw(TypeError, /\[Function(: foo)?\]/);
       });
 
       it('displays nested arrays', () => {
@@ -1794,7 +1794,6 @@ describe('Utility functions', () => {
         '"foo"': 'foo',
         '[Array: 1]': ['a'],
         '[Function: foo]': function foo(){},
-        '[Function]': function(){},
         '[Object: foo, bar]': {foo: 1, bar: 2},
         '1': 1,
         'undefined': undefined};
