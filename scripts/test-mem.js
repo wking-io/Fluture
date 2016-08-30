@@ -2,7 +2,6 @@
 
 /*eslint no-console:0, no-sync:0*/
 
-const heapdump = require('heapdump');
 const Future = require('..');
 const fs = require('fs');
 const log = require('util').log;
@@ -32,8 +31,7 @@ const recursive = fd => {
     stamp = Date.now();
   }
   if(memMB > nextMBThreshold){
-    log('Memory increased. Writing snapshot...');
-    heapdump.writeSnapshot()
+    log('Memory increased.');
     nextMBThreshold += 100
   }
   return Future.after(1, fd).chain(recursive);
