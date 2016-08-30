@@ -4,7 +4,13 @@ const expect = require('chai').expect;
 const Future = require('../fluture');
 const jsc = require('jsverify');
 const S = require('sanctuary');
-const FL = require('fantasy-land');
+const FL = {
+  map: 'map',
+  bimap: 'bimap',
+  chain: 'chain',
+  ap: 'ap',
+  of: 'of'
+};
 
 const noop = () => {};
 const add = a => b => a + b;

@@ -10,19 +10,15 @@
   'use strict';
 
   /*istanbul ignore next*/
-  if(typeof module !== 'undefined'){
-    module.exports = f(require('fantasy-land'), require('inspect-f'));
-  }
-
-  else if(typeof global.define === 'function' && global.define.amd){
-    global.define(['fantasy-land', 'inspect-f'], f);
+  if(module && typeof module.exports !== 'undefined'){
+    module.exports = f(require('inspect-f'));
   }
 
   else{
-    global.Fluture = f(global.FantasyLand, global.inspectf);
+    global.Fluture = f(global.inspectf);
   }
 
-}(/*istanbul ignore next*/(global || window || this), function(FL, inspectf){
+}(/*istanbul ignore next*/(global || window || this), function(inspectf){
 
   'use strict';
 
@@ -31,6 +27,13 @@
   ///////////////////
 
   const TYPEOF_FUTURE = 'fluture/Future';
+  const FL = {
+    map: 'map',
+    bimap: 'bimap',
+    chain: 'chain',
+    ap: 'ap',
+    of: 'of'
+  };
 
   function isForkable(m){
     return Boolean(m) && typeof m.fork === 'function' && m.fork.length >= 2;

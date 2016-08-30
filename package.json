@@ -50,7 +50,6 @@
     "sequential"
   ],
   "dependencies": {
-    "fantasy-land": "^0.3.0",
     "inspect-f": "^1.1.0"
   },
   "devDependencies": {
