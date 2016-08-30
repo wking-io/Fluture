@@ -165,9 +165,21 @@
     if(!isFunction(f)) error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
+  function check$recur(it, f){
+    if(!isFuture(it)) error$invalidContext('Future#recur', it);
+    if(!isFunction(f)) error$invalidArgument('Future#recur', 0, 'be a function', f);
+  }
+
   function check$chain$f(m, f, x){
     if(!isFuture(m)) throw new TypeError(
       'Future#chain expects the function its given to return a Future'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+    );
+  }
+
+  function check$recur$f(m, f, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future#recur expects the function its given to return a Future'
       + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
     );
   }
@@ -395,6 +407,18 @@
     });
   }
 
+  function Future$recur(f){
+    check$recur(this, f);
+    const _this = this;
+    return new FutureClass(function Future$chain$fork(rej, res){
+      return _this._f(rej, function Future$chain$res(x){
+        const m = f(x);
+        check$recur$f(m, f, x);
+        m._f(rej, res);
+      });
+    });
+  }
+
   function Future$chainRej(f){
     check$chainRej(this, f);
     const _this = this;
@@ -608,6 +632,7 @@
     of: Future$of,
     [FL.chain]: Future$chain,
     chain: Future$chain,
+    recur: Future$recur,
     chainRej: Future$chainRej,
     [FL.map]: Future$map,
     map: Future$map,
@@ -703,6 +728,7 @@
   }
 
   Future.chain = createUnaryDispatcher('chain');
+  Future.recur = createUnaryDispatcher('recur');
   Future.chainRej = createUnaryDispatcher('chainRej');
   Future.map = createUnaryDispatcher('map');
   Future.mapRej = createUnaryDispatcher('mapRej');

@@ -53,7 +53,6 @@ getPackageName('package.json')
   1. [Type signatures](#type-signatures)
   1. [Creating Futures](#creating-futures)
     * [Future](#future)
-    * [Guarded](#guarded)
     * [of](#of)
     * [reject](#reject)
     * [after](#after)
@@ -65,6 +64,7 @@ getPackageName('package.json')
     * [map](#map)
     * [bimap](#bimap)
     * [chain](#chain)
+    * [recur](#recur)
     * [ap](#ap)
     * [swap](#swap)
   1. [Error handling](#error-handling)
@@ -280,6 +280,20 @@ Future.of(1)
 .chain(x => Future.of(x + 1))
 .fork(console.error, console.log);
 //> 2
+```
+
+#### recur
+##### `#recur :: Future a b ~> (b -> Future a c) -> Future a c`
+##### `.recur :: (b -> Future a c) -> Future a b -> Future a c`
+
+An alternative version of `chain` which does not build up the cancel function.
+This is useful in the case of a never-resolving recursive computation, in
+order to prevent stack-overflow or out-of-memory errors:
+
+```js
+const recursive = () => Future.after(200, 'world').recur(recursive);
+const cancel = recursive();
+process.on('SIGINT', cancel);
 ```
 
 #### ap
