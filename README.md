@@ -19,6 +19,8 @@ Fluture boasts the following features:
 
 * Fine-grained control over asynchronous flow through generic monadic
   transformations and an array of control utilities.
+* [Cancellation](#future).
+* [Resource management utilities](#resource-management).
 * Plays nicely with functional libraries such as [Ramda][20] and [Sanctuary][21].
 * Provides a pleasant debugging experience through informative error messages.
 * Considerable performance benefits over Promises and the likes.
