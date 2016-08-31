@@ -1971,6 +1971,15 @@ describe('Other', () => {
       setTimeout(done, 25);
     });
 
+    it('stops cancellation from being called after continuations', () => {
+      const m = Future((rej, res) => {
+        res(1);
+        return () => { throw error };
+      });
+      const cancel = m.fork(failRej, noop);
+      cancel();
+    });
+
   });
 
 });

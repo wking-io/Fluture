@@ -391,8 +391,8 @@
     });
     check$fork$f(f, this._raw);
     return function Future$guardedFork$cancel(){
+      open && f && f();
       open = false;
-      f && f();
     };
   }
 
