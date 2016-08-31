@@ -2,6 +2,7 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture');
+const {Readable} = require('stream');
 const jsc = require('jsverify');
 const S = require('sanctuary');
 const FL = {
@@ -1822,6 +1823,10 @@ describe('Utility functions', () => {
       const array = [{a: 1}, {b: 1}];
       expect(util.show(recursive)).to.equal('{"x": 1, "recursive": [Object: x, recursive]}');
       expect(util.show(array)).to.equal('[[Object: a], [Object: b]]');
+    });
+
+    it('handles nested objects with custom toString functions', () => {
+      expect(util.show(new Readable)).to.be.a('string');
     });
 
   });

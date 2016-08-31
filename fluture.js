@@ -85,7 +85,7 @@
     ? typeof x.name === 'string' && x.name.length > 0
     ? `[Function: ${x.name}]`
     : '[Function]'
-    : x && x.toString === Object.prototype.toString
+    : x && typeof x === 'object'
     ? `[Object: ${Object.keys(x).map(String).join(', ')}]`
     : String(x);
 
