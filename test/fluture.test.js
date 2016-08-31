@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture');
-const {Readable} = require('stream');
+const Readable = require('stream').Readable;
 const jsc = require('jsverify');
 const S = require('sanctuary');
 const FL = {
