@@ -222,7 +222,8 @@
 
   function check$ap$f(f){
     if(!isFunction(f)) throw new TypeError(
-      `Future#ap can only be used on Future<Function> but was used on a Future of: ${show(f)}`
+      'Future#ap expects its first argument to be a Future of a Function'
+      + `\n  Actual: Future.of(${show(f)})`
     );
   }
 
@@ -317,8 +318,8 @@
 
   function check$parallel$m(m, i){
     if(!isFuture(m)) throw new TypeError(
-      'Future.parallel expects argument 1 to be an array of Futures.'
-      + ` The value at position ${i} in the array was not a Future.\n  Actual: ${show(m)}`
+      'Future.parallel expects its second argument to be an array of Futures.'
+      + ` The value at position ${i} in the array was not a Future\n  Actual: ${show(m)}`
     );
   }
 
@@ -474,15 +475,15 @@
     return new FutureClass(function Future$ap$fork(g, res){
       let _f, _x, ok1, ok2, ko;
       const rej = x => ko || (ko = 1, g(x));
-      const c1 = _this._f(rej, function Future$ap$resThis(f){
-        if(!ok2) return void (ok1 = 1, _f = f);
-        check$ap$f(f);
-        res(f(_x));
-      });
-      const c2 = m._f(rej, function Future$ap$resThat(x){
+      const c1 = _this._f(rej, function Future$ap$resThis(x){
         if(!ok1) return void (ok2 = 1, _x = x)
         check$ap$f(_f);
         res(_f(x));
+      });
+      const c2 = m._f(rej, function Future$ap$resThat(f){
+        if(!ok2) return void (ok1 = 1, _f = f);
+        check$ap$f(f);
+        res(f(_x));
       });
       return function Future$ap$cancel(){ c1(); c2() };
     });
@@ -701,15 +702,6 @@
     };
   }
 
-  //Creates a dispatcher for a unary method, but takes the object first rather than last.
-  function createInvertedUnaryDispatcher(method){
-    return function invertedUnaryDispatch(m, a){
-      if(arguments.length === 1) return unaryPartial(invertedUnaryDispatch, m);
-      if(m && typeof m[method] === 'function') return m[method](a);
-      error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
-    };
-  }
-
   //Creates a dispatcher for a binary method.
   function createBinaryDispatcher(method){
     return function binaryDispatch(a, b, m){
@@ -736,7 +728,7 @@
   Future.map = createUnaryDispatcher(FL.map);
   Future.mapRej = createUnaryDispatcher('mapRej');
   Future.bimap = createBinaryDispatcher(FL.bimap);
-  Future.ap = createInvertedUnaryDispatcher(FL.ap);
+  Future.ap = createUnaryDispatcher(FL.ap);
   Future.swap = createNullaryDispatcher('swap');
   Future.fork = createBinaryDispatcher('fork');
   Future.race = createUnaryDispatcher('race');

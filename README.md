@@ -314,18 +314,17 @@ process.on('SIGINT', cancel);
 ```
 
 #### ap
-##### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
+##### `#ap :: Future a b ~> Future a (b -> c) -> Future a c`
 ##### `.ap :: Apply m => m (a -> b) -> m a -> m b`
 
-Apply the resolution value, which is expected to be a function (as in
-`Future.of(a_function)`), to the resolution value in the given Future. Both
-Futures involved will run in parallel, and if one rejects the resulting Future
-will also be rejected. To learn more about the exact behaviour of `ap`, check
-out its [spec][14].
+Applies the function contained in the right-hand Future to the value contained
+in the left-hand Future. Both Futures involved will run in parallel, and if one
+rejects the resulting Future will also be rejected. To learn more about the
+exact behaviour of `ap`, check out its [spec][14].
 
 ```js
-Future.of(x => x + 1)
-.ap(Future.of(1))
+Future.of(1)
+.ap(Future.of(x => x + 1))
 .fork(console.error, console.log);
 //> 2
 ```

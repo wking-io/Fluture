@@ -726,14 +726,14 @@ describe('Future', () => {
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
-    it('throws TypeError when not not called on Future<Function>', () => {
+    it('throws TypeError when not not called with Future<Function>', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.of(x).ap(Future.of(1)).fork(noop, noop));
+      const fs = xs.map(x => () => Future.of(1).ap(Future.of(x)).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
-    it('applies its inner to the inner of the other', () => {
-      const actual = Future.of(add(1)).ap(Future.of(1));
+    it('calls the function contained in the given Future to its contained value', () => {
+      const actual = Future.of(1).ap(Future.of(add(1)));
       return assertResolved(actual, 2);
     });
 
@@ -747,19 +747,19 @@ describe('Future', () => {
     });
 
     it('does not matter if the left resolves late', () => {
-      const actual = Future.after(20, add(1)).ap(Future.of(1));
+      const actual = Future.after(20, 1).ap(Future.of(add(1)));
       return assertResolved(actual, 2);
     });
 
     it('does not matter if the right resolves late', () => {
-      const actual = Future.of(add(1)).ap(Future.after(20, 1));
+      const actual = Future.of(1).ap(Future.after(20, add(1)));
       return assertResolved(actual, 2);
     });
 
     it('forks in parallel', function(){
       this.slow(80);
       this.timeout(50);
-      const actual = Future.after(30, add(1)).ap(Future.after(30, 1));
+      const actual = Future.after(30, 1).ap(Future.after(30, add(1)));
       return assertResolved(actual, 2);
     });
 
@@ -1283,6 +1283,7 @@ describe('Fantasy-Land Compliance', function(){
   const of = Future[FL.of];
 
   const I = x => x;
+  const T = x => f => f(x);
   const B = f => g => x => f(g(x));
 
   const sub3 = x => x - 3;
@@ -1312,23 +1313,23 @@ describe('Fantasy-Land Compliance', function(){
 
   describe('Apply', () => {
     test('composition', x => eq(
-      of(sub3)[FL.map](B)[FL.ap](of(mul3))[FL.ap](of(x)),
-      of(sub3)[FL.ap](of(mul3)[FL.ap](of(x)))
+      of(x)[FL.ap](of(sub3)[FL.ap](of(mul3)[FL.map](B))),
+      of(x)[FL.ap](of(sub3))[FL.ap](of(mul3))
     ));
   });
 
   describe('Applicative', () => {
     test('identity', x => eq(
-      of(x),
-      of(I)[FL.ap](of(x))
+      of(x)[FL.ap](of(I)),
+      of(x)
     ));
     test('homomorphism', x => eq(
-      of(sub3(x)),
-      of(sub3)[FL.ap](of(x))
+      of(x)[FL.ap](of(sub3)),
+      of(sub3(x))
     ));
     test('interchange', x => eq(
-      of(sub3)[FL.ap](of(x)),
-      of(f => f(x))[FL.ap](of(sub3))
+      of(x)[FL.ap](of(sub3)),
+      of(sub3)[FL.ap](of(T(x)))
     ));
   });
 
