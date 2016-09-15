@@ -1,7 +1,5 @@
 # Fluture
 
-[<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="196" height="196" alt="Fantasy Land" />][1]
-
 [![NPM Version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
 [![Dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
 [![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
@@ -51,6 +49,7 @@ getPackageName('package.json')
 ## Table of contents
 
 - [Usage](#usage)
+- [Interoperability](#interoperability)
 - [Documentation](#documentation)
   1. [Type signatures](#type-signatures)
   1. [Creating Futures](#creating-futures)
@@ -92,6 +91,13 @@ getPackageName('package.json')
   1. [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
 - [The name](#the-name)
+
+## Interoperability
+
+[<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][1]
+
+Fluture implements [FantasyLand 1.x][25] compatible `Functor`, `Bifunctor`,
+`Apply`, `Applicative`, `Chain` and `Monad`.
 
 ## Documentation
 
@@ -801,3 +807,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [22]: https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
 [23]: https://vimeo.com/106008027
 [24]: https://github.com/fantasyland/fantasy-land#bifunctor
+[25]: https://github.com/fantasyland/fantasy-land/tree/1.0.0
