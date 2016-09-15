@@ -84,7 +84,7 @@
     : typeof x === 'function'
     ? typeof x.name === 'string' && x.name.length > 0
     ? `[Function: ${x.name}]`
-    : '[Function]'
+    : /*istanbul ignore next*/ '[Function]' //Only for older JS engines.
     : x && typeof x === 'object'
     ? `[Object: ${Object.keys(x).map(String).join(', ')}]`
     : String(x);
