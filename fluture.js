@@ -28,11 +28,11 @@
 
   const TYPEOF_FUTURE = 'fluture/Future';
   const FL = {
-    map: 'map',
-    bimap: 'bimap',
-    chain: 'chain',
-    ap: 'ap',
-    of: 'of'
+    map: 'fantasy-land/map',
+    bimap: 'fantasy-land/bimap',
+    chain: 'fantasy-land/chain',
+    ap: 'fantasy-land/ap',
+    of: 'fantasy-land/of'
   };
 
   function isForkable(m){
@@ -730,13 +730,13 @@
     };
   }
 
-  Future.chain = createUnaryDispatcher('chain');
+  Future.chain = createUnaryDispatcher(FL.chain);
   Future.recur = createUnaryDispatcher('recur');
   Future.chainRej = createUnaryDispatcher('chainRej');
-  Future.map = createUnaryDispatcher('map');
+  Future.map = createUnaryDispatcher(FL.map);
   Future.mapRej = createUnaryDispatcher('mapRej');
-  Future.bimap = createBinaryDispatcher('bimap');
-  Future.ap = createInvertedUnaryDispatcher('ap');
+  Future.bimap = createBinaryDispatcher(FL.bimap);
+  Future.ap = createInvertedUnaryDispatcher(FL.ap);
   Future.swap = createNullaryDispatcher('swap');
   Future.fork = createBinaryDispatcher('fork');
   Future.race = createUnaryDispatcher('race');

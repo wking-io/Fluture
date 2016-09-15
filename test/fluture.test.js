@@ -6,11 +6,11 @@ const Readable = require('stream').Readable;
 const jsc = require('jsverify');
 const S = require('sanctuary');
 const FL = {
-  map: 'map',
-  bimap: 'bimap',
-  chain: 'chain',
-  ap: 'ap',
-  of: 'of'
+  map: 'fantasy-land/map',
+  bimap: 'fantasy-land/bimap',
+  chain: 'fantasy-land/chain',
+  ap: 'fantasy-land/ap',
+  of: 'fantasy-land/of'
 };
 
 const noop = () => {};
