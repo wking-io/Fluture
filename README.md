@@ -36,6 +36,7 @@ For more information:
 > `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment</sup>
 
 ```js
+const fs = require('fs');
 const Future = require('fluture');
 
 const getPackageName = file =>
