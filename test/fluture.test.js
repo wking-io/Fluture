@@ -5,13 +5,7 @@ const Future = require('../fluture');
 const Readable = require('stream').Readable;
 const jsc = require('jsverify');
 const S = require('sanctuary');
-const FL = {
-  map: 'fantasy-land/map',
-  bimap: 'fantasy-land/bimap',
-  chain: 'fantasy-land/chain',
-  ap: 'fantasy-land/ap',
-  of: 'fantasy-land/of'
-};
+const FL = require('fantasy-land');
 
 const noop = () => {};
 const add = a => b => a + b;
