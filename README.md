@@ -96,7 +96,7 @@ getPackageName('package.json')
 
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][1]
 
-Fluture implements [FantasyLand 1.x][25] compatible `Functor`, `Bifunctor`,
+Fluture implements [FantasyLand 1.x][1] compatible `Functor`, `Bifunctor`,
 `Apply`, `Applicative`, `Chain` and `Monad`.
 
 ## Documentation
@@ -807,4 +807,3 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [22]: https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
 [23]: https://vimeo.com/106008027
 [24]: https://github.com/fantasyland/fantasy-land#bifunctor
-[25]: https://github.com/fantasyland/fantasy-land/tree/1.0.0
