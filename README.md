@@ -1,7 +1,5 @@
 # Fluture
 
-[<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="196" height="196" alt="Fantasy Land" />][1]
-
 [![NPM Version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
 [![Dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
 [![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
@@ -52,6 +50,7 @@ getPackageName('package.json')
 ## Table of contents
 
 - [Usage](#usage)
+- [Interoperability](#interoperability)
 - [Documentation](#documentation)
   1. [Type signatures](#type-signatures)
   1. [Creating Futures](#creating-futures)
@@ -93,6 +92,13 @@ getPackageName('package.json')
   1. [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
 - [The name](#the-name)
+
+## Interoperability
+
+[<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][1]
+
+Fluture implements [FantasyLand 1.x][1] compatible `Functor`, `Bifunctor`,
+`Apply`, `Applicative`, `Chain` and `Monad`.
 
 ## Documentation
 
@@ -315,18 +321,17 @@ process.on('SIGINT', cancel);
 ```
 
 #### ap
-##### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
+##### `#ap :: Future a b ~> Future a (b -> c) -> Future a c`
 ##### `.ap :: Apply m => m (a -> b) -> m a -> m b`
 
-Apply the resolution value, which is expected to be a function (as in
-`Future.of(a_function)`), to the resolution value in the given Future. Both
-Futures involved will run in parallel, and if one rejects the resulting Future
-will also be rejected. To learn more about the exact behaviour of `ap`, check
-out its [spec][14].
+Applies the function contained in the right-hand Future to the value contained
+in the left-hand Future. Both Futures involved will run in parallel, and if one
+rejects the resulting Future will also be rejected. To learn more about the
+exact behaviour of `ap`, check out its [spec][14].
 
 ```js
-Future.of(x => x + 1)
-.ap(Future.of(1))
+Future.of(1)
+.ap(Future.of(x => x + 1))
 .fork(console.error, console.log);
 //> 2
 ```
