@@ -1268,7 +1268,7 @@ describe('Future', () => {
 
 });
 
-describe('Fantasy-Land Compliance', function(){
+describe('Compliance', function(){
 
   this.slow(200);
 
@@ -1283,66 +1283,138 @@ describe('Fantasy-Land Compliance', function(){
   const sub3 = x => x - 3;
   const mul3 = x => x * 3;
 
-  describe('Functor', () => {
-    test('identity', x => eq(
-      of(x),
-      of(x)[FL.map](I))
-    );
-    test('composition', x => eq(
-      of(x)[FL.map](B(sub3)(mul3)),
-      of(x)[FL.map](mul3)[FL.map](sub3))
-    );
+  describe('to Fantasy-Land:', () => {
+
+    describe('Functor', () => {
+      test('identity', x => eq(
+        of(x),
+        of(x)[FL.map](I))
+      );
+      test('composition', x => eq(
+        of(x)[FL.map](B(sub3)(mul3)),
+        of(x)[FL.map](mul3)[FL.map](sub3))
+      );
+    });
+
+    describe('Bifunctor', () => {
+      test('identity', x => eq(
+        of(x),
+        of(x)[FL.bimap](I, I)
+      ));
+      test('composition', x => eq(
+        of(x)[FL.bimap](B(mul3)(sub3), B(mul3)(sub3)),
+        of(x)[FL.bimap](sub3, sub3)[FL.bimap](mul3, mul3))
+      );
+    });
+
+    describe('Apply', () => {
+      test('composition', x => eq(
+        of(x)[FL.ap](of(sub3)[FL.ap](of(mul3)[FL.map](B))),
+        of(x)[FL.ap](of(sub3))[FL.ap](of(mul3))
+      ));
+    });
+
+    describe('Applicative', () => {
+      test('identity', x => eq(
+        of(x)[FL.ap](of(I)),
+        of(x)
+      ));
+      test('homomorphism', x => eq(
+        of(x)[FL.ap](of(sub3)),
+        of(sub3(x))
+      ));
+      test('interchange', x => eq(
+        of(x)[FL.ap](of(sub3)),
+        of(sub3)[FL.ap](of(T(x)))
+      ));
+    });
+
+    describe('Chain', () => {
+      test('associativity', x => eq(
+        of(x)[FL.chain](B(of)(sub3))[FL.chain](B(of)(mul3)),
+        of(x)[FL.chain](y => B(of)(sub3)(y)[FL.chain](B(of)(mul3)))
+      ));
+    });
+
+    describe('Monad', () => {
+      test('left identity', x => eq(
+        B(of)(sub3)(x),
+        of(x)[FL.chain](B(of)(sub3))
+      ));
+      test('right identity', x => eq(
+        of(x),
+        of(x)[FL.chain](of)
+      ));
+    });
+
   });
 
-  describe('Bifunctor', () => {
-    test('identity', x => eq(
-      of(x),
-      of(x)[FL.bimap](I, I)
-    ));
-    test('composition', x => eq(
-      of(x)[FL.bimap](B(mul3)(sub3), B(mul3)(sub3)),
-      of(x)[FL.bimap](sub3, sub3)[FL.bimap](mul3, mul3))
-    );
-  });
+  describe('to Static-Land:', () => {
 
-  describe('Apply', () => {
-    test('composition', x => eq(
-      of(x)[FL.ap](of(sub3)[FL.ap](of(mul3)[FL.map](B))),
-      of(x)[FL.ap](of(sub3))[FL.ap](of(mul3))
-    ));
-  });
+    const F = Future;
 
-  describe('Applicative', () => {
-    test('identity', x => eq(
-      of(x)[FL.ap](of(I)),
-      of(x)
-    ));
-    test('homomorphism', x => eq(
-      of(x)[FL.ap](of(sub3)),
-      of(sub3(x))
-    ));
-    test('interchange', x => eq(
-      of(x)[FL.ap](of(sub3)),
-      of(sub3)[FL.ap](of(T(x)))
-    ));
-  });
+    describe('Functor', () => {
+      test('identity', x => eq(
+        F.map(I, of(x)),
+        of(x)
+      ));
+      test('composition', x => eq(
+        F.map(B(sub3)(mul3), of(x)),
+        F.map(sub3, F.map(mul3, of(x)))
+      ));
+    });
 
-  describe('Chain', () => {
-    test('associativity', x => eq(
-      of(x)[FL.chain](B(of)(sub3))[FL.chain](B(of)(mul3)),
-      of(x)[FL.chain](y => B(of)(sub3)(y)[FL.chain](B(of)(mul3)))
-    ));
-  });
+    describe('Bifunctor', () => {
+      test('identity', x => eq(
+        F.bimap(I, I, of(x)),
+        of(x)
+      ));
+      test('composition', x => eq(
+        F.bimap(B(sub3)(mul3), B(sub3)(mul3), of(x)),
+        F.bimap(sub3, sub3, F.bimap(mul3, mul3, of(x)))
+      ));
+    });
 
-  describe('Monad', () => {
-    test('left identity', x => eq(
-      B(of)(sub3)(x),
-      of(x)[FL.chain](B(of)(sub3))
-    ));
-    test('right identity', x => eq(
-      of(x),
-      of(x)[FL.chain](of)
-    ));
+    describe('Apply', () => {
+      test('composition', x => eq(
+        F.ap(F.ap(F.map(B, of(sub3)), of(mul3)), of(x)),
+        F.ap(of(sub3), F.ap(of(mul3), of(x)))
+      ));
+    });
+
+    describe('Applicative', () => {
+      test('identity', x => eq(
+        F.ap(of(I), of(x)),
+        of(x)
+      ));
+      test('homomorphism', x => eq(
+        F.ap(of(sub3), of(x)),
+        of(sub3(x))
+      ));
+      test('interchange', x => eq(
+        F.ap(of(sub3), of(x)),
+        F.ap(of(T(x)), of(sub3))
+      ));
+    });
+
+    describe('Chain', () => {
+      test('associativity', x => eq(
+        F.chain(B(of)(sub3), F.chain(B(of)(mul3), of(x))),
+        F.chain(y => F.chain(B(of)(sub3), B(of)(mul3)(y)), of(x))
+      ));
+    });
+
+    describe('Monad', () => {
+      test('left identity', x => eq(
+        F.chain(B(of)(sub3), of(x)),
+        B(of)(sub3)(x)
+      ));
+      test('right identity', x => eq(
+        F.chain(of, of(x)),
+        of(x)
+      ));
+    });
+
   });
 
 });

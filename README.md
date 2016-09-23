@@ -96,9 +96,10 @@ getPackageName('package.json')
 ## Interoperability
 
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][1]
+[<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][25]
 
-Fluture implements [FantasyLand 1.x][1] compatible `Functor`, `Bifunctor`,
-`Apply`, `Applicative`, `Chain` and `Monad`.
+Fluture implements [FantasyLand 1.x][1] and [Static Land][25] compatible
+`Functor`, `Bifunctor`, `Apply`, `Applicative`, `Chain` and `Monad`.
 
 ## Documentation
 
@@ -808,3 +809,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [22]: https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
 [23]: https://vimeo.com/106008027
 [24]: https://github.com/fantasyland/fantasy-land#bifunctor
+[25]: https://github.com/rpominov/static-land
