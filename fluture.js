@@ -31,6 +31,7 @@
     map: 'fantasy-land/map',
     bimap: 'fantasy-land/bimap',
     chain: 'fantasy-land/chain',
+    chainRec: 'fantasy-land/chainRec',
     ap: 'fantasy-land/ap',
     of: 'fantasy-land/of'
   };
@@ -107,6 +108,8 @@
   const showf = f => padf('  ', inspectf(2, f));
   const fid = f => f.name ? f.name : '<anonymous>';
   const ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
+  const Next = x => ({done: false, value: x});
+  const Done = x => ({done: true, value: x});
 
   //Partially apply a function with a single argument.
   function unaryPartial(f, a){
@@ -166,6 +169,35 @@
   function check$chain(it, f){
     if(!isFuture(it)) error$invalidContext('Future#chain', it);
     if(!isFunction(f)) error$invalidArgument('Future#chain', 0, 'be a function', f);
+  }
+
+  function check$loop(f){
+    if(!isFunction(f)) error$invalidArgument('Future.loop', 0, 'be a function', f);
+  }
+
+  function check$chainRec(f){
+    if(!isFunction(f)) error$invalidArgument('Future.chainRec', 0, 'be a function', f);
+    if(!isTernary(f)) error$invalidArgument('Future.chainRec', 0, 'take at least three arguments', f);
+  }
+
+  function check$chainRec$f(m, f, i, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future.chainRec expects the function its given to return a Future every'
+      + ' time it is called. The value returned from'
+      + (ordinal[i] ? ` the ${ordinal[i]} call` : ` call ${i}`)
+      + ' was not a Future.'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: (Next, Done, ${show(x)})`
+    );
+  }
+
+  function check$chainRec$it(it, i){
+    if(!isIteration(it)) throw new TypeError(
+      'Future.chainRec expects the function its given to return a Future of an'
+      + ' Iteration every time it is called. The Future returned from'
+      + (ordinal[i] ? ` the ${ordinal[i]} call` : ` call ${i}`)
+      + ' did not resolve to a member of Iteration.'
+      + `\n  Actual: Future.of(${show(it)})`
+    );
   }
 
   function check$recur(it, f){
@@ -363,6 +395,40 @@
   function Future$of(x){
     return new FutureClass(function Future$of$fork(rej, res){
       res(x);
+    });
+  }
+
+  function Future$chainRec(f, init){
+    check$chainRec(f);
+    return new FutureClass(function(rej, res){
+      let cancel = noop, i = 0;
+      (function Future$chainRec$recur(value){
+        let isSync = null, state = Next(value);
+        function Future$chainRec$res(it){
+          check$chainRec$it(it, i);
+          i = i + 1;
+          if(isSync === null){
+            isSync = true;
+            state = it;
+          }else{
+            (it.done ? res : Future$chainRec$recur)(it.value);
+          }
+        }
+        while(!state.done){
+          isSync = null;
+          const m = f(Next, Done, state.value);
+          check$chainRec$f(m, f, i, state.value);
+          cancel = m._f(rej, Future$chainRec$res);
+          if(isSync === true){
+            continue;
+          }else{
+            isSync = false;
+            return;
+          }
+        }
+        res(state.value);
+      }(init));
+      return function Future$chainRec$cancel(){ cancel() };
     });
   }
 
@@ -634,6 +700,7 @@
     fork: Future$fork,
     [FL.of]: Future$of,
     of: Future$of,
+    [FL.chainRec]: Future$chainRec,
     [FL.chain]: Future$chain,
     chain: Future$chain,
     recur: Future$recur,
@@ -659,9 +726,12 @@
   };
 
   Future[FL.of] = Future.of = Future$of;
+  Future[FL.chainRec] = Future.chainRec = Future$chainRec;
   Future.Future = Future;
 
   Future.util = {
+    Next,
+    Done,
     isForkable,
     isFuture,
     isFunction,
@@ -774,12 +844,7 @@
     if(arguments.length === 1) return unaryPartial(Future.encase, f);
     return new FutureClass(function Future$encase$fork(rej, res){
       let r;
-      try{
-        r = f(x);
-      }
-      catch(e){
-        return void rej(e);
-      }
+      try{ r = f(x) }catch(e){ return void rej(e) }
       res(r);
     });
   };
@@ -790,12 +855,7 @@
     if(arguments.length === 2) return binaryPartial(Future.encase2, f, x);
     return new FutureClass(function Future$encase2$fork(rej, res){
       let r;
-      try{
-        r = f(x, y);
-      }
-      catch(e){
-        return void rej(e);
-      }
+      try{ r = f(x, y) }catch(e){ return void rej(e) }
       res(r);
     });
   };
@@ -807,12 +867,7 @@
     if(arguments.length === 3) return ternaryPartial(Future.encase3, f, x, y);
     return new FutureClass(function Future$encase3$fork(rej, res){
       let r;
-      try{
-        r = f(x, y, z);
-      }
-      catch(e){
-        return void rej(e);
-      }
+      try{ r = f(x, y, z) }catch(e){ return void rej(e) }
       res(r);
     });
   };
@@ -849,17 +904,24 @@
     });
   };
 
+  Future.loop = function Future$loop(f, init){
+    if(arguments.length === 1) return unaryPartial(Future.loop, f);
+    check$loop(f);
+    return Future$chainRec(function Future$loop$chainRec(a, b, x){
+      return f(x);
+    }, init);
+  };
+
   Future.do = function Future$do(f){
     check$do(f);
     return new FutureClass(function Future$do$fork(rej, res){
       const g = f();
       check$do$g(g);
-      const next = function Future$do$next(x){
+      return Future$chainRec(function Future$do$next(next, _, x){
         const o = g.next(x);
         check$do$next(o);
-        return o.done ? Future$of(o.value) : o.value.chain(Future$do$next);
-      };
-      return next()._f(rej, res);
+        return o.done ? Future$of(o) : o.value.map(next);
+      }, undefined)._f(rej, res);
     });
   };
 
