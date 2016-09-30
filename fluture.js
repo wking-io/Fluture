@@ -177,7 +177,7 @@
 
   function check$chainRec(f){
     if(!isFunction(f)) error$invalidArgument('Future.chainRec', 0, 'be a function', f);
-    if(!isTernary(f)) error$invalidArgument('Future.chainRec', 0, 'take at least three arguments', f);
+    if(!isTernary(f)) error$invalidArgument('Future.chainRec', 0, 'take three arguments', f);
   }
 
   function check$chainRec$f(m, f, i, x){
@@ -331,12 +331,12 @@
 
   function check$encase2(f){
     if(!isFunction(f)) error$invalidArgument('Future.encase2', 0, 'be a function', f);
-    if(!isBinary(f)) error$invalidArgument('Future.encase2', 0, 'take at least two arguments', f);
+    if(!isBinary(f)) error$invalidArgument('Future.encase2', 0, 'take two arguments', f);
   }
 
   function check$encase3(f){
     if(!isFunction(f)) error$invalidArgument('Future.encase3', 0, 'be a function', f);
-    if(!isTernary(f)) error$invalidArgument('Future.encase3', 0, 'take at least three arguments', f);
+    if(!isTernary(f)) error$invalidArgument('Future.encase3', 0, 'take three arguments', f);
   }
 
   function check$node(f){
@@ -402,8 +402,8 @@
     check$chainRec(f);
     return new FutureClass(function(rej, res){
       let cancel = noop, i = 0;
-      (function Future$chainRec$recur(value){
-        let isSync = null, state = Next(value);
+      (function Future$chainRec$recur(state){
+        let isSync = null;
         function Future$chainRec$res(it){
           check$chainRec$it(it, i);
           i = i + 1;
@@ -411,7 +411,7 @@
             isSync = true;
             state = it;
           }else{
-            (it.done ? res : Future$chainRec$recur)(it.value);
+            Future$chainRec$recur(it);
           }
         }
         while(!state.done){
@@ -427,7 +427,7 @@
           }
         }
         res(state.value);
-      }(init));
+      }(Next(init)));
       return function Future$chainRec$cancel(){ cancel() };
     });
   }

@@ -545,7 +545,7 @@ describe('Constructors', () => {
     });
 
     it('throws TypeError when the returned Future does not always contain an iteration', () => {
-      const recur = (a, b, i) => i <= 6 ? Future.of(Future.util.Next(i + 1)) : Future.of('hello');
+      const recur = (a, b, i) => i <= 6 ? Future.of(a(i + 1)) : Future.of('hello');
       const f = _ => Future.chainRec(recur, 1).fork(noop, noop);
       expect(f).to.throw(TypeError, /Future.*6/);
     });
