@@ -521,14 +521,14 @@ describe('Constructors', () => {
     });
 
     it('throws TypeError when the given function is not ternary', () => {
-      const xs = [() => {}, (_) => {}, (a, _) => {}];
+      const xs = [() => {}, (a) => a, (a, b) => b];
       const fs = xs.map(x => _ => Future.chainRec(x, 1));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future.*three/));
     });
 
     it('throws TypeError when the given function does not return a Future', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => _ => Future.chainRec((a, b, _) => x, 1).fork(noop, noop));
+      const fs = xs.map(x => _ => Future.chainRec((a, b, c) => (c, x), 1).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
     });
 
@@ -540,7 +540,7 @@ describe('Constructors', () => {
 
     it('throws TypeError when the returned Future does not contain an iteration', () => {
       const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
-      const fs = xs.map(x => _ => Future.chainRec((a, b, _) => Future.of(x), 1).fork(noop, noop));
+      const fs = xs.map(x => _ => Future.chainRec((a, b, c) => Future.of((c, x)), 1).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
     });
 
@@ -644,7 +644,7 @@ describe('Future', () => {
     });
 
     it('throws TypeError when the computation returns nonsense', () => {
-      const xs = [null, 1, (_) => {}, (x, _) => {}, 'hello'];
+      const xs = [null, 1, (_) => {}, (a, b) => b, 'hello'];
       const ms = xs.map(x => Future(_ => x));
       const fs = ms.map(m => () => m.fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
