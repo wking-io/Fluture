@@ -514,6 +514,10 @@ describe('Constructors', () => {
 
   describe('.chainRec()', () => {
 
+    it('is curried', () => {
+      expect(Future.chainRec(noop)).to.be.a('function');
+    });
+
     it('throws TypeError when not given a function', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
       const fs = xs.map(x => _ => Future.chainRec(x, 1));
@@ -577,7 +581,7 @@ describe('Constructors', () => {
     });
 
     it('can be cancelled straight away', done => {
-      Future.chainRec((f, g, x) => Future.after(10, g(x))).fork(failRej, failRes)();
+      Future.chainRec((f, g, x) => Future.after(10, g(x)), 1).fork(failRej, failRes)();
       setTimeout(done, 20);
     });
 
@@ -586,28 +590,6 @@ describe('Constructors', () => {
       const cancel = m.fork(failRej, failRes);
       setTimeout(cancel, 25);
       setTimeout(done, 70);
-    });
-
-  });
-
-  describe('.loop()', () => {
-
-    it('is curried', () => {
-      expect(Future.loop(noop)).to.be.a('function');
-    });
-
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => _ => Future.loop(x, 1));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('calls the function with the value from the current iteration', () => {
-      let i = 0;
-      Future.loop(x => {
-        expect(x).to.equal(i);
-        return x < 5 ? Future.of(Future.util.Next(++i)) : Future.of(Future.util.Done(x));
-      }, i).fork(noop, noop);
     });
 
   });

@@ -62,7 +62,6 @@ getPackageName('package.json')
     * [try](#try)
     * [encase](#encase)
     * [node](#node)
-    * [loop](#loop)
     * [chainRec](#chainrec)
   1. [Transforming Futures](#transforming-futures)
     * [map](#map)
@@ -123,6 +122,8 @@ A list of all types used within the signatures follows:
 - **Apply** - Values which conform to the [Fantasy Land Apply specification][14].
 - **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][18].
 - **Iteration** - `{done, value}`-Objects as defined by the [Iterator protocol][18].
+- **Next** - An uncomplete (`{done: false}`) Iteration.
+- **Done** - A complete (`{done: true}`) Iteration.
 - **Cancel** - The nullary cancellation functions returned from computations.
 
 ### Creating Futures
@@ -254,29 +255,25 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 //> "{...}"
 ```
 
-#### loop
-##### `.loop :: (b -> Future a (Iteration b)) -> b -> Future a b`
+#### chainRec
+##### `.chainRec :: (((b -> Next), (c -> Done), b) -> Future a Iteration) -> b -> Future a c`
 
 Stack- and memory-safe asynchronous "recursion" based on [FantasyLand ChainRec][26].
-Calls the given function with the initial value, and expects a Future of an
-[Iteration](#type-signatures). If the Iteration is incomplete (`{done: false}`),
-then the function is called again with the Iteration value until it returns a
-Future of a complete (`{done: true}`) Iteration.
+
+Calls the given function with the initial value (as third argument), and expects
+a Future of an [Iteration](#type-signatures). If the Iteration is incomplete
+(`{done: false}`), then the function is called again with the Iteration value
+until it returns a Future of a complete (`{done: true}`) Iteration.
+
+For convenience and interoperability, the first two arguments passed to the
+function are functions for creating an uncomplete Iteration, and for creating a
+complete Iteration, respectively.
 
 ```js
-const Next = x => ({done: false, value: x});
-const Done = x => ({done: true, value: x});
-Future.loop((x => Future.of(x < 1000000 ? Next(x + 1) : Done(x))), 0)
+Future.chainRec((next, done, x) => Future.of(x < 1000000 ? next(x + 1) : done(x)), 0)
 .fork(console.error, console.log);
 //> 1000000
 ```
-
-#### chainRec
-##### `.chainRec :: ((((b -> Next b), (b -> Done b), b) -> Future a (Iteration b)), b) -> Future a b`
-
-Fantasy-Land compliant version of [`loop`](#loop). Passes Next and Done
-constructors as first and second arguments to the iteration-function. Used under
-the hood by [`loop`](#loop) and [`do`](#do).
 
 ### Transforming Futures
 

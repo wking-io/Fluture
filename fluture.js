@@ -171,10 +171,6 @@
     if(!isFunction(f)) error$invalidArgument('Future#chain', 0, 'be a function', f);
   }
 
-  function check$loop(f){
-    if(!isFunction(f)) error$invalidArgument('Future.loop', 0, 'be a function', f);
-  }
-
   function check$chainRec(f){
     if(!isFunction(f)) error$invalidArgument('Future.chainRec', 0, 'be a function', f);
     if(!isTernary(f)) error$invalidArgument('Future.chainRec', 0, 'take three arguments', f);
@@ -196,6 +192,9 @@
       + ' Iteration every time it is called. The Future returned from'
       + (ordinal[i] ? ` the ${ordinal[i]} call` : ` call ${i}`)
       + ' did not resolve to a member of Iteration.'
+      + '\n  You can create an uncomplete or complete Iteration using the next'
+      + ' or done functions respectively. These are passed into your callback'
+      + ' as first and second arguments.'
       + `\n  Actual: Future.of(${show(it)})`
     );
   }
@@ -399,6 +398,7 @@
   }
 
   function Future$chainRec(f, init){
+    if(arguments.length === 1) return unaryPartial(Future$chainRec, f);
     check$chainRec(f);
     return new FutureClass(function(rej, res){
       let cancel = noop, i = 0;
@@ -902,14 +902,6 @@
       ms.slice(0, i).forEach(fork);
       return function Future$parallel$cancel(){ cs.forEach(call) };
     });
-  };
-
-  Future.loop = function Future$loop(f, init){
-    if(arguments.length === 1) return unaryPartial(Future.loop, f);
-    check$loop(f);
-    return Future$chainRec(function Future$loop$chainRec(a, b, x){
-      return f(x);
-    }, init);
   };
 
   Future.do = function Future$do(f){
