@@ -122,7 +122,7 @@ A list of all types used within the signatures follows:
 - **Apply** - Values which conform to the [Fantasy Land Apply specification][14].
 - **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][18].
 - **Iteration** - `{done, value}`-Objects as defined by the [Iterator protocol][18].
-- **Next** - An uncomplete (`{done: false}`) Iteration.
+- **Next** - An incomplete (`{done: false}`) Iteration.
 - **Done** - A complete (`{done: true}`) Iteration.
 - **Cancel** - The nullary cancellation functions returned from computations.
 
@@ -266,7 +266,7 @@ a Future of an [Iteration](#type-signatures). If the Iteration is incomplete
 until it returns a Future of a complete (`{done: true}`) Iteration.
 
 For convenience and interoperability, the first two arguments passed to the
-function are functions for creating an uncomplete Iteration, and for creating a
+function are functions for creating an incomplete Iteration, and for creating a
 complete Iteration, respectively.
 
 ```js
