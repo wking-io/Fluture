@@ -60,14 +60,16 @@
     return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
   }
 
-  function isIterator(i){
-    return Boolean(i) && typeof i.next === 'function';
+  function isObject(o){
+    return o !== null && typeof o === 'object';
   }
 
-  const hasProp = Object.prototype.hasOwnProperty;
+  function isIterator(i){
+    return isObject(i) && typeof i.next === 'function';
+  }
 
   function isIteration(o){
-    return Boolean(o) && typeof o.done === 'boolean' && hasProp.call(o, 'value');
+    return isObject(o) && typeof o.done === 'boolean';
   }
 
   ///////////////
@@ -731,6 +733,7 @@
     isBinary,
     isTernary,
     isPositiveInteger,
+    isObject,
     isIterator,
     isIteration,
     preview,

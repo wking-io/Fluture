@@ -475,7 +475,7 @@ describe('Constructors', () => {
     });
 
     it('throws TypeError when the returned iterator does not return a valid iteration', () => {
-      const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
+      const xs = [null, '', {}, {value: 1, done: 1}];
       const fs = xs.map(x => () => Future.do(() => ({next: () => x})).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
@@ -543,7 +543,7 @@ describe('Constructors', () => {
     });
 
     it('throws TypeError when the returned Future does not contain an iteration', () => {
-      const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
+      const xs = [null, '', {}, {value: 1, done: 1}];
       const fs = xs.map(x => _ => Future.chainRec((a, b, c) => Future.of((c, x)), 1).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
     });
@@ -552,6 +552,11 @@ describe('Constructors', () => {
       const recur = (a, b, i) => i <= 6 ? Future.of(a(i + 1)) : Future.of('hello');
       const f = _ => Future.chainRec(recur, 1).fork(noop, noop);
       expect(f).to.throw(TypeError, /Future.*6/);
+    });
+
+    it('does not break if the iteration does not contain a value key', () => {
+      const actual = Future.chainRec((f, g, x) => (x, Future.of({done: true})), 0);
+      return assertResolved(actual, undefined);
     });
 
     it('calls the function with Next, Done and the initial value', () => {
@@ -1990,6 +1995,22 @@ describe('Utility functions', () => {
 
   });
 
+  describe('.isObject()', () => {
+
+    function O(){}
+    const os = [{}, {foo: 1}, Object.create(null), new O, []];
+    const xs = [1, true, NaN, null, undefined, ''];
+
+    it('returns true when given an Object', () => {
+      os.forEach(i => expect(util.isObject(i)).to.equal(true));
+    });
+
+    it('returns false when not given an Object', () => {
+      xs.forEach(x => expect(util.isObject(x)).to.equal(false));
+    });
+
+  });
+
   describe('.isIterator()', () => {
 
     const is = [{next: () => {}}, {next: x => x}, (function*(){}())];
@@ -2007,8 +2028,8 @@ describe('Utility functions', () => {
 
   describe('.isIteration()', () => {
 
-    const is = [{value: 1, done: true}, {value: 2, done: false}, (function*(){}()).next()];
-    const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
+    const is = [{done: true}, {value: 2, done: false}, (function*(){}()).next()];
+    const xs = [null, '', {}, {value: 1, done: 1}];
 
     it('returns true when given an Iteration', () => {
       is.forEach(i => expect(util.isIteration(i)).to.equal(true));
