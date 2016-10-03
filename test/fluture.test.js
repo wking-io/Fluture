@@ -585,6 +585,18 @@ describe('Constructors', () => {
       return assertResolved(actual, 5);
     });
 
+    it('responds to failure', () => {
+      const m = Future.chainRec((f, g, x) => Future.reject(x), 1);
+      return assertRejected(m, 1);
+    });
+
+    it('responds to failure after chaining async', () => {
+      const m = Future.chainRec(
+        (f, g, x) => x < 2 ? Future.after(10, f(x + 1)) : Future.reject(x), 0
+      );
+      return assertRejected(m, 2);
+    });
+
     it('can be cancelled straight away', done => {
       Future.chainRec((f, g, x) => Future.after(10, g(x)), 1).fork(failRej, failRes)();
       setTimeout(done, 20);
