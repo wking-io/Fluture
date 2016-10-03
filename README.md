@@ -256,7 +256,7 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 ```
 
 #### chainRec
-##### `.chainRec :: (((b -> Next), (c -> Done), b) -> Future a Iteration) -> b -> Future a c`
+##### `.chainRec :: ((b -> Next, c -> Done, b) -> Future a Iteration) -> b -> Future a c`
 
 Stack- and memory-safe asynchronous "recursion" based on [FantasyLand ChainRec][26].
 
