@@ -60,16 +60,14 @@
     return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
   }
 
-  function isObject(x){
-    return typeof x === 'object' && x !== null;
+  function isIterator(i){
+    return Boolean(i) && typeof i.next === 'function';
   }
 
-  function isIterator(i){
-    return isObject(i) && typeof i.next === 'function';
-  }
+  const hasProp = Object.prototype.hasOwnProperty;
 
   function isIteration(o){
-    return isObject(o) && 'value' in o && 'done' in o && typeof o.done === 'boolean';
+    return Boolean(o) && typeof o.done === 'boolean' && hasProp.call(o, 'value');
   }
 
   ///////////////
@@ -381,26 +379,27 @@
   // Future //
   ////////////
 
-  function FutureClass(f, guard){
-    this._f = guard === true ? Future$guardedFork : Future$rawFork;
+  function FutureClass(safe, f){
+    this._f = safe === true ? Future$safeFork : f;
     this._raw = f;
   }
 
   function Future(f){
     check$Future(f);
-    return new FutureClass(f, true);
+    return new FutureClass(true, f);
   }
 
   function Future$of(x){
-    return new FutureClass(function Future$of$fork(rej, res){
+    return new FutureClass(false, function Future$of$fork(rej, res){
       res(x);
+      return noop;
     });
   }
 
   function Future$chainRec(f, init){
     if(arguments.length === 1) return unaryPartial(Future$chainRec, f);
     check$chainRec(f);
-    return new FutureClass(function(rej, res){
+    return new FutureClass(false, function(rej, res){
       let cancel = noop, i = 0;
       (function Future$chainRec$recur(state){
         let isSync = null;
@@ -437,27 +436,21 @@
     return this._f(rej, res);
   }
 
-  function Future$rawFork(rej, res){
-    const f = this._raw(rej, res);
-    check$fork$f(f, this._raw);
-    return f || noop;
-  }
-
-  function Future$guardedFork(rej, res){
+  function Future$safeFork(rej, res){
     let open = true;
-    const f = this._raw(function Future$guard$rej(x){
+    const f = this._raw(function Future$safeFork$rej(x){
       if(open){
         open = false;
         rej(x);
       }
-    }, function Future$guard$res(x){
+    }, function Future$safeFork$res(x){
       if(open){
         open = false;
         res(x);
       }
     });
     check$fork$f(f, this._raw);
-    return function Future$guardedFork$cancel(){
+    return function Future$safeFork$cancel(){
       open && f && f();
       open = false;
     };
@@ -466,7 +459,7 @@
   function Future$chain(f){
     check$chain(this, f);
     const _this = this;
-    return new FutureClass(function Future$chain$fork(rej, res){
+    return new FutureClass(false, function Future$chain$fork(rej, res){
       let cancel;
       const r = _this._f(rej, function Future$chain$res(x){
         const m = f(x);
@@ -480,7 +473,7 @@
   function Future$recur(f){
     check$recur(this, f);
     const _this = this;
-    return new FutureClass(function Future$chain$fork(rej, res){
+    return new FutureClass(false, function Future$chain$fork(rej, res){
       return _this._f(rej, function Future$chain$res(x){
         const m = f(x);
         check$recur$f(m, f, x);
@@ -492,7 +485,7 @@
   function Future$chainRej(f){
     check$chainRej(this, f);
     const _this = this;
-    return new FutureClass(function Future$chainRej$fork(rej, res){
+    return new FutureClass(false, function Future$chainRej$fork(rej, res){
       let cancel;
       const r = _this._f(function Future$chainRej$rej(x){
         const m = f(x);
@@ -506,7 +499,7 @@
   function Future$map(f){
     check$map(this, f);
     const _this = this;
-    return new FutureClass(function Future$map$fork(rej, res){
+    return new FutureClass(false, function Future$map$fork(rej, res){
       return _this._f(rej, function Future$map$res(x){
         res(f(x));
       });
@@ -516,7 +509,7 @@
   function Future$mapRej(f){
     check$mapRej(this, f);
     const _this = this;
-    return new FutureClass(function Future$mapRej$fork(rej, res){
+    return new FutureClass(false, function Future$mapRej$fork(rej, res){
       return _this._f(function Future$mapRej$rej(x){
         rej(f(x));
       }, res);
@@ -526,7 +519,7 @@
   function Future$bimap(f, g){
     check$bimap(this, f, g);
     const _this = this;
-    return new FutureClass(function Future$bimap$fork(rej, res){
+    return new FutureClass(false, function Future$bimap$fork(rej, res){
       return _this._f(function Future$bimap$rej(x){
         rej(f(x));
       }, function Future$bimap$res(x){
@@ -538,7 +531,7 @@
   function Future$ap(m){
     check$ap(this, m);
     const _this = this;
-    return new FutureClass(function Future$ap$fork(g, res){
+    return new FutureClass(false, function Future$ap$fork(g, res){
       let _f, _x, ok1, ok2, ko;
       const rej = x => ko || (ko = 1, g(x));
       const c1 = _this._f(rej, function Future$ap$resThis(x){
@@ -558,7 +551,7 @@
   function Future$swap(){
     check$swap(this);
     const _this = this;
-    return new FutureClass(function Future$swap$fork(rej, res){
+    return new FutureClass(false, function Future$swap$fork(rej, res){
       return _this._f(res, rej);
     });
   }
@@ -570,7 +563,7 @@
   function Future$race(m){
     check$race(this, m);
     const _this = this;
-    return new FutureClass(function Future$race$fork(rej, res){
+    return new FutureClass(false, function Future$race$fork(rej, res){
       let settled = false, c1 = noop, c2 = noop;
       const once = f => a => settled || (settled = true, c1(), c2(), f(a));
       c1 = _this._f(once(rej), once(res));
@@ -582,7 +575,7 @@
   function Future$or(m){
     check$or(this, m);
     const _this = this;
-    return new FutureClass(function Future$or$fork(rej, res){
+    return new FutureClass(false, function Future$or$fork(rej, res){
       let ok = false, ko = false, val, err;
       const c1 = _this._f(
         () => ko ? rej(err) : ok ? res(val) : (ko = true),
@@ -599,7 +592,7 @@
   function Future$fold(f, g){
     check$fold(this, f, g);
     const _this = this;
-    return new FutureClass(function Future$fold$fork(rej, res){
+    return new FutureClass(false, function Future$fold$fork(rej, res){
       return _this._f(e => res(f(e)), x => res(g(x)));
     });
   }
@@ -607,7 +600,7 @@
   function Future$hook(dispose, consume){
     check$hook(this, dispose, consume);
     const _this = this;
-    return new FutureClass(function Future$hook$fork(rej, res){
+    return new FutureClass(false, function Future$hook$fork(rej, res){
       let cancel;
       const ret = _this._f(rej, function Future$hook$res(resource){
         const m = consume(resource);
@@ -630,7 +623,7 @@
   function Future$finally(m){
     check$finally(this, m);
     const _this = this;
-    return new FutureClass(function Future$finally$fork(rej, res){
+    return new FutureClass(false, function Future$finally$fork(rej, res){
       let cancel;
       const r = _this._f(function Future$finally$rej(e){
         cancel = m._f(rej, function Future$finally$rej$res(){ rej(e) });
@@ -674,7 +667,7 @@
       }
       que = undefined;
     };
-    return new FutureClass(function Future$cache$fork(rej, res){
+    return new FutureClass(false, function Future$cache$fork(rej, res){
       let cancel = noop;
       switch(state){
         case 1: que.push({2: rej, 3: res}); break;
@@ -738,7 +731,6 @@
     isBinary,
     isTernary,
     isPositiveInteger,
-    isObject,
     isIterator,
     isIteration,
     preview,
@@ -818,15 +810,16 @@
   Future.isForkable = isForkable;
 
   Future.reject = function Future$reject(x){
-    return new FutureClass(function Future$reject$fork(rej){
+    return new FutureClass(false, function Future$reject$fork(rej){
       rej(x);
+      return noop;
     });
   };
 
   Future.after = function Future$after(n, x){
     if(arguments.length === 1) return unaryPartial(Future.after, n);
     check$after(n);
-    return new FutureClass(function Future$after$fork(rej, res){
+    return new FutureClass(false, function Future$after$fork(rej, res){
       const t = setTimeout(res, n, x);
       return function Future$after$cancel(){ clearTimeout(t) };
     });
@@ -834,18 +827,19 @@
 
   Future.cast = function Future$cast(m){
     check$cast(m);
-    return new FutureClass(function Future$cast$fork(rej, res){
+    return new FutureClass(true, function Future$cast$fork(rej, res){
       m.fork(rej, res);
-    }, true);
+    });
   };
 
   Future.encase = function Future$encase(f, x){
     check$encase(f);
     if(arguments.length === 1) return unaryPartial(Future.encase, f);
-    return new FutureClass(function Future$encase$fork(rej, res){
+    return new FutureClass(false, function Future$encase$fork(rej, res){
       let r;
       try{ r = f(x) }catch(e){ return void rej(e) }
       res(r);
+      return noop;
     });
   };
 
@@ -853,10 +847,11 @@
     check$encase2(f);
     if(arguments.length === 1) return unaryPartial(Future.encase2, f);
     if(arguments.length === 2) return binaryPartial(Future.encase2, f, x);
-    return new FutureClass(function Future$encase2$fork(rej, res){
+    return new FutureClass(false, function Future$encase2$fork(rej, res){
       let r;
       try{ r = f(x, y) }catch(e){ return void rej(e) }
       res(r);
+      return noop;
     });
   };
 
@@ -865,10 +860,11 @@
     if(arguments.length === 1) return unaryPartial(Future.encase3, f);
     if(arguments.length === 2) return binaryPartial(Future.encase3, f, x);
     if(arguments.length === 3) return ternaryPartial(Future.encase3, f, x, y);
-    return new FutureClass(function Future$encase3$fork(rej, res){
+    return new FutureClass(false, function Future$encase3$fork(rej, res){
       let r;
       try{ r = f(x, y, z) }catch(e){ return void rej(e) }
       res(r);
+      return noop;
     });
   };
 
@@ -878,18 +874,18 @@
 
   Future.node = function Future$node(f){
     check$node(f);
-    return new FutureClass(function Future$node$fork(rej, res){
+    return new FutureClass(true, function Future$node$fork(rej, res){
       f(function Future$node$done(a, b){
         a ? rej(a) : res(b);
       });
-    }, true);
+    });
   };
 
   Future.parallel = function Future$parallel(i, ms){
     if(arguments.length === 1) return unaryPartial(Future.parallel, i);
     check$parallel(i, ms);
     const l = ms.length;
-    return l < 1 ? Future$of([]) : new FutureClass(function Future$parallel$fork(rej, res){
+    return l < 1 ? Future$of([]) : new FutureClass(false, function Future$parallel$fork(rej, res){
       let ko = false;
       let ok = 0;
       const cs = [];
@@ -906,7 +902,7 @@
 
   Future.do = function Future$do(f){
     check$do(f);
-    return new FutureClass(function Future$do$fork(rej, res){
+    return new FutureClass(false, function Future$do$fork(rej, res){
       const g = f();
       check$do$g(g);
       return Future$chainRec(function Future$do$next(next, _, x){

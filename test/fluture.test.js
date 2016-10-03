@@ -1990,22 +1990,6 @@ describe('Utility functions', () => {
 
   });
 
-  describe('.isObject()', () => {
-
-    function O(){}
-    const os = [{}, {foo: 1}, Object.create(null), new O, []];
-    const xs = [1, true, NaN, null, undefined, ''];
-
-    it('returns true when given an Object', () => {
-      os.forEach(i => expect(util.isObject(i)).to.equal(true));
-    });
-
-    it('returns false when not given an Object', () => {
-      xs.forEach(x => expect(util.isObject(x)).to.equal(false));
-    });
-
-  });
-
   describe('.isIterator()', () => {
 
     const is = [{next: () => {}}, {next: x => x}, (function*(){}())];
