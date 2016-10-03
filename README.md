@@ -62,6 +62,7 @@ getPackageName('package.json')
     * [try](#try)
     * [encase](#encase)
     * [node](#node)
+    * [chainRec](#chainrec)
   1. [Transforming Futures](#transforming-futures)
     * [map](#map)
     * [bimap](#bimap)
@@ -99,7 +100,7 @@ getPackageName('package.json')
 [<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][25]
 
 Fluture implements [FantasyLand 1.x][1] and [Static Land][25] compatible
-`Functor`, `Bifunctor`, `Apply`, `Applicative`, `Chain` and `Monad`.
+`Functor`, `Bifunctor`, `Apply`, `Applicative`, `Chain`, `ChainRec` and `Monad`.
 
 ## Documentation
 
@@ -119,7 +120,10 @@ A list of all types used within the signatures follows:
 - **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][24].
 - **Chain** - Values which conform to the [Fantasy Land Chain specification][13].
 - **Apply** - Values which conform to the [Fantasy Land Apply specification][14].
-- **Iterator** - Values which conform to the [Iterator protocol][18].
+- **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][18].
+- **Iteration** - `{done, value}`-Objects as defined by the [Iterator protocol][18].
+- **Next** - An incomplete (`{done: false}`) Iteration.
+- **Done** - A complete (`{done: true}`) Iteration.
 - **Cancel** - The nullary cancellation functions returned from computations.
 
 ### Creating Futures
@@ -249,6 +253,26 @@ a Future, check out [futurization](#futurization).
 Future.node(done => fs.readFile('package.json', 'utf8', done))
 .fork(console.error, console.log)
 //> "{...}"
+```
+
+#### chainRec
+##### `.chainRec :: ((b -> Next, c -> Done, b) -> Future a Iteration) -> b -> Future a c`
+
+Stack- and memory-safe asynchronous "recursion" based on [FantasyLand ChainRec][26].
+
+Calls the given function with the initial value (as third argument), and expects
+a Future of an [Iteration](#type-signatures). If the Iteration is incomplete
+(`{done: false}`), then the function is called again with the Iteration value
+until it returns a Future of a complete (`{done: true}`) Iteration.
+
+For convenience and interoperability, the first two arguments passed to the
+function are functions for creating an incomplete Iteration, and for creating a
+complete Iteration, respectively.
+
+```js
+Future.chainRec((next, done, x) => Future.of(x < 1000000 ? next(x + 1) : done(x)), 0)
+.fork(console.error, console.log);
+//> 1000000
 ```
 
 ### Transforming Futures
@@ -810,3 +834,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [23]: https://vimeo.com/106008027
 [24]: https://github.com/fantasyland/fantasy-land#bifunctor
 [25]: https://github.com/rpominov/static-land
+[26]: https://github.com/fantasyland/fantasy-land#chainrec

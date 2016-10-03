@@ -7,6 +7,7 @@ const jsc = require('jsverify');
 const S = require('sanctuary');
 const FL = require('fantasy-land');
 
+const STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
 const noop = () => {};
 const add = a => b => a + b;
 const error = new Error('Intentional error for unit testing');
@@ -96,34 +97,34 @@ describe('Constructors', () => {
       actual.fork(_ => done(), failRes);
     });
 
-    describe('error message', () => {
-
-      it('takes it easy with the recursive data structures', () => {
-        const data = {foo: 'bar'};
-        data.data = data;
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /Future/);
+    it('prevents chains from running twice', done => {
+      const m = Future((rej, res) => {
+        res(1);
+        res(1);
       });
+      m.map(x => {
+        done();
+        return x;
+      })
+      .fork(failRej, noop);
+    });
 
-      it('displays nested named functions by their name', () => {
-        function nyerk(){}
-        const data = {foo: nyerk};
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Function: nyerk\]/);
+    it('stops continuations from being called after cancellation', done => {
+      Future((rej, res) => {
+        setTimeout(res, 20, 1);
+        setTimeout(rej, 20, 1);
+      })
+      .fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('stops cancellation from being called after continuations', () => {
+      const m = Future((rej, res) => {
+        res(1);
+        return () => { throw error };
       });
-
-      it('displays nested anonymous functions', () => {
-        const data = {foo: () => {}};
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Function(: foo)?\]/);
-      });
-
-      it('displays nested arrays', () => {
-        const data = {foo: ['a', 'b', 'c']};
-        const f = () => Future(data);
-        expect(f).to.throw(TypeError, /\[Array: 3\]/);
-      });
-
+      const cancel = m.fork(failRej, noop);
+      cancel();
     });
 
   });
@@ -459,6 +460,157 @@ describe('Constructors', () => {
 
   });
 
+  describe('.do()', () => {
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.do(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the given function does not return an interator', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, () => {}, {next: 'hello'}];
+      const fs = xs.map(x => () => Future.do(() => x).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the returned iterator does not return a valid iteration', () => {
+      const xs = [null, '', {}, {value: 1, done: 1}];
+      const fs = xs.map(x => () => Future.do(() => ({next: () => x})).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the returned iterator produces something other than a Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () =>
+        Future.do(() => ({next: () => ({done: false, value: x})})).fork(noop, noop)
+      );
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('can be used to chain Futures in do-notation', () => {
+      const actual = Future.do(function*(){
+        const a = yield Future.of(1);
+        const b = yield Future.of(2);
+        return a + b;
+      });
+      return Promise.all([
+        assertResolved(actual, 3),
+        assertResolved(actual, 3)
+      ]);
+    });
+
+    it('is stack safe', () => {
+      const gen = function*(){
+        let i = 0;
+        while(i < STACKSIZE + 1) yield Future.of(i++);
+        return i;
+      };
+      const m = Future.do(gen);
+      return assertResolved(m, STACKSIZE + 1);
+    });
+
+  });
+
+  describe('.chainRec()', () => {
+
+    it('is curried', () => {
+      expect(Future.chainRec(noop)).to.be.a('function');
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => _ => Future.chainRec(x, 1));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when the given function is not ternary', () => {
+      const xs = [() => {}, (a) => a, (a, b) => b];
+      const fs = xs.map(x => _ => Future.chainRec(x, 1));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future.*three/));
+    });
+
+    it('throws TypeError when the given function does not return a Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => _ => Future.chainRec((a, b, c) => (c, x), 1).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
+    });
+
+    it('throws TypeError when the given function does not always return a Future', () => {
+      const recur = (a, b, i) => i <= 6 ? Future.of(Future.util.Next(i + 1)) : 'hello';
+      const f = _ => Future.chainRec(recur, 1).fork(noop, noop);
+      expect(f).to.throw(TypeError, /Future.*6/);
+    });
+
+    it('throws TypeError when the returned Future does not contain an iteration', () => {
+      const xs = [null, '', {}, {value: 1, done: 1}];
+      const fs = xs.map(x => _ => Future.chainRec((a, b, c) => Future.of((c, x)), 1).fork(noop, noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
+    });
+
+    it('throws TypeError when the returned Future does not always contain an iteration', () => {
+      const recur = (a, b, i) => i <= 6 ? Future.of(a(i + 1)) : Future.of('hello');
+      const f = _ => Future.chainRec(recur, 1).fork(noop, noop);
+      expect(f).to.throw(TypeError, /Future.*6/);
+    });
+
+    it('does not break if the iteration does not contain a value key', () => {
+      const actual = Future.chainRec((f, g, x) => (x, Future.of({done: true})), 0);
+      return assertResolved(actual, undefined);
+    });
+
+    it('calls the function with Next, Done and the initial value', () => {
+      Future.chainRec((f, g, x) => {
+        expect(f).to.be.a('function');
+        expect(f.length).to.equal(1);
+        expect(f(x)).to.deep.equal(Future.util.Next(x));
+        expect(g).to.be.a('function');
+        expect(g.length).to.equal(1);
+        expect(g(x)).to.deep.equal(Future.util.Done(x));
+        expect(x).to.equal(42);
+        return Future.of(g(x));
+      }, 42).fork(noop, noop);
+    });
+
+    it('calls the function with the value from the current iteration', () => {
+      let i = 0;
+      Future.chainRec((f, g, x) => {
+        expect(x).to.equal(i);
+        return x < 5 ? Future.of(f(++i)) : Future.of(g(x));
+      }, i).fork(noop, noop);
+    });
+
+    it('works asynchronously', () => {
+      const actual = Future.chainRec((f, g, x) => Future.after(10, x < 5 ? f(x + 1) : g(x)), 0);
+      return assertResolved(actual, 5);
+    });
+
+    it('responds to failure', () => {
+      const m = Future.chainRec((f, g, x) => Future.reject(x), 1);
+      return assertRejected(m, 1);
+    });
+
+    it('responds to failure after chaining async', () => {
+      const m = Future.chainRec(
+        (f, g, x) => x < 2 ? Future.after(10, f(x + 1)) : Future.reject(x), 0
+      );
+      return assertRejected(m, 2);
+    });
+
+    it('can be cancelled straight away', done => {
+      Future.chainRec((f, g, x) => Future.after(10, g(x)), 1).fork(failRej, failRes)();
+      setTimeout(done, 20);
+    });
+
+    it('can be cancelled after some iterations', done => {
+      const m = Future.chainRec((f, g, x) => Future.after(10, x < 5 ? f(x + 1) : g(x)), 0);
+      const cancel = m.fork(failRej, failRes);
+      setTimeout(cancel, 25);
+      setTimeout(done, 70);
+    });
+
+  });
+
 });
 
 describe('Future', () => {
@@ -491,7 +643,7 @@ describe('Future', () => {
     });
 
     it('throws TypeError when the computation returns nonsense', () => {
-      const xs = [null, 1, (_) => {}, (x, _) => {}, 'hello'];
+      const xs = [null, 1, (_) => {}, (a, b) => b, 'hello'];
       const ms = xs.map(x => Future(_ => x));
       const fs = ms.map(m => () => m.fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
@@ -1336,6 +1488,29 @@ describe('Compliance', function(){
       ));
     });
 
+    describe('ChainRec', () => {
+
+      test('equivalence', x => {
+        const p = v => v < 1;
+        const d = of;
+        const n = B(of)(v => v - 1);
+        const a = Future[FL.chainRec]((l, r, v) => p(v) ? d(v)[FL.map](r) : n(v)[FL.map](l), x);
+        const b = (function step(v){ return p(v) ? d(v) : n(v)[FL.chain](step) }(x));
+        return eq(a, b);
+      });
+
+      it('is stack safe', () => {
+        const p = v => v > (STACKSIZE + 1);
+        const d = of;
+        const n = B(of)(v => v + 1);
+        const a = Future[FL.chainRec]((l, r, v) => p(v) ? d(v)[FL.map](r) : n(v)[FL.map](l), 0);
+        const b = (function step(v){ return p(v) ? d(v) : n(v)[FL.chain](step) }(0));
+        expect(_ => a.fork(noop, noop)).to.not.throw();
+        expect(_ => b.fork(noop, noop)).to.throw(/call stack/);
+      });
+
+    });
+
     describe('Monad', () => {
       test('left identity', x => eq(
         B(of)(sub3)(x),
@@ -1402,6 +1577,29 @@ describe('Compliance', function(){
         F.chain(B(of)(sub3), F.chain(B(of)(mul3), of(x))),
         F.chain(y => F.chain(B(of)(sub3), B(of)(mul3)(y)), of(x))
       ));
+    });
+
+    describe('ChainRec', () => {
+
+      test('equivalence', x => {
+        const p = v => v < 1;
+        const d = of;
+        const n = B(of)(v => v - 1);
+        const a = F.chainRec((l, r, v) => p(v) ? F.map(r, d(v)) : F.map(l, n(v)), x);
+        const b = (function step(v){ return p(v) ? d(v) : F.chain(step, n(v)) }(x));
+        return eq(a, b);
+      });
+
+      it('is stack safe', () => {
+        const p = v => v > (STACKSIZE + 1);
+        const d = of;
+        const n = B(of)(v => v + 1);
+        const a = F.chainRec((l, r, v) => p(v) ? F.map(r, d(v)) : F.map(l, n(v)), 0);
+        const b = (function step(v){ return p(v) ? d(v) : F.chain(step, n(v)) }(0));
+        expect(_ => a.fork(noop, noop)).to.not.throw();
+        expect(_ => b.fork(noop, noop)).to.throw(/call stack/);
+      });
+
     });
 
     describe('Monad', () => {
@@ -1842,8 +2040,8 @@ describe('Utility functions', () => {
 
   describe('.isIteration()', () => {
 
-    const is = [{value: 1, done: true}, {value: 2, done: false}, (function*(){}()).next()];
-    const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
+    const is = [{done: true}, {value: 2, done: false}, (function*(){}()).next()];
+    const xs = [null, '', {}, {value: 1, done: 1}];
 
     it('returns true when given an Iteration', () => {
       is.forEach(i => expect(util.isIteration(i)).to.equal(true));
@@ -1969,84 +2167,56 @@ describe('Utility functions', () => {
 
   });
 
-});
+  describe('.Next()', () => {
 
-describe('Other', () => {
-
-  describe('.do()', () => {
-
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.do(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('throws TypeError when the given function does not return an interator', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, () => {}, {next: 'hello'}];
-      const fs = xs.map(x => () => Future.do(() => x).fork(noop, noop));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('throws TypeError when the returned iterator does not return a valid iteration', () => {
-      const xs = [null, '', {}, {done: true}, {value: 1, done: 1}];
-      const fs = xs.map(x => () => Future.do(() => ({next: () => x})).fork(noop, noop));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('throws TypeError when the returned iterator produces something other than a Future', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () =>
-        Future.do(() => ({next: () => ({done: false, value: x})})).fork(noop, noop)
-      );
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('can be used to chain Futures in do-notation', () => {
-      const actual = Future.do(function*(){
-        const a = yield Future.of(1);
-        const b = yield Future.of(2);
-        return a + b;
-      });
-      return Promise.all([
-        assertResolved(actual, 3),
-        assertResolved(actual, 3)
-      ]);
+    it('returns an uncomplete Iteration of the given value', () => {
+      const actual = util.Next(42);
+      expect(util.isIteration(actual)).to.equal(true);
+      expect(actual.done).to.equal(false);
+      expect(actual.value).to.equal(42);
     });
 
   });
 
-  describe('Guarded', () => {
+  describe('.Done()', () => {
 
-    it('prevents chains from running twice', done => {
-      const m = Future((rej, res) => {
-        res(1);
-        res(1);
-      });
-      m.map(x => {
-        done();
-        return x;
-      })
-      .fork(failRej, noop);
+    it('returns a complete Iteration of the given value', () => {
+      const actual = util.Done(42);
+      expect(util.isIteration(actual)).to.equal(true);
+      expect(actual.done).to.equal(true);
+      expect(actual.value).to.equal(42);
     });
 
-    it('stops continuations from being called after cancellation', done => {
-      Future((rej, res) => {
-        setTimeout(res, 20, 1);
-        setTimeout(rej, 20, 1);
-      })
-      .fork(failRej, failRes)();
-      setTimeout(done, 25);
-    });
+  });
 
-    it('stops cancellation from being called after continuations', () => {
-      const m = Future((rej, res) => {
-        res(1);
-        return () => { throw error };
-      });
-      const cancel = m.fork(failRej, noop);
-      cancel();
-    });
+});
 
+describe('Error messages', () => {
+
+  it('take it easy with the recursive data structures', () => {
+    const data = {foo: 'bar'};
+    data.data = data;
+    const f = () => Future(data);
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('display nested named functions by their name', () => {
+    function nyerk(){}
+    const data = {foo: nyerk};
+    const f = () => Future(data);
+    expect(f).to.throw(TypeError, /\[Function: nyerk\]/);
+  });
+
+  it('display nested anonymous functions', () => {
+    const data = {foo: () => {}};
+    const f = () => Future(data);
+    expect(f).to.throw(TypeError, /\[Function(: foo)?\]/);
+  });
+
+  it('display nested arrays', () => {
+    const data = {foo: ['a', 'b', 'c']};
+    const f = () => Future(data);
+    expect(f).to.throw(TypeError, /\[Array: 3\]/);
   });
 
 });
