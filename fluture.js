@@ -173,7 +173,6 @@
 
   function check$chainRec(f){
     if(!isFunction(f)) error$invalidArgument('Future.chainRec', 0, 'be a function', f);
-    if(!isTernary(f)) error$invalidArgument('Future.chainRec', 0, 'take three arguments', f);
   }
 
   function check$chainRec$f(m, f, i, x){

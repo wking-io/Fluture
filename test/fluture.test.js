@@ -524,12 +524,6 @@ describe('Constructors', () => {
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
-    it('throws TypeError when the given function is not ternary', () => {
-      const xs = [() => {}, (a) => a, (a, b) => b];
-      const fs = xs.map(x => _ => Future.chainRec(x, 1));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future.*three/));
-    });
-
     it('throws TypeError when the given function does not return a Future', () => {
       const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
       const fs = xs.map(x => _ => Future.chainRec((a, b, c) => (c, x), 1).fork(noop, noop));
