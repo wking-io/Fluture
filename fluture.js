@@ -344,7 +344,7 @@
 
   function check$parallel(i, ms){
     if(!isPositiveInteger(i)) error$invalidArgument('Future.parallel', 0, 'be a positive integer', i);
-    if(!Array.isArray(ms)) error$invalidArgument('Future.parallel', 0, 'be an array', ms);
+    if(!Array.isArray(ms)) error$invalidArgument('Future.parallel', 1, 'be an array', ms);
   }
 
   function check$parallel$m(m, i){
