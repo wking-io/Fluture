@@ -13,7 +13,7 @@ const taskF = new DataTask((rej, res) => res(x => x + 1));
 const futureF = RamdaFuture((rej, res) => res(x => x + 1));
 
 suite.add('Fluture', () => {
-  flutureF.ap(fluture).fork(noop, noop);
+  fluture.ap(flutureF).fork(noop, noop);
 });
 
 suite.add('data.task', () => {
