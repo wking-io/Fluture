@@ -439,10 +439,7 @@
 
   function Future$fold(f, g){
     check$fold(this, f, g);
-    const _this = this;
-    return new UnsafeFuture(function Future$fold$fork(rej, res){
-      return _this._f(e => res(f(e)), x => res(g(x)));
-    });
+    return new FutureFold(this, f, g);
   }
 
   function Future$hook(dispose, consume){
@@ -970,6 +967,29 @@
 
   FutureOr.prototype.toString = function FutureOr$toString(){
     return `${this._left.toString()}.or(${this._right.toString()})`;
+  }
+
+  //----------
+
+  function FutureFold(parent, lfold, rfold){
+    this._parent = parent;
+    this._lfold = lfold;
+    this._rfold = rfold;
+  }
+
+  FutureFold.prototype = Object.create(Future.prototype);
+
+  FutureFold.prototype._f = function FutureFold$fork(rej, res){
+    const _this = this;
+    return _this._parent._f(function FutureFold$fork$rej(x){
+      res(_this._lfold(x));
+    }, function FutureFold$fork$res(x){
+      res(_this._rfold(x));
+    });
+  }
+
+  FutureFold.prototype.toString = function FutureFold$toString(){
+    return `${this._parent.toString()}.fold(${showf(this._lfold)}, ${showf(this._rfold)})`;
   }
 
   /////////////////
