@@ -735,11 +735,15 @@
     return cancel;
   }
 
-  CachedFuture.prototype.toString = function CachedFuture$toString(){
+  CachedFuture.prototype.inspect = function CachedFuture$inspect(){
     const repr = this._state === 3
       ? show(this._value)
       : `<${this.getState()}>` + (this._state === 2 ? ` ${this._value}` : '');
     return `Future { ${repr} }`;
+  }
+
+  CachedFuture.prototype.toString = function CachedFuture$toString(){
+    return `${this._pure.toString()}.cache()`;
   }
 
   //----------
