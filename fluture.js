@@ -426,8 +426,8 @@
     });
   }
 
-  function Future$toString(){
-    return `Future(${this._f.toString()})`;
+  function Future$inspect(){
+    return this.toString();
   }
 
   function Future$race(m){
@@ -547,8 +547,7 @@
     [FL.ap]: Future$ap,
     ap: Future$ap,
     swap: Future$swap,
-    toString: Future$toString,
-    inspect: Future$toString,
+    inspect: Future$inspect,
     race: Future$race,
     or: Future$or,
     fold: Future$fold,
@@ -761,8 +760,7 @@
     return cancel;
   }
 
-  CachedFuture.prototype.toString =
-  CachedFuture.prototype.inspect = function CachedFuture$toString(){
+  CachedFuture.prototype.toString = function CachedFuture$toString(){
     const repr = this._state === 3
       ? show(this._value)
       : `<${this.getState()}>` + (this._state === 2 ? ` ${this._value}` : '');
