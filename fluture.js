@@ -429,14 +429,7 @@
 
   function Future$race(m){
     check$race(this, m);
-    const _this = this;
-    return new UnsafeFuture(function Future$race$fork(rej, res){
-      let settled = false, c1 = noop, c2 = noop;
-      const once = f => a => settled || (settled = true, c1(), c2(), f(a));
-      c1 = _this._f(once(rej), once(res));
-      c2 = m._f(once(rej), once(res));
-      return function Future$race$cancel(){ c1(); c2() };
-    });
+    return new FutureRace(this, m);
   }
 
   function Future$or(m){
@@ -935,6 +928,34 @@
 
   FutureSwap.prototype.toString = function FutureSwap$toString(){
     return `${this._parent.toString()}.swap()`;
+  }
+
+  //----------
+
+  function FutureRace(left, right){
+    this._left = left;
+    this._right = right;
+  }
+
+  FutureRace.prototype = Object.create(Future.prototype);
+
+  FutureRace.prototype._f = function FutureRace$fork(rej, res){
+    let settled = false, lcancel = noop, rcancel = noop;
+    function FutureRace$fork$rej(x){
+      if(settled) return;
+      settled = true; lcancel(); rcancel(); rej(x);
+    }
+    function FutureRace$fork$res(x){
+      if(settled) return;
+      settled = true; lcancel(); rcancel(); res(x);
+    }
+    lcancel = this._left._f(FutureRace$fork$rej, FutureRace$fork$res);
+    settled || (rcancel = this._right._f(FutureRace$fork$rej, FutureRace$fork$res));
+    return function FutureRace$fork$cancel(){ lcancel(); rcancel() };
+  }
+
+  FutureRace.prototype.toString = function FutureRace$toString(){
+    return `${this._left.toString()}.race(${this._right.toString()})`;
   }
 
   /////////////////
