@@ -455,13 +455,27 @@ withConnection(
 .fork(console.error, console.log)
 ```
 
-Be careful when cancelling a hooked Future. If the resource was acquired but not
-yet consumed, it will no longer be disposed. One way to work around this is to
-have the `consume` computation return a cancel function which forcefully
-disposes of the resource.
+In the case that a hooked Future is *cancelled* after the resource was acquired,
+`dispose` will be executed and immediately cancelled. This means that rejections
+which may happen during this disposal are **silently ignored**. To ensure that
+resources are disposed during cancellation, you might synchronously dispose
+resources in the `cancel` function of the disposal Future:
 
-Take care when using this in combination with [`cache`](#cache). Hooking relies
-on the first operation providing a fresh resource every time it's forked.
+```js
+const closeConnection = conn => Future((rej, res) => {
+
+  //We try to dispose gracefully.
+  conn.flushGracefully(err => {
+    if(err) return rej(err);
+    conn.close();
+    res();
+  });
+
+  //On cancel, we force dispose.
+  return () => conn.close();
+
+});
+```
 
 #### finally
 ##### `#finally :: Future a b ~> Future a c -> Future a b`

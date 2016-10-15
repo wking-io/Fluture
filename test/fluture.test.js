@@ -1179,6 +1179,13 @@ describe('Future', () => {
       setTimeout(done, 25);
     });
 
+    it('immediately runs and cancels the disposal Future when cancelled after acquire', done => {
+      const cancel = immediateRes
+        .hook(_ => Future(() => () => done()), () => delayedRes)
+        .fork(failRej, failRes);
+      setTimeout(cancel, 10);
+    });
+
   });
 
   describe('#finally()', () => {

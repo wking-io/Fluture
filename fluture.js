@@ -444,25 +444,7 @@
 
   function Future$hook(dispose, consume){
     check$hook(this, dispose, consume);
-    const _this = this;
-    return new UnsafeFuture(function Future$hook$fork(rej, res){
-      let cancel;
-      const ret = _this._f(rej, function Future$hook$res(resource){
-        const m = consume(resource);
-        check$hook$g(m, consume, resource);
-        cancel = m._f(e => {
-          const c = dispose(resource);
-          check$hook$f(c, dispose, resource);
-          c._f(rej, _ => rej(e));
-        }, x => {
-          const c = dispose(resource);
-          check$hook$f(c, dispose, resource);
-          c._f(rej, _ => res(x));
-        });
-      });
-      cancel = cancel || ret;
-      return function Future$hook$cancel(){ cancel() };
-    });
+    return new FutureHook(this, dispose, consume);
   }
 
   function Future$finally(m){
@@ -994,6 +976,46 @@
 
   FutureFold.prototype.toString = function FutureFold$toString(){
     return `${this._parent.toString()}.fold(${showf(this._lfold)}, ${showf(this._rfold)})`;
+  }
+
+  //----------
+
+  function FutureHook(acquire, dispose, consume){
+    this._acquire = acquire;
+    this._dispose = dispose;
+    this._consume = consume;
+  }
+
+  FutureHook.prototype = Object.create(Future.prototype);
+
+  FutureHook.prototype._f = function FutureHook$fork(rej, res){
+    const _this = this;
+    let cancel, cancelAcquire = noop;
+    cancelAcquire = _this._acquire._f(rej, function FutureHook$fork$res(resource){
+      const disposer = function FutureHook$dispose(callback){
+        const disposal = _this._dispose(resource);
+        check$hook$f(disposal, _this._dispose, resource);
+        cancel = disposal._f(rej, callback);
+        return cancel;
+      }
+      const consumption = _this._consume(resource);
+      check$hook$g(consumption, _this._consume, resource);
+      cancel = function FutureHook$fork$cancelConsume(){
+        disposer(noop)();
+        cancelAcquire();
+        cancelConsume();
+      }
+      const cancelConsume = consumption._f(
+        x => disposer(_ => rej(x)),
+        x => disposer(_ => res(x))
+      );
+    });
+    cancel = cancel || cancelAcquire;
+    return function FutureHook$fork$cancel(){ cancel() };
+  }
+
+  FutureHook.prototype.toString = function FutureHook$toString(){
+    return `${this._acquire.toString()}.hook(${showf(this._dispose)}, ${showf(this._consume)})`;
   }
 
   /////////////////
