@@ -449,16 +449,7 @@
 
   function Future$finally(m){
     check$finally(this, m);
-    const _this = this;
-    return new UnsafeFuture(function Future$finally$fork(rej, res){
-      let cancel;
-      const r = _this._f(function Future$finally$rej(e){
-        cancel = m._f(rej, function Future$finally$rej$res(){ rej(e) });
-      }, function Future$finally$res(x){
-        cancel = m._f(rej, function Future$finally$res$res(){ res(x) });
-      });
-      return cancel ? cancel : (cancel = r, function Future$finally$cancel(){ cancel() });
-    });
+    return new FutureFinally(this, m);
   }
 
   function Future$value(f){
@@ -1016,6 +1007,30 @@
 
   FutureHook.prototype.toString = function FutureHook$toString(){
     return `${this._acquire.toString()}.hook(${showf(this._dispose)}, ${showf(this._consume)})`;
+  }
+
+  //----------
+
+  function FutureFinally(left, right){
+    this._left = left;
+    this._right = right;
+  }
+
+  FutureFinally.prototype = Object.create(Future.prototype);
+
+  FutureFinally.prototype._f = function FutureFinally$fork(rej, res){
+    const _this = this;
+    let cancel;
+    const r = _this._left._f(function FutureFinally$fork$rej(e){
+      cancel = _this._right._f(rej, function FutureFinally$fork$rej$res(){ rej(e) });
+    }, function FutureFinally$fork$res(x){
+      cancel = _this._right._f(rej, function FutureFinally$fork$res$res(){ res(x) });
+    });
+    return cancel ? cancel : (cancel = r, function FutureFinally$fork$cancel(){ cancel() });
+  }
+
+  FutureFinally.prototype.toString = function FutureFinally$toString(){
+    return `${this._left.toString()}.finally(${this._right.toString()})`;
   }
 
   /////////////////
