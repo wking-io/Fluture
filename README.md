@@ -331,9 +331,9 @@ Future.of(1)
 ```
 
 Note that, due to its lazy nature, the stack and/or heap will slowly fill up as
-you're you chain more and more over the same structure. It's therefore
-recommended that you use [`chainRec`](#chainrec) in cases where you wish to
-`chain` recursively or traverse a large list (10000+ items).
+you chain more over the same structure. It's therefore recommended that you use
+[`chainRec`](#chainrec) in cases where you wish to `chain` recursively or
+traverse a large list (10000+ items).
 
 #### ap
 ##### `#ap :: Future a b ~> Future a (b -> c) -> Future a c`
