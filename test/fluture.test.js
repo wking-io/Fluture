@@ -723,58 +723,6 @@ describe('Future', () => {
 
   });
 
-  describe('#recur()', () => {
-
-    it('throws when invoked out of context', () => {
-      const f = () => immediateRes.recur.call(null, noop);
-      expect(f).to.throw(TypeError, /Future/);
-    });
-
-    it('throws TypeError when not given a function', () => {
-      const fs = xs.map(x => () => immediateRes.recur(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('throws TypeError when the given function does not return Future', () => {
-      const fs = xs.map(x => () => immediateRes.recur(() => x).fork(noop, noop));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('calls the given function with the inner of the Future', () => {
-      immediateRes.recur(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
-    });
-
-    it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = immediateRes.recur(() => Future.of(2));
-      return assertResolved(actual, 2);
-    });
-
-    it('maintains rejected state', () => {
-      const actual = immediateRej.recur(() => immediateRes);
-      return assertRejected(actual, 1);
-    });
-
-    it('assumes rejected state', () => {
-      const actual = immediateRes.recur(() => immediateRej);
-      return assertRejected(actual, 1);
-    });
-
-    it('does not recur after being cancelled on the main branch', done => {
-      delayedRes.recur(failRes).fork(failRej, failRes)();
-      setTimeout(done, 25);
-    });
-
-    it('does not reject after being cancelled on the main branch', done => {
-      delayedRej.recur(failRes).fork(failRej, failRes)();
-      setTimeout(done, 25);
-    });
-
-    it('does not cancel the off-branch', done => {
-      immediateRes.recur(_ => delayedRes).fork(failRej, _ => done())();
-    });
-
-  });
-
   describe('#chainRej()', () => {
 
     it('throws when invoked out of context', () => {
