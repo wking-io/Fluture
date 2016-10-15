@@ -26,7 +26,7 @@ suite.add('Fluture', () => {
 });
 
 suite.add('Ramda Fantasy', () => {
-  const future = RamdaFuture.cache(Fluture.of(1));
+  const future = RamdaFuture.cache(RamdaFuture.of(1));
   addTenMaps(future);
   future.fork(noop, noop);
 });

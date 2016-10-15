@@ -571,35 +571,7 @@
 
   function Future$cache(){
     check$cache(this);
-    const _this = this;
-    let que = [];
-    let value, state;
-    const settleWith = newState => function Future$cache$settle(newValue){
-      value = newValue; state = newState;
-      for(let i = 0, l = que.length; i < l; i++){
-        que[i][state](value);
-        que[i] = undefined;
-      }
-      que = undefined;
-    };
-    return new UnsafeFuture(function Future$cache$fork(rej, res){
-      let cancel = noop;
-      switch(state){
-        case 1: que.push({2: rej, 3: res}); break;
-        case 2: rej(value); break;
-        case 3: res(value); break;
-        default:
-          state = 1;
-          que.push({2: rej, 3: res});
-          cancel = _this._f(settleWith(2), settleWith(3));
-      }
-      return function Future$cache$cancel(){
-        que = [];
-        value = undefined;
-        state = undefined;
-        cancel();
-      };
-    });
+    return new CachedFuture(this);
   }
 
   Future.prototype = {
@@ -663,8 +635,8 @@
   // Classes //
   /////////////
 
-  function UnsafeFuture(f){
-    this._f = f;
+  function UnsafeFuture(computation){
+    this._f = computation;
   }
 
   UnsafeFuture.prototype = Object.create(Future.prototype);
@@ -748,6 +720,99 @@
 
   ChainRec.prototype.toString = function ChainRec$toString(){
     return `Future.chainRec(${showf(this._iterate)}, ${show(this._init)})`;
+  }
+
+  //----------
+
+  function CachedFuture(pure){
+    this._pure = pure;
+    this._cancel = noop;
+    this._queue = [];
+    this._queued = 0;
+    this._value = null;
+    this._state = 0;
+  }
+
+  CachedFuture.STATE = {
+    0: 'cold',
+    1: 'pending',
+    2: 'rejected',
+    3: 'resolved'
+  };
+
+  CachedFuture.prototype = Object.create(Future.prototype);
+
+  CachedFuture.prototype._addToQueue = function CachedFuture$addToQueue(rej, res){
+    const _this = this;
+    const i = _this._queue.push({2: rej, 3: res}) - 1;
+    _this._queued = _this._queued + 1;
+    return function CachedFuture$removeFromQueue(){
+      if(_this._state > 1) return;
+      _this._queue[i] = undefined;
+      _this._queued = this._queued - 1;
+      if(_this._queued === 0) _this.reset();
+    };
+  }
+
+  CachedFuture.prototype._drainQueue = function CachedFuture$drainQueue(){
+    const q = this._queue, l = q.length, s = this._state, v = this._value;
+    for(let i = 0; i < l; i++){
+      q[i] && q[i][s](v);
+      q[i] = undefined;
+    }
+    this._queue = undefined;
+    this._queued = 0;
+  }
+
+  CachedFuture.prototype.reject = function CachedFuture$reject(reason){
+    this._value = reason;
+    this._state = 2;
+    this._drainQueue();
+  }
+
+  CachedFuture.prototype.resolve = function CachedFuture$resolve(value){
+    this._value = value;
+    this._state = 3;
+    this._drainQueue();
+  }
+
+  CachedFuture.prototype.reset = function CachedFuture$reset(){
+    this._cancel();
+    this._cancel = noop;
+    this._queue = [];
+    this._queued = 0;
+    this._value = undefined;
+    this._state = 0;
+  }
+
+  CachedFuture.prototype.getState = function CachedFuture$getState(){
+    return CachedFuture.STATE[this._state];
+  }
+
+  CachedFuture.prototype._f = function CachedFuture$fork(rej, res){
+    const _this = this;
+    let cancel = noop;
+    switch(_this._state){
+      case 1: cancel = _this._addToQueue(rej, res); break;
+      case 2: rej(_this._value); cancel = noop; break;
+      case 3: res(_this._value); cancel = noop; break;
+      default:
+        _this._state = 1;
+        _this._addToQueue(rej, res);
+        _this._cancel = _this._pure._f(
+          function CachedFuture$fork$rej(x){ _this.reject(x) },
+          function CachedFuture$fork$res(x){ _this.resolve(x) }
+        );
+    }
+    return cancel;
+  }
+
+  CachedFuture.prototype.toString =
+  CachedFuture.prototype.inspect = function CachedFuture$toString(){
+    const repr = this._state === 3
+      ? show(this._value)
+      : `<${this.getState()}>` + (this._state === 2 ? ` ${this._value}` : '');
+    return `Future { ${repr} }`;
   }
 
   //----------
