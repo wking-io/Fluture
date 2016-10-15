@@ -420,10 +420,7 @@
 
   function Future$swap(){
     check$swap(this);
-    const _this = this;
-    return new UnsafeFuture(function Future$swap$fork(rej, res){
-      return _this._f(res, rej);
-    });
+    return new FutureSwap(this);
   }
 
   function Future$inspect(){
@@ -922,6 +919,22 @@
 
   FutureAp.prototype.toString = function FutureAp$toString(){
     return `${this._mval.toString()}.ap(${this._mfunc.toString()})`;
+  }
+
+  //----------
+
+  function FutureSwap(parent){
+    this._parent = parent;
+  }
+
+  FutureSwap.prototype = Object.create(Future.prototype);
+
+  FutureSwap.prototype._f = function FutureSwap$fork(rej, res){
+    return this._parent._f(res, rej);
+  }
+
+  FutureSwap.prototype.toString = function FutureSwap$toString(){
+    return `${this._parent.toString()}.swap()`;
   }
 
   /////////////////
