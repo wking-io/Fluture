@@ -395,16 +395,7 @@
 
   function Future$chainRej(f){
     check$chainRej(this, f);
-    const _this = this;
-    return new UnsafeFuture(function Future$chainRej$fork(rej, res){
-      let cancel;
-      const r = _this._f(function Future$chainRej$rej(x){
-        const m = f(x);
-        check$chainRej$f(m, f, x);
-        cancel = m._f(rej, res);
-      }, res);
-      return cancel ? cancel : (cancel = r, function Future$chainRej$cancel(){ cancel() });
-    });
+    return new FutureChainRej(this, f);
   }
 
   function Future$map(f){
@@ -829,6 +820,30 @@
 
   FutureChain.prototype.toString = function FutureChain$toString(){
     return `${this._parent.toString()}.chain(${showf(this._chainer)})`;
+  }
+
+  //----------
+
+  function FutureChainRej(parent, chainer){
+    this._parent = parent;
+    this._chainer = chainer;
+  }
+
+  FutureChainRej.prototype = Object.create(Future.prototype);
+
+  FutureChainRej.prototype._f = function FutureChainRej$fork(rej, res){
+    const _this = this;
+    let cancel;
+    const r = _this._parent._f(function FutureChainRej$fork$rej(x){
+      const m = _this._chainer(x);
+      check$chainRej$f(m, _this._chainer, x);
+      cancel = m._f(rej, res);
+    }, res);
+    return cancel ? cancel : (cancel = r, function FutureChainRej$fork$cancel(){ cancel() });
+  }
+
+  FutureChainRej.prototype.toString = function FutureChainRej$toString(){
+    return `${this._parent.toString()}.chainRej(${showf(this._chainer)})`;
   }
 
   //----------
