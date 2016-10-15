@@ -410,14 +410,7 @@
 
   function Future$bimap(f, g){
     check$bimap(this, f, g);
-    const _this = this;
-    return new UnsafeFuture(function Future$bimap$fork(rej, res){
-      return _this._f(function Future$bimap$rej(x){
-        rej(f(x));
-      }, function Future$bimap$res(x){
-        res(g(x));
-      });
-    });
+    return new FutureBimap(this, f, g);
   }
 
   function Future$ap(m){
@@ -879,6 +872,29 @@
 
   FutureMapRej.prototype.toString = function FutureMapRej$toString(){
     return `${this._parent.toString()}.mapRej(${showf(this._mapper)})`;
+  }
+
+  //----------
+
+  function FutureBimap(parent, lmapper, rmapper){
+    this._parent = parent;
+    this._lmapper = lmapper;
+    this._rmapper = rmapper;
+  }
+
+  FutureBimap.prototype = Object.create(Future.prototype);
+
+  FutureBimap.prototype._f = function FutureBimap$fork(rej, res){
+    const _this = this;
+    return _this._parent._f(function FutureBimap$fork$rej(x){
+      rej(_this._lmapper(x));
+    }, function FutureBimap$fork$res(x){
+      res(_this._rmapper(x));
+    });
+  }
+
+  FutureBimap.prototype.toString = function FutureBimap$toString(){
+    return `${this._parent.toString()}.bimap(${showf(this._lmapper)}, ${showf(this._rmapper)})`;
   }
 
   //----------
