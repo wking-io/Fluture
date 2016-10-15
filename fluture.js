@@ -434,19 +434,7 @@
 
   function Future$or(m){
     check$or(this, m);
-    const _this = this;
-    return new UnsafeFuture(function Future$or$fork(rej, res){
-      let ok = false, ko = false, val, err;
-      const c1 = _this._f(
-        () => ko ? rej(err) : ok ? res(val) : (ko = true),
-        x => (ok = true, res(x))
-      );
-      const c2 = m._f(
-        e => ok || (ko ? rej(e) : (err = e, ko = true)),
-        x => ok || (ko ? res(x) : (val = x, ok = true))
-      );
-      return function Future$or$cancel(){ c1(); c2() };
-    });
+    return new FutureOr(this, m);
   }
 
   function Future$fold(f, g){
@@ -956,6 +944,32 @@
 
   FutureRace.prototype.toString = function FutureRace$toString(){
     return `${this._left.toString()}.race(${this._right.toString()})`;
+  }
+
+  //----------
+
+  function FutureOr(left, right){
+    this._left = left;
+    this._right = right;
+  }
+
+  FutureOr.prototype = Object.create(Future.prototype);
+
+  FutureOr.prototype._f = function FutureOr$fork(rej, res){
+    let resolved = false, rejected = false, val, err, lcancel = noop, rcancel = noop;
+    lcancel = this._left._f(
+      _ => rejected ? rej(err) : resolved ? res(val) : (rejected = true),
+      x => (resolved = true, rcancel(), res(x))
+    );
+    resolved || (rcancel = this._right._f(
+      e => resolved || (rejected ? rej(e) : (err = e, rejected = true)),
+      x => resolved || (rejected ? res(x) : (val = x, resolved = true))
+    ));
+    return function FutureOr$fork$cancel(){ lcancel(); rcancel() };
+  }
+
+  FutureOr.prototype.toString = function FutureOr$toString(){
+    return `${this._left.toString()}.or(${this._right.toString()})`;
   }
 
   /////////////////
