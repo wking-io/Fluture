@@ -761,7 +761,7 @@
     return function CachedFuture$removeFromQueue(){
       if(_this._state > 1) return;
       _this._queue[i] = undefined;
-      _this._queued = this._queued - 1;
+      _this._queued = _this._queued - 1;
       if(_this._queued === 0) _this.reset();
     };
   }
@@ -788,6 +788,15 @@
     this._drainQueue();
   }
 
+  CachedFuture.prototype.run = function CachedFuture$run(){
+    const _this = this;
+    _this._state = 1;
+    _this._cancel = _this._pure._f(
+      function CachedFuture$fork$rej(x){ _this.reject(x) },
+      function CachedFuture$fork$res(x){ _this.resolve(x) }
+    );
+  }
+
   CachedFuture.prototype.reset = function CachedFuture$reset(){
     this._cancel();
     this._cancel = noop;
@@ -806,15 +815,9 @@
     let cancel = noop;
     switch(_this._state){
       case 1: cancel = _this._addToQueue(rej, res); break;
-      case 2: rej(_this._value); cancel = noop; break;
-      case 3: res(_this._value); cancel = noop; break;
-      default:
-        _this._state = 1;
-        _this._addToQueue(rej, res);
-        _this._cancel = _this._pure._f(
-          function CachedFuture$fork$rej(x){ _this.reject(x) },
-          function CachedFuture$fork$res(x){ _this.resolve(x) }
-        );
+      case 2: rej(_this._value); break;
+      case 3: res(_this._value); break;
+      default: cancel = _this._addToQueue(rej, res); _this.run();
     }
     return cancel;
   }
