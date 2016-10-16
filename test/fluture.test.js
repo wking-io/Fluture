@@ -446,6 +446,24 @@ describe('Constructors', () => {
       setTimeout(cancel, 20);
     });
 
+    it('cancels only running Futures when cancelled', done => {
+      let i = 0, j = 0;
+      const m = Future((rej, res) => {
+        const x = setTimeout(x => {j += 1; res(x)}, 20, 1);
+        return () => {
+          i += 1
+          clearTimeout(x);
+        };
+      });
+      const cancel = Future.parallel(2, [m, m, m, m]).fork(failRej, failRes);
+      setTimeout(() => {
+        cancel();
+        expect(i).to.equal(2);
+        expect(j).to.equal(2);
+        done();
+      }, 30);
+    })
+
     it('does not resolve after being cancelled', done => {
       const cancel = Future.parallel(1, [delayedRes, delayedRes]).fork(failRej, failRes);
       setTimeout(cancel, 10);

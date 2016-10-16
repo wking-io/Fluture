@@ -103,7 +103,6 @@
     : preview(x);
 
   const noop = function noop(){};
-  const call = function call(f){f()};
   const padf = (sf, s) => s.replace(/^/gm, sf).replace(sf, '');
   const showf = f => padf('  ', inspectf(2, f));
   const fid = f => f.name ? f.name : '<anonymous>';
@@ -908,32 +907,40 @@
 
   //----------
 
+  function FutureParallel$emptyFork(rej, res){
+    res([]);
+  }
+
   function FutureParallel(max, futures){
-    this._max = max;
     this._futures = futures;
     this._length = futures.length;
-    if(futures.length === 0) this._f = function FutureParallel$emptyFork(rej, res){ res([]) };
+    this._max = Math.min(this._length, max);
+    if(futures.length === 0) this._f = FutureParallel$emptyFork;
   }
 
   FutureParallel.prototype = Object.create(Future.prototype);
 
   FutureParallel.prototype._f = function FutureParallel$fork(rej, res){
-    const _this = this, cancels = [], out = new Array(_this._length);
+    const _this = this, cancels = new Array(_this._max), out = new Array(_this._length);
     let i = _this._max, rejected = false, ok = 0;
-    const next = function FutureParallel$fork$next(j){
-      i < _this._length
-      ? run(_this._futures[i], i++)
-      : (j === _this._length && res(out));
+    const run = function FutureParallel$fork$run(future, j, c){
+      check$parallel$m(future, j);
+      cancels[c] = future._f(function Future$parallel$fork$rej(reason){
+        if(rejected) return;
+        rejected = true;
+        rej(reason);
+      }, function Future$parallel$fork$res(value){
+        if(rejected) return;
+        out[j] = value;
+        ok += 1;
+        if(i < _this._length) run(_this._futures[i], i++, c);
+        else if(ok === _this._length) res(out);
+      });
     }
-    const run = function FutureParallel$fork$run(m, j){
-      check$parallel$m(m, j);
-      cancels[j] = m._f(
-        e => rejected || (rej(e), rejected = true),
-        x => rejected || (out[j] = x, next(++ok))
-      )
-    }
-    _this._futures.slice(0, i).forEach(run);
-    return function Future$parallel$cancel(){ cancels.forEach(call) };
+    for(let n = 0; n < _this._max; n++) run(_this._futures[n], n, n);
+    return function Future$parallel$cancel(){
+      for(let n = 0; n < _this._max; n++) cancels[n]();
+    };
   }
 
   FutureParallel.prototype.toString = function FutureParallel$toString(){
