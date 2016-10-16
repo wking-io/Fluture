@@ -132,6 +132,43 @@
     return function partial(d){ return f(a, b, c, d) };
   }
 
+  //Creates a dispatcher for a nullary method.
+  function createNullaryDispatcher(method){
+    return function nullaryDispatch(m){
+      if(m && typeof m[method] === 'function') return m[method]();
+      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+    };
+  }
+
+  //Creates a dispatcher for a unary method.
+  function createUnaryDispatcher(method){
+    return function unaryDispatch(a, m){
+      if(arguments.length === 1) return unaryPartial(unaryDispatch, a);
+      if(m && typeof m[method] === 'function') return m[method](a);
+      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+    };
+  }
+
+  //Creates a dispatcher for a binary method.
+  function createBinaryDispatcher(method){
+    return function binaryDispatch(a, b, m){
+      if(arguments.length === 1) return unaryPartial(binaryDispatch, a);
+      if(arguments.length === 2) return binaryPartial(binaryDispatch, a, b);
+      if(m && typeof m[method] === 'function') return m[method](a, b);
+      error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
+    };
+  }
+
+  //Creates a dispatcher for a binary method, but takes the object first rather than last.
+  function createInvertedBinaryDispatcher(method){
+    return function invertedBinaryDispatch(m, a, b){
+      if(arguments.length === 1) return unaryPartial(invertedBinaryDispatch, m);
+      if(arguments.length === 2) return binaryPartial(invertedBinaryDispatch, m, a);
+      if(m && typeof m[method] === 'function') return m[method](a, b);
+      error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
+    };
+  }
+
   ////////////
   // Errors //
   ////////////
@@ -364,9 +401,9 @@
     );
   }
 
-  ////////////
-  // Future //
-  ////////////
+  ////////////////
+  // Base class //
+  ////////////////
 
   function Future(f){
     check$Future(f);
@@ -383,133 +420,241 @@
     return new ChainRec(f, init);
   }
 
-  function Future$fork(rej, res){
-    check$fork(this, rej, res);
-    return this._f(rej, res);
-  }
-
-  function Future$chain(f){
-    check$chain(this, f);
-    return new FutureChain(this, f);
-  }
-
-  function Future$chainRej(f){
-    check$chainRej(this, f);
-    return new FutureChainRej(this, f);
-  }
-
-  function Future$map(f){
-    check$map(this, f);
-    return new FutureMap(this, f);
-  }
-
-  function Future$mapRej(f){
-    check$mapRej(this, f);
-    return new FutureMapRej(this, f);
-  }
-
-  function Future$bimap(f, g){
-    check$bimap(this, f, g);
-    return new FutureBimap(this, f, g);
-  }
-
-  function Future$ap(m){
-    check$ap(this, m);
-    return new FutureAp(this, m);
-  }
-
-  function Future$swap(){
-    check$swap(this);
-    return new FutureSwap(this);
-  }
-
-  function Future$inspect(){
-    return this.toString();
-  }
-
-  function Future$race(m){
-    check$race(this, m);
-    return new FutureRace(this, m);
-  }
-
-  function Future$or(m){
-    check$or(this, m);
-    return new FutureOr(this, m);
-  }
-
-  function Future$fold(f, g){
-    check$fold(this, f, g);
-    return new FutureFold(this, f, g);
-  }
-
-  function Future$hook(dispose, consume){
-    check$hook(this, dispose, consume);
-    return new FutureHook(this, dispose, consume);
-  }
-
-  function Future$finally(m){
-    check$finally(this, m);
-    return new FutureFinally(this, m);
-  }
-
-  function Future$value(f){
-    check$value(this, f);
-    return this._f(
-      function Future$value$rej(e){
-        throw new Error(
-          `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
-        );
-      },
-      f
-    );
-  }
-
-  function Future$promise(){
-    check$promise(this);
-    const _this = this;
-    return new Promise(function Future$promise$do(resolve, reject){
-      _this._f(reject, resolve);
-    });
-  }
-
-  function Future$cache(){
-    check$cache(this);
-    return new CachedFuture(this);
-  }
-
   Future.prototype = {
+
+    //Properties.
     '@@type': TYPEOF_FUTURE,
     _f: null,
-    fork: Future$fork,
-    [FL.of]: Future$of,
+
+    //Subclass creators.
     of: Future$of,
-    [FL.chainRec]: Future$chainRec,
-    [FL.chain]: Future$chain,
-    chain: Future$chain,
-    chainRej: Future$chainRej,
-    [FL.map]: Future$map,
-    map: Future$map,
-    mapRej: Future$mapRej,
-    [FL.bimap]: Future$bimap,
-    bimap: Future$bimap,
-    [FL.ap]: Future$ap,
-    ap: Future$ap,
-    swap: Future$swap,
-    inspect: Future$inspect,
-    race: Future$race,
-    or: Future$or,
-    fold: Future$fold,
-    hook: Future$hook,
-    finally: Future$finally,
-    value: Future$value,
-    promise: Future$promise,
-    cache: Future$cache
+
+    ap: function Future$ap(m){
+      check$ap(this, m);
+      return new FutureAp(this, m);
+    },
+
+    map: function Future$map(f){
+      check$map(this, f);
+      return new FutureMap(this, f);
+    },
+
+    bimap: function Future$bimap(f, g){
+      check$bimap(this, f, g);
+      return new FutureBimap(this, f, g);
+    },
+
+    chain: function Future$chain(f){
+      check$chain(this, f);
+      return new FutureChain(this, f);
+    },
+
+    chainRej: function Future$chainRej(f){
+      check$chainRej(this, f);
+      return new FutureChainRej(this, f);
+    },
+
+    mapRej: function Future$mapRej(f){
+      check$mapRej(this, f);
+      return new FutureMapRej(this, f);
+    },
+
+    swap: function Future$swap(){
+      check$swap(this);
+      return new FutureSwap(this);
+    },
+
+    race: function Future$race(m){
+      check$race(this, m);
+      return new FutureRace(this, m);
+    },
+
+    or: function Future$or(m){
+      check$or(this, m);
+      return new FutureOr(this, m);
+    },
+
+    fold: function Future$fold(f, g){
+      check$fold(this, f, g);
+      return new FutureFold(this, f, g);
+    },
+
+    hook: function Future$hook(dispose, consume){
+      check$hook(this, dispose, consume);
+      return new FutureHook(this, dispose, consume);
+    },
+
+    finally: function Future$finally(m){
+      check$finally(this, m);
+      return new FutureFinally(this, m);
+    },
+
+    cache: function Future$cache(){
+      check$cache(this);
+      return new CachedFuture(this);
+    },
+
+    //Other methods.
+    fork: function Future$fork(rej, res){
+      check$fork(this, rej, res);
+      return this._f(rej, res);
+    },
+
+    inspect: function Future$inspect(){
+      return this.toString();
+    },
+
+    value: function Future$value(f){
+      check$value(this, f);
+      return this._f(
+        function Future$value$rej(e){
+          throw new Error(
+            `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
+          );
+        },
+        f
+      );
+    },
+
+    promise: function Future$promise(){
+      check$promise(this);
+      const _this = this;
+      return new Promise(function Future$promise$do(resolve, reject){
+        _this._f(reject, resolve);
+      });
+    }
+
   };
 
-  Future[FL.of] = Future.of = Future$of;
-  Future[FL.chainRec] = Future.chainRec = Future$chainRec;
+  //Static functions.
+  Future.of = Future$of;
+  Future.ap = createUnaryDispatcher(FL.ap);
+  Future.map = createUnaryDispatcher(FL.map);
+  Future.bimap = createBinaryDispatcher(FL.bimap);
+  Future.chain = createUnaryDispatcher(FL.chain);
+  Future.chainRec = Future$chainRec;
+  Future.recur = createUnaryDispatcher('recur');
+  Future.chainRej = createUnaryDispatcher('chainRej');
+  Future.mapRej = createUnaryDispatcher('mapRej');
+  Future.swap = createNullaryDispatcher('swap');
+  Future.fork = createBinaryDispatcher('fork');
+  Future.race = createUnaryDispatcher('race');
+  Future.or = createUnaryDispatcher('or');
+  Future.fold = createBinaryDispatcher('fold');
+  Future.hook = createInvertedBinaryDispatcher('hook');
+  Future.finally = createUnaryDispatcher('finally');
+  Future.value = createUnaryDispatcher('value');
+  Future.promise = createNullaryDispatcher('promise');
+  Future.cache = createNullaryDispatcher('cache');
   Future.Future = Future;
+  Future.isFuture = isFuture;
+  Future.isForkable = isForkable;
 
+  Future.reject = function Future$reject(x){
+    return new UnsafeFuture(function Future$reject$fork(rej){
+      rej(x);
+      return noop;
+    });
+  };
+
+  Future.after = function Future$after(n, x){
+    if(arguments.length === 1) return unaryPartial(Future.after, n);
+    check$after(n);
+    return new UnsafeFuture(function Future$after$fork(rej, res){
+      const t = setTimeout(res, n, x);
+      return function Future$after$cancel(){ clearTimeout(t) };
+    });
+  };
+
+  Future.cast = function Future$cast(m){
+    check$cast(m);
+    return new SafeFuture(function Future$cast$fork(rej, res){
+      m.fork(rej, res);
+    });
+  };
+
+  Future.encase = function Future$encase(f, x){
+    check$encase(f);
+    if(arguments.length === 1) return unaryPartial(Future.encase, f);
+    return new UnsafeFuture(function Future$encase$fork(rej, res){
+      let r;
+      try{ r = f(x) }catch(e){ return void rej(e) }
+      res(r);
+      return noop;
+    });
+  };
+
+  Future.encase2 = function Future$encase2(f, x, y){
+    check$encase2(f);
+    if(arguments.length === 1) return unaryPartial(Future.encase2, f);
+    if(arguments.length === 2) return binaryPartial(Future.encase2, f, x);
+    return new UnsafeFuture(function Future$encase2$fork(rej, res){
+      let r;
+      try{ r = f(x, y) }catch(e){ return void rej(e) }
+      res(r);
+      return noop;
+    });
+  };
+
+  Future.encase3 = function Future$encase3(f, x, y, z){
+    check$encase3(f);
+    if(arguments.length === 1) return unaryPartial(Future.encase3, f);
+    if(arguments.length === 2) return binaryPartial(Future.encase3, f, x);
+    if(arguments.length === 3) return ternaryPartial(Future.encase3, f, x, y);
+    return new UnsafeFuture(function Future$encase3$fork(rej, res){
+      let r;
+      try{ r = f(x, y, z) }catch(e){ return void rej(e) }
+      res(r);
+      return noop;
+    });
+  };
+
+  Future.try = function Future$try(f){
+    return Future.encase(f, undefined);
+  };
+
+  Future.node = function Future$node(f){
+    check$node(f);
+    return new SafeFuture(function Future$node$fork(rej, res){
+      f(function Future$node$done(a, b){
+        a ? rej(a) : res(b);
+      });
+    });
+  };
+
+  Future.parallel = function Future$parallel(i, ms){
+    if(arguments.length === 1) return unaryPartial(Future.parallel, i);
+    check$parallel(i, ms);
+    const l = ms.length;
+    return l < 1 ? Future$of([]) : new UnsafeFuture(function Future$parallel$fork(rej, res){
+      let ko = false;
+      let ok = 0;
+      const cs = [];
+      const out = new Array(l);
+      const next = j => i < l ? fork(ms[i], i++) : (j === l && res(out));
+      const fork = (m, j) => (check$parallel$m(m, j), cs[j] = m._f(
+        e => ko || (rej(e), ko = true),
+        x => ko || (out[j] = x, next(++ok))
+      ));
+      ms.slice(0, i).forEach(fork);
+      return function Future$parallel$cancel(){ cs.forEach(call) };
+    });
+  };
+
+  Future.do = function Future$do(f){
+    check$do(f);
+    return new UnsafeFuture(function Future$do$fork(rej, res){
+      const g = f();
+      check$do$g(g);
+      return Future$chainRec(function Future$do$next(next, _, x){
+        const o = g.next(x);
+        check$do$next(o);
+        return o.done ? Future$of(o) : o.value.map(next);
+      }, undefined)._f(rej, res);
+    });
+  };
+
+  //Utilities.
   Future.util = {
     Next,
     Done,
@@ -532,9 +677,19 @@
     ternaryPartial
   };
 
-  /////////////
-  // Classes //
-  /////////////
+  //Fantasy-Land compatibility.
+  Future[FL.of] = Future.of;
+  Future[FL.chainRec] = Future$chainRec;
+  Future.prototype[FL.of] = Future.prototype.of;
+  Future.prototype[FL.ap] = Future.prototype.ap;
+  Future.prototype[FL.map] = Future.prototype.map;
+  Future.prototype[FL.bimap] = Future.prototype.bimap;
+  Future.prototype[FL.chain] = Future.prototype.chain;
+  Future.prototype[FL.chainRec] = Future.prototype.chainRec;
+
+  /////////////////
+  // Sub classes //
+  /////////////////
 
   function UnsafeFuture(computation){
     this._f = computation;
@@ -1032,176 +1187,6 @@
   FutureFinally.prototype.toString = function FutureFinally$toString(){
     return `${this._left.toString()}.finally(${this._right.toString()})`;
   }
-
-  /////////////////
-  // Dispatchers //
-  /////////////////
-
-  //Creates a dispatcher for a nullary method.
-  function createNullaryDispatcher(method){
-    return function nullaryDispatch(m){
-      if(m && typeof m[method] === 'function') return m[method]();
-      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
-    };
-  }
-
-  //Creates a dispatcher for a unary method.
-  function createUnaryDispatcher(method){
-    return function unaryDispatch(a, m){
-      if(arguments.length === 1) return unaryPartial(unaryDispatch, a);
-      if(m && typeof m[method] === 'function') return m[method](a);
-      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
-    };
-  }
-
-  //Creates a dispatcher for a binary method.
-  function createBinaryDispatcher(method){
-    return function binaryDispatch(a, b, m){
-      if(arguments.length === 1) return unaryPartial(binaryDispatch, a);
-      if(arguments.length === 2) return binaryPartial(binaryDispatch, a, b);
-      if(m && typeof m[method] === 'function') return m[method](a, b);
-      error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
-    };
-  }
-
-  //Creates a dispatcher for a binary method, but takes the object first rather than last.
-  function createInvertedBinaryDispatcher(method){
-    return function invertedBinaryDispatch(m, a, b){
-      if(arguments.length === 1) return unaryPartial(invertedBinaryDispatch, m);
-      if(arguments.length === 2) return binaryPartial(invertedBinaryDispatch, m, a);
-      if(m && typeof m[method] === 'function') return m[method](a, b);
-      error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
-    };
-  }
-
-  Future.chain = createUnaryDispatcher(FL.chain);
-  Future.recur = createUnaryDispatcher('recur');
-  Future.chainRej = createUnaryDispatcher('chainRej');
-  Future.map = createUnaryDispatcher(FL.map);
-  Future.mapRej = createUnaryDispatcher('mapRej');
-  Future.bimap = createBinaryDispatcher(FL.bimap);
-  Future.ap = createUnaryDispatcher(FL.ap);
-  Future.swap = createNullaryDispatcher('swap');
-  Future.fork = createBinaryDispatcher('fork');
-  Future.race = createUnaryDispatcher('race');
-  Future.or = createUnaryDispatcher('or');
-  Future.fold = createBinaryDispatcher('fold');
-  Future.hook = createInvertedBinaryDispatcher('hook');
-  Future.finally = createUnaryDispatcher('finally');
-  Future.value = createUnaryDispatcher('value');
-  Future.promise = createNullaryDispatcher('promise');
-  Future.cache = createNullaryDispatcher('cache');
-
-  /////////////////////
-  // Other functions //
-  /////////////////////
-
-  Future.isFuture = isFuture;
-  Future.isForkable = isForkable;
-
-  Future.reject = function Future$reject(x){
-    return new UnsafeFuture(function Future$reject$fork(rej){
-      rej(x);
-      return noop;
-    });
-  };
-
-  Future.after = function Future$after(n, x){
-    if(arguments.length === 1) return unaryPartial(Future.after, n);
-    check$after(n);
-    return new UnsafeFuture(function Future$after$fork(rej, res){
-      const t = setTimeout(res, n, x);
-      return function Future$after$cancel(){ clearTimeout(t) };
-    });
-  };
-
-  Future.cast = function Future$cast(m){
-    check$cast(m);
-    return new SafeFuture(function Future$cast$fork(rej, res){
-      m.fork(rej, res);
-    });
-  };
-
-  Future.encase = function Future$encase(f, x){
-    check$encase(f);
-    if(arguments.length === 1) return unaryPartial(Future.encase, f);
-    return new UnsafeFuture(function Future$encase$fork(rej, res){
-      let r;
-      try{ r = f(x) }catch(e){ return void rej(e) }
-      res(r);
-      return noop;
-    });
-  };
-
-  Future.encase2 = function Future$encase2(f, x, y){
-    check$encase2(f);
-    if(arguments.length === 1) return unaryPartial(Future.encase2, f);
-    if(arguments.length === 2) return binaryPartial(Future.encase2, f, x);
-    return new UnsafeFuture(function Future$encase2$fork(rej, res){
-      let r;
-      try{ r = f(x, y) }catch(e){ return void rej(e) }
-      res(r);
-      return noop;
-    });
-  };
-
-  Future.encase3 = function Future$encase3(f, x, y, z){
-    check$encase3(f);
-    if(arguments.length === 1) return unaryPartial(Future.encase3, f);
-    if(arguments.length === 2) return binaryPartial(Future.encase3, f, x);
-    if(arguments.length === 3) return ternaryPartial(Future.encase3, f, x, y);
-    return new UnsafeFuture(function Future$encase3$fork(rej, res){
-      let r;
-      try{ r = f(x, y, z) }catch(e){ return void rej(e) }
-      res(r);
-      return noop;
-    });
-  };
-
-  Future.try = function Future$try(f){
-    return Future.encase(f, undefined);
-  };
-
-  Future.node = function Future$node(f){
-    check$node(f);
-    return new SafeFuture(function Future$node$fork(rej, res){
-      f(function Future$node$done(a, b){
-        a ? rej(a) : res(b);
-      });
-    });
-  };
-
-  Future.parallel = function Future$parallel(i, ms){
-    if(arguments.length === 1) return unaryPartial(Future.parallel, i);
-    check$parallel(i, ms);
-    const l = ms.length;
-    return l < 1 ? Future$of([]) : new UnsafeFuture(function Future$parallel$fork(rej, res){
-      let ko = false;
-      let ok = 0;
-      const cs = [];
-      const out = new Array(l);
-      const next = j => i < l ? fork(ms[i], i++) : (j === l && res(out));
-      const fork = (m, j) => (check$parallel$m(m, j), cs[j] = m._f(
-        e => ko || (rej(e), ko = true),
-        x => ko || (out[j] = x, next(++ok))
-      ));
-      ms.slice(0, i).forEach(fork);
-      return function Future$parallel$cancel(){ cs.forEach(call) };
-    });
-  };
-
-  Future.do = function Future$do(f){
-    check$do(f);
-    return new UnsafeFuture(function Future$do$fork(rej, res){
-      const g = f();
-      check$do$g(g);
-      return Future$chainRec(function Future$do$next(next, _, x){
-        const o = g.next(x);
-        check$do$next(o);
-        return o.done ? Future$of(o) : o.value.map(next);
-      }, undefined)._f(rej, res);
-    });
-  };
 
   return Future;
 
