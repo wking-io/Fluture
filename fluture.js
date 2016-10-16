@@ -348,6 +348,10 @@
     if(!isForkable(m)) error$invalidArgument('Future.cast', 0, 'be a Forkable', m);
   }
 
+  function check$try(f){
+    if(!isFunction(f)) error$invalidArgument('Future.try', 0, 'be a function', f);
+  }
+
   function check$encase(f){
     if(!isFunction(f)) error$invalidArgument('Future.encase', 0, 'be a function', f);
   }
@@ -551,49 +555,36 @@
   Future.isForkable = isForkable;
 
   Future.reject = function Future$reject(x){
-    return new UnsafeFuture(function Future$reject$fork(rej){
-      rej(x);
-      return noop;
-    });
+    return new FutureReject(x);
   };
 
   Future.after = function Future$after(n, x){
-    if(arguments.length === 1) return unaryPartial(Future.after, n);
+    if(arguments.length === 1) return unaryPartial(Future$after, n);
     check$after(n);
-    return new UnsafeFuture(function Future$after$fork(rej, res){
-      const t = setTimeout(res, n, x);
-      return function Future$after$cancel(){ clearTimeout(t) };
-    });
+    return new FutureAfter(n, x);
   };
 
   Future.cast = function Future$cast(m){
     check$cast(m);
-    return new SafeFuture(function Future$cast$fork(rej, res){
-      m.fork(rej, res);
-    });
+    return new FutureCast(m);
+  };
+
+  Future.try = function Future$try(f){
+    check$try(f);
+    return new FutureTry(f);
   };
 
   Future.encase = function Future$encase(f, x){
     check$encase(f);
     if(arguments.length === 1) return unaryPartial(Future.encase, f);
-    return new UnsafeFuture(function Future$encase$fork(rej, res){
-      let r;
-      try{ r = f(x) }catch(e){ return void rej(e) }
-      res(r);
-      return noop;
-    });
+    return new FutureEncase(f, x);
   };
 
   Future.encase2 = function Future$encase2(f, x, y){
     check$encase2(f);
     if(arguments.length === 1) return unaryPartial(Future.encase2, f);
     if(arguments.length === 2) return binaryPartial(Future.encase2, f, x);
-    return new UnsafeFuture(function Future$encase2$fork(rej, res){
-      let r;
-      try{ r = f(x, y) }catch(e){ return void rej(e) }
-      res(r);
-      return noop;
-    });
+    return new FutureEncase(f, x, y);
   };
 
   Future.encase3 = function Future$encase3(f, x, y, z){
@@ -601,57 +592,23 @@
     if(arguments.length === 1) return unaryPartial(Future.encase3, f);
     if(arguments.length === 2) return binaryPartial(Future.encase3, f, x);
     if(arguments.length === 3) return ternaryPartial(Future.encase3, f, x, y);
-    return new UnsafeFuture(function Future$encase3$fork(rej, res){
-      let r;
-      try{ r = f(x, y, z) }catch(e){ return void rej(e) }
-      res(r);
-      return noop;
-    });
-  };
-
-  Future.try = function Future$try(f){
-    return Future.encase(f, undefined);
+    return new FutureEncase(f, x, y, z);
   };
 
   Future.node = function Future$node(f){
     check$node(f);
-    return new SafeFuture(function Future$node$fork(rej, res){
-      f(function Future$node$done(a, b){
-        a ? rej(a) : res(b);
-      });
-    });
+    return new FutureNode(f);
   };
 
   Future.parallel = function Future$parallel(i, ms){
-    if(arguments.length === 1) return unaryPartial(Future.parallel, i);
+    if(arguments.length === 1) return unaryPartial(Future$parallel, i);
     check$parallel(i, ms);
-    const l = ms.length;
-    return l < 1 ? Future$of([]) : new UnsafeFuture(function Future$parallel$fork(rej, res){
-      let ko = false;
-      let ok = 0;
-      const cs = [];
-      const out = new Array(l);
-      const next = j => i < l ? fork(ms[i], i++) : (j === l && res(out));
-      const fork = (m, j) => (check$parallel$m(m, j), cs[j] = m._f(
-        e => ko || (rej(e), ko = true),
-        x => ko || (out[j] = x, next(++ok))
-      ));
-      ms.slice(0, i).forEach(fork);
-      return function Future$parallel$cancel(){ cs.forEach(call) };
-    });
+    return new FutureParallel(i, ms);
   };
 
   Future.do = function Future$do(f){
     check$do(f);
-    return new UnsafeFuture(function Future$do$fork(rej, res){
-      const g = f();
-      check$do$g(g);
-      return Future$chainRec(function Future$do$next(next, _, x){
-        const o = g.next(x);
-        check$do$next(o);
-        return o.done ? Future$of(o) : o.value.map(next);
-      }, undefined)._f(rej, res);
-    });
+    return new FutureDo(f);
   };
 
   //Utilities.
@@ -889,6 +846,192 @@
 
   FutureOf.prototype.toString = function FutureOf$toString(){
     return `Future.of(${show(this._value)})`;
+  }
+
+  //----------
+
+  function FutureReject(reason){
+    this._reason = reason;
+  }
+
+  FutureReject.prototype = Object.create(Future.prototype);
+
+  FutureReject.prototype._f = function FutureReject$fork(rej){
+    rej(this._reason);
+    return noop;
+  }
+
+  FutureReject.prototype.toString = function FutureReject$toString(){
+    return `Future.reject(${show(this._reason)})`;
+  }
+
+  //----------
+
+  function FutureNode(computation){
+    this._computation = computation;
+  }
+
+  FutureNode.prototype = Object.create(Future.prototype);
+
+  FutureNode.prototype._f = function FutureNode$fork(rej, res){
+    let open = true;
+    this._computation(function FutureNode$fork$done(a, b){
+      if(open){
+        a ? rej(a) : res(b);
+        open = false;
+      }
+    });
+    return function FutureNode$fork$cancel(){ open = false };
+  }
+
+  FutureNode.prototype.toString = function FutureNode$toString(){
+    return `Future.node(${showf(this._computation)})`;
+  }
+
+  //----------
+
+  function FutureAfter(time, value){
+    this._time = time;
+    this._value = value;
+  }
+
+  FutureAfter.prototype = Object.create(Future.prototype);
+
+  FutureAfter.prototype._f = function FutureAfter$fork(rej, res){
+    const id = setTimeout(res, this._time, this._value);
+    return function FutureAfter$fork$cancel(){ clearTimeout(id) };
+  }
+
+  FutureAfter.prototype.toString = function FutureAfter$toString(){
+    return `Future.after(${show(this._time)}, ${show(this._value)})`;
+  }
+
+  //----------
+
+  function FutureParallel(max, futures){
+    this._max = max;
+    this._futures = futures;
+    this._length = futures.length;
+    if(futures.length === 0) this._f = function FutureParallel$emptyFork(rej, res){ res([]) };
+  }
+
+  FutureParallel.prototype = Object.create(Future.prototype);
+
+  FutureParallel.prototype._f = function FutureParallel$fork(rej, res){
+    const _this = this, cancels = [], out = new Array(_this._length);
+    let i = _this._max, rejected = false, ok = 0;
+    const next = function FutureParallel$fork$next(j){
+      i < _this._length
+      ? run(_this._futures[i], i++)
+      : (j === _this._length && res(out));
+    }
+    const run = function FutureParallel$fork$run(m, j){
+      check$parallel$m(m, j);
+      cancels[j] = m._f(
+        e => rejected || (rej(e), rejected = true),
+        x => rejected || (out[j] = x, next(++ok))
+      )
+    }
+    _this._futures.slice(0, i).forEach(run);
+    return function Future$parallel$cancel(){ cancels.forEach(call) };
+  }
+
+  FutureParallel.prototype.toString = function FutureParallel$toString(){
+    return `Future.parallel(${show(this._max)}, ${show(this._futures)})`;
+  }
+
+  //----------
+
+  function FutureDo(generator){
+    this._generator = generator;
+  }
+
+  FutureDo.prototype = Object.create(Future.prototype);
+
+  FutureDo.prototype._f = function FutureDo$fork(rej, res){
+    const iterator = this._generator();
+    check$do$g(iterator);
+    const recurser = new ChainRec(function Future$do$next(next, _, x){
+      const iteration = iterator.next(x);
+      check$do$next(iteration);
+      return iteration.done ? new FutureOf(iteration) : iteration.value.map(next);
+    }, undefined);
+    return recurser._f(rej, res);
+  }
+
+  FutureDo.prototype.toString = function FutureDo$toString(){
+    return `Future.do(${showf(this._generator)})`;
+  }
+
+  //----------
+
+  function FutureCast(forkable){
+    SafeFuture.call(this, (l, r) => forkable.fork(l, r));
+    this._forkable = forkable;
+  }
+
+  FutureCast.prototype = Object.create(SafeFuture.prototype);
+
+  FutureCast.prototype.toString = function FutureCast$toString(){
+    return `Future.cast(${show(this._forkable)})`;
+  }
+
+  //----------
+
+  function FutureTry(fn){
+    this._fn = fn;
+  }
+
+  FutureTry.prototype = Object.create(Future.prototype);
+
+  FutureTry.prototype._f = function FutureTry$0$fork(rej, res){
+    let r;
+    try{ r = this._fn() }catch(e){ rej(e); return noop }
+    res(r);
+    return noop;
+  }
+
+  FutureTry.prototype.toString = function FutureTry$toString(){
+    return `Future.try(${show(this._fn)})`;
+  }
+
+  //----------
+
+  function FutureEncase(fn, a, b, c){
+    this._length = arguments.length - 1;
+    this._fn = fn;
+    this._a = a;
+    this._b = b;
+    this._c = c;
+    this._f = FutureEncase.FS[this._length];
+  }
+
+  FutureEncase.FS = {
+    1: function FutureEncase$1$fork(rej, res){
+      let r;
+      try{ r = this._fn(this._a) }catch(e){ rej(e); return noop }
+      res(r);
+      return noop;
+    },
+    2: function FutureEncase$2$fork(rej, res){
+      let r;
+      try{ r = this._fn(this._a, this._b) }catch(e){ rej(e); return noop }
+      res(r);
+      return noop;
+    },
+    3: function FutureEncase$3$fork(rej, res){
+      let r;
+      try{ r = this._fn(this._a, this._b, this._c) }catch(e){ rej(e); return noop }
+      res(r);
+      return noop;
+    }
+  }
+
+  FutureEncase.prototype = Object.create(Future.prototype);
+
+  FutureEncase.prototype.toString = function FutureEncase$toString(){
+    const args = [this._a, this._b, this._c].slice(0, this._length).map(show).join(', ');
+    return `Future.encase${this._length}(${show(this._fn)}, ${args})`;
   }
 
   //----------
