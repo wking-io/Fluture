@@ -647,18 +647,6 @@
   // Sub classes //
   /////////////////
 
-  function UnsafeFuture(computation){
-    this._f = computation;
-  }
-
-  UnsafeFuture.prototype = Object.create(Future.prototype);
-
-  UnsafeFuture.prototype.toString = function UnsafeFuture$toString(){
-    return `Future(${showf(this._f)})`;
-  }
-
-  //----------
-
   function SafeFuture(computation){
     this._computation = computation;
   }
@@ -777,12 +765,14 @@
   }
 
   CachedFuture.prototype.reject = function CachedFuture$reject(reason){
+    if(this._state > 1) return;
     this._value = reason;
     this._state = 2;
     this._drainQueue();
   }
 
   CachedFuture.prototype.resolve = function CachedFuture$resolve(value){
+    if(this._state > 1) return;
     this._value = value;
     this._state = 3;
     this._drainQueue();
@@ -826,7 +816,7 @@
     const repr = this._state === 3
       ? show(this._value)
       : `<${this.getState()}>` + (this._state === 2 ? ` ${this._value}` : '');
-    return `Future { ${repr} }`;
+    return `CachedFuture({ ${repr} })`;
   }
 
   CachedFuture.prototype.toString = function CachedFuture$toString(){
@@ -925,15 +915,16 @@
 
   FutureParallel.prototype._f = function FutureParallel$fork(rej, res){
     const _this = this, cancels = new Array(_this._max), out = new Array(_this._length);
-    let i = _this._max, rejected = false, ok = 0;
+    let i = _this._max, ok = 0;
+    const cancelAll = function Future$parallel$cancel(){
+      for(let n = 0; n < _this._max; n++) cancels[n] && cancels[n]();
+    };
     const run = function FutureParallel$fork$run(future, j, c){
       check$parallel$m(future, j);
       cancels[c] = future._f(function Future$parallel$fork$rej(reason){
-        if(rejected) return;
-        rejected = true;
+        cancelAll();
         rej(reason);
       }, function Future$parallel$fork$res(value){
-        if(rejected) return;
         out[j] = value;
         ok += 1;
         if(i < _this._length) run(_this._futures[i], i++, c);
@@ -941,13 +932,11 @@
       });
     }
     for(let n = 0; n < _this._max; n++) run(_this._futures[n], n, n);
-    return function Future$parallel$cancel(){
-      for(let n = 0; n < _this._max; n++) cancels[n]();
-    };
+    return cancelAll;
   }
 
   FutureParallel.prototype.toString = function FutureParallel$toString(){
-    return `Future.parallel(${show(this._max)}, ${show(this._futures)})`;
+    return `Future.parallel(${show(this._max)}, [${this._futures.map(show).join(', ')}])`;
   }
 
   //----------
@@ -1041,7 +1030,8 @@
 
   FutureEncase.prototype.toString = function FutureEncase$toString(){
     const args = [this._a, this._b, this._c].slice(0, this._length).map(show).join(', ');
-    return `Future.encase${this._length}(${show(this._fn)}, ${args})`;
+    const name = `encase${this._length > 1 ? this._length : ''}`;
+    return `Future.${name}(${show(this._fn)}, ${args})`;
   }
 
   //----------
@@ -1210,18 +1200,13 @@
   FutureRace.prototype = Object.create(Future.prototype);
 
   FutureRace.prototype._f = function FutureRace$fork(rej, res){
-    let settled = false, lcancel = noop, rcancel = noop;
-    function FutureRace$fork$rej(x){
-      if(settled) return;
-      settled = true; lcancel(); rcancel(); rej(x);
-    }
-    function FutureRace$fork$res(x){
-      if(settled) return;
-      settled = true; lcancel(); rcancel(); res(x);
-    }
-    lcancel = this._left._f(FutureRace$fork$rej, FutureRace$fork$res);
-    settled || (rcancel = this._right._f(FutureRace$fork$rej, FutureRace$fork$res));
-    return function FutureRace$fork$cancel(){ lcancel(); rcancel() };
+    let cancelled = false, lcancel = noop, rcancel = noop;
+    const cancel = function FutureRace$fork$cancel(){ cancelled = true; lcancel(); rcancel() };
+    const reject = function FutureRace$fork$rej(x){ cancel(); rej(x) }
+    const resolve = function FutureRace$fork$res(x){ cancel(); res(x) }
+    lcancel = this._left._f(reject, resolve);
+    cancelled || (rcancel = this._right._f(reject, resolve));
+    return cancel;
   }
 
   FutureRace.prototype.toString = function FutureRace$toString(){

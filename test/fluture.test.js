@@ -48,6 +48,11 @@ const assertRejected = (m, x) => new Promise(done => {
   m.fork(y => (expect(y).to.deep.equal(x), done()), failRes);
 });
 
+const immediateRes = Future.of(1);
+const immediateRej = Future.reject(1);
+const delayedRes = Future((rej, res) => void setTimeout(res, 20, 1));
+const delayedRej = Future(rej => void setTimeout(rej, 20, 1));
+
 describe('Constructors', () => {
 
   describe('Future', () => {
@@ -127,6 +132,13 @@ describe('Constructors', () => {
       cancel();
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future((rej, res) => res());
+      const s = 'Future((rej, res) => res())';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('.of()', () => {
@@ -140,6 +152,13 @@ describe('Constructors', () => {
       return assertResolved(m, 1);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1);
+      const s = 'Future.of(1)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('.reject()', () => {
@@ -151,6 +170,13 @@ describe('Constructors', () => {
     it('treats the value as inner', () => {
       const m = Future.reject(1);
       return assertRejected(m, 1);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.reject(1);
+      const s = 'Future.reject(1)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -181,6 +207,13 @@ describe('Constructors', () => {
     it('ensures no continuations are called after the first reject', done => {
       const forkable = {fork: (l, r) => { l(1); r(2); l(3) }};
       Future.cast(forkable).fork(_ => done(), failRes);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.cast(Future.of(1));
+      const s = 'Future.cast(Future.of(1))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -216,6 +249,13 @@ describe('Constructors', () => {
       expect(f).to.throw(error);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.encase((a) => (a), 1);
+      const s = 'Future.encase((a) => (a), 1)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('.encase2()', () => {
@@ -248,6 +288,13 @@ describe('Constructors', () => {
         Future.of(1).chain(Future.encase2((y, x) => x)(1))
         .map(() => { throw error }).fork(noop, noop)
       expect(f).to.throw(error);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.encase2((a, b) => (b), 1, 2);
+      const s = 'Future.encase2((a, b) => (b), 1, 2)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -289,6 +336,13 @@ describe('Constructors', () => {
       expect(f).to.throw(error);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.encase3((a, b, c) => (c), 1, 2, 3);
+      const s = 'Future.encase3((a, b, c) => (c), 1, 2, 3)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('.try()', () => {
@@ -309,6 +363,13 @@ describe('Constructors', () => {
         throw error;
       });
       return assertRejected(actual, error);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.try(() => {});
+      const s = 'Future.try(() => {})';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -341,6 +402,19 @@ describe('Constructors', () => {
       Future.node(f).fork(_ => done(), failRes);
     });
 
+    it('ensures no continuations are called after cancel', done => {
+      const f = done => setTimeout(done, 5);
+      Future.node(f).fork(failRej, failRes)();
+      setTimeout(done, 20);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.node(() => {});
+      const s = 'Future.node(() => {})';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('.after()', () => {
@@ -363,6 +437,13 @@ describe('Constructors', () => {
     it('clears its internal timeout when cancelled', done => {
       Future.after(20, 1).fork(failRej, failRes)();
       setTimeout(done, 25);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.after(1, 2);
+      const s = 'Future.after(1, 2)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -440,6 +521,11 @@ describe('Constructors', () => {
       return assertRejected(actual, 'err');
     });
 
+    it('does not reject multiple times', done => {
+      const actual = Future.parallel(2, [delayedRej, immediateRej]);
+      actual.fork(_ => done(), failRes);
+    });
+
     it('cancels all Futures when cancelled', done => {
       const m = Future(() => () => done());
       const cancel = Future.parallel(1, [m]).fork(noop, noop);
@@ -474,6 +560,13 @@ describe('Constructors', () => {
       const cancel = Future.parallel(1, [delayedRej, delayedRej]).fork(failRej, failRes);
       setTimeout(cancel, 10);
       setTimeout(done, 50);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.parallel(Infinity, [Future.of(1), Future.of(2)]);
+      const s = 'Future.parallel(2, [Future.of(1), Future.of(2)])';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -526,6 +619,13 @@ describe('Constructors', () => {
       };
       const m = Future.do(gen);
       return assertResolved(m, STACKSIZE + 1);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.do(function*(){});
+      const s = 'Future.do(function* (){})';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -621,16 +721,19 @@ describe('Constructors', () => {
       setTimeout(done, 70);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.chainRec((next, done, x) => next(x), 1);
+      const s = 'Future.chainRec((next, done, x) => next(x), 1)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
 });
 
 describe('Future', () => {
 
-  const immediateRes = Future.of(1);
-  const immediateRej = Future.reject(1);
-  const delayedRes = Future((rej, res) => void setTimeout(res, 20, 1));
-  const delayedRej = Future(rej => void setTimeout(rej, 20, 1));
   const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
   describe('#fork()', () => {
@@ -739,6 +842,13 @@ describe('Future', () => {
       setTimeout(done, 25);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).chain(x => Future.of(x));
+      const s = 'Future.of(1).chain(x => Future.of(x))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('#chainRej()', () => {
@@ -782,6 +892,13 @@ describe('Future', () => {
       setTimeout(done, 25);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).chainRej(x => Future.of(x));
+      const s = 'Future.of(1).chainRej(x => Future.of(x))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('#map()', () => {
@@ -815,6 +932,13 @@ describe('Future', () => {
     it('does not reject after being cancelled', done => {
       delayedRej.map(failRes).fork(failRej, failRes)();
       setTimeout(done, 25);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).map(x => x);
+      const s = 'Future.of(1).map(x => x)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -876,24 +1000,11 @@ describe('Future', () => {
       cancel();
     });
 
-  });
-
-  describe('#map()', () => {
-
-    it('throws when invoked out of context', () => {
-      const f = () => Future.of(1).map.call(null, noop);
-      expect(f).to.throw(TypeError, /Future/);
-    });
-
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.of(1).map(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('applies the given function to its resolution value', () => {
-      const actual = Future.of(1).map(add(1));
-      return assertResolved(actual, 2);
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).ap(Future.of(x => x));
+      const s = 'Future.of(1).ap(Future.of(x => x))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -914,6 +1025,13 @@ describe('Future', () => {
     it('applies the given function to its rejection value', () => {
       const actual = Future.reject(1).mapRej(add(1));
       return assertRejected(actual, 2);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).mapRej(x => x);
+      const s = 'Future.of(1).mapRej(x => x)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -947,6 +1065,13 @@ describe('Future', () => {
       return assertResolved(actual, 2);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).bimap(x => x, y => y);
+      const s = 'Future.of(1).bimap(x => x, y => y)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('#swap()', () => {
@@ -966,13 +1091,11 @@ describe('Future', () => {
       return assertResolved(actual, 1);
     });
 
-  });
-
-  describe('#toString()', () => {
-
-    it('returns a string representation', () => {
-      const actual = Future(x => x).toString();
-      expect(actual).to.equal('Future(x => x)');
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).swap();
+      const s = 'Future.of(1).swap()';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -1007,6 +1130,13 @@ describe('Future', () => {
       const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
       const cancel = m.race(m).fork(noop, noop);
       cancel();
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).race(Future.of(2));
+      const s = 'Future.of(1).race(Future.of(2))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -1084,6 +1214,13 @@ describe('Future', () => {
       cancel();
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).or(Future.of(2));
+      const s = 'Future.of(1).or(Future.of(2))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('#fold()', () => {
@@ -1113,6 +1250,13 @@ describe('Future', () => {
 
     it('resolves with the transformed resolution value', () => {
       return assertResolved(Future.of(1).fold(add(1), add(1)), 2);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).fold(x => x, y => y);
+      const s = 'Future.of(1).fold(x => x, y => y)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -1204,6 +1348,13 @@ describe('Future', () => {
       setTimeout(cancel, 10);
     });
 
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).hook(() => Future.of(2), () => Future.of(3));
+      const s = 'Future.of(1).hook(() => Future.of(2), () => Future.of(3))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
   });
 
   describe('#finally()', () => {
@@ -1252,6 +1403,13 @@ describe('Future', () => {
       delayedRej.finally(immediateRej).fork(failRej, failRes)();
       immediateRej.finally(delayedRej).fork(failRej, failRes)();
       setTimeout(done, 25);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).finally(Future.of(2));
+      const s = 'Future.of(1).finally(Future.of(2))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
     });
 
   });
@@ -1381,6 +1539,62 @@ describe('Future', () => {
         clear();
         m.fork(noop, v => (expect(v).to.have.property('cleared', false), done()));
       }, 10);
+    });
+
+    it('does not reset when one of multiple listeners is cancelled', done => {
+      const m = Future.cache(Future((rej, res) => {
+        setTimeout(res, 5, 1);
+        return () => done(new Error('Reset happened'));
+      }));
+      const cancel = m.fork(noop, noop);
+      m.fork(noop, noop);
+      cancel();
+      setTimeout(done, 20);
+    });
+
+    it('cannot be rejected after being resolved', () => {
+      const m = Future.cache(Future(noop));
+      m.resolve(1)
+      m.reject(2);
+      expect(m.getState()).to.equal('resolved');
+    });
+
+    it('cannot be resolved after being rejected', () => {
+      const m = Future.cache(Future(noop));
+      m.reject(1);
+      m.resolve(2)
+      expect(m.getState()).to.equal('rejected');
+    });
+
+    it('does not change when cancelled after settled', done => {
+      const m = Future.cache(Future((rej, res) => {
+        res(1);
+        return () => done(new Error('Cancelled after settled'));
+      }));
+      const cancel = m.fork(noop, noop);
+      setTimeout(() => {
+        cancel();
+        done();
+      }, 5);
+    });
+
+    it('has custom toString', () => {
+      const m = Future.of(1).cache();
+      const s = 'Future.of(1).cache()';
+      expect(m.toString()).to.equal(s);
+    });
+
+    it('has custom inspect', () => {
+      const fork = Future.fork(noop, noop);
+      const cold = Future.of(1).cache();
+      const pending = Future.after(5, 2).cache();
+      const resolved = Future.of(3).cache();
+      const rejected = Future.reject(4).cache();
+      [pending, resolved, rejected].map(fork);
+      expect(cold.inspect()).to.equal('CachedFuture({ <cold> })');
+      expect(pending.inspect()).to.equal('CachedFuture({ <pending> })');
+      expect(resolved.inspect()).to.equal('CachedFuture({ 3 })');
+      expect(rejected.inspect()).to.equal('CachedFuture({ <rejected> 4 })');
     });
 
   });
