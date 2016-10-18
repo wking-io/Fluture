@@ -466,9 +466,12 @@ const closeConnection = conn => Future((rej, res) => {
 
   //We try to dispose gracefully.
   conn.flushGracefully(err => {
-    if(err) return rej(err);
-    conn.close();
-    res();
+    if(err === null){
+      conn.close();
+      res();
+    }else{
+      rej(err);
+    }
   });
 
   //On cancel, we force dispose.
