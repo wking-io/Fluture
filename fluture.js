@@ -574,24 +574,30 @@
   };
 
   Future.encase = function Future$encase(f, x){
+    if(arguments.length === 1) return unaryPartial(Future$encase, f);
     check$encase(f);
-    if(arguments.length === 1) return unaryPartial(Future.encase, f);
     return new FutureEncase(f, x);
   };
 
   Future.encase2 = function Future$encase2(f, x, y){
-    check$encase2(f);
-    if(arguments.length === 1) return unaryPartial(Future.encase2, f);
-    if(arguments.length === 2) return binaryPartial(Future.encase2, f, x);
-    return new FutureEncase(f, x, y);
+    switch(arguments.length){
+      case 1: return unaryPartial(Future$encase2, f);
+      case 2: return binaryPartial(Future$encase2, f, x);
+      default:
+        check$encase2(f);
+        return new FutureEncase(f, x, y);
+    }
   };
 
   Future.encase3 = function Future$encase3(f, x, y, z){
-    check$encase3(f);
-    if(arguments.length === 1) return unaryPartial(Future.encase3, f);
-    if(arguments.length === 2) return binaryPartial(Future.encase3, f, x);
-    if(arguments.length === 3) return ternaryPartial(Future.encase3, f, x, y);
-    return new FutureEncase(f, x, y, z);
+    switch(arguments.length){
+      case 1: return unaryPartial(Future$encase3, f);
+      case 2: return binaryPartial(Future$encase3, f, x);
+      case 3: return ternaryPartial(Future$encase3, f, x, y);
+      default:
+        check$encase3(f);
+        return new FutureEncase(f, x, y, z);
+    }
   };
 
   Future.node = function Future$node(f){
