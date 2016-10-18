@@ -63,6 +63,7 @@
     "istanbul": "^0.4.2",
     "jsverify": "^0.7.1",
     "lazy-either": "^1.0.3",
+    "lodash.curry": "^4.1.1",
     "markdown-toc": "^0.12.6",
     "mocha": "^3.0.2",
     "nsp": "^2.2.0",

@@ -67,7 +67,6 @@ getPackageName('package.json')
     * [map](#map)
     * [bimap](#bimap)
     * [chain](#chain)
-    * [recur](#recur)
     * [ap](#ap)
     * [swap](#swap)
   1. [Error handling](#error-handling)
@@ -331,19 +330,10 @@ Future.of(1)
 //> 2
 ```
 
-#### recur
-##### `#recur :: Future a b ~> (b -> Future a c) -> Future a c`
-##### `.recur :: (b -> Future a c) -> Future a b -> Future a c`
-
-An alternative version of `chain` which does not build up the cancel function.
-This is useful in the case of a never-resolving recursive computation, in
-order to prevent stack-overflow or out-of-memory errors:
-
-```js
-const recursive = () => Future.after(200, 'world').recur(recursive);
-const cancel = recursive();
-process.on('SIGINT', cancel);
-```
+Note that, due to its lazy nature, the stack and/or heap will slowly fill up as
+you chain more over the same structure. It's therefore recommended that you use
+[`chainRec`](#chainrec) in cases where you wish to `chain` recursively or
+traverse a large list (10000+ items).
 
 #### ap
 ##### `#ap :: Future a b ~> Future a (b -> c) -> Future a c`
@@ -465,13 +455,30 @@ withConnection(
 .fork(console.error, console.log)
 ```
 
-Be careful when cancelling a hooked Future. If the resource was acquired but not
-yet consumed, it will no longer be disposed. One way to work around this is to
-have the `consume` computation return a cancel function which forcefully
-disposes of the resource.
+In the case that a hooked Future is *cancelled* after the resource was acquired,
+`dispose` will be executed and immediately cancelled. This means that rejections
+which may happen during this disposal are **silently ignored**. To ensure that
+resources are disposed during cancellation, you might synchronously dispose
+resources in the `cancel` function of the disposal Future:
 
-Take care when using this in combination with [`cache`](#cache). Hooking relies
-on the first operation providing a fresh resource every time it's forked.
+```js
+const closeConnection = conn => Future((rej, res) => {
+
+  //We try to dispose gracefully.
+  conn.flushGracefully(err => {
+    if(err === null){
+      conn.close();
+      res();
+    }else{
+      rej(err);
+    }
+  });
+
+  //On cancel, we force dispose.
+  return () => conn.close();
+
+});
+```
 
 #### finally
 ##### `#finally :: Future a b ~> Future a c -> Future a b`

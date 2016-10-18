@@ -22,7 +22,7 @@ console.log('--- map chain ap fork ---');
 
 Future.of(1)
 .map(x => x + 1)
-.chain(x => Future.of(f => f(x + 1)))
+.chain(x => Future.of(x + 1))
 .ap(Future.of(x => x + 1))
 .fork(noop, noop);
 
@@ -40,7 +40,7 @@ printStatus(m.fork);
 
 Future.of(1)
 .map(x => x + 1)
-.chain(x => Future.of(f => f(x + 1)))
+.chain(x => Future.of(x + 1))
 .ap(Future.of(x => x + 1))
 .fork(noop, noop);
 
