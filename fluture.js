@@ -685,6 +685,11 @@
 
   //----------
 
+  //data Timing = Undetermined | Synchronous | Asynchronous
+  const Undetermined = 0;
+  const Synchronous = 1;
+  const Asynchronous = 2;
+
   function ChainRec(iterate, init){
     this._iterate = iterate;
     this._init = init;
@@ -696,26 +701,24 @@
     const _this = this;
     let cancel = noop, i = 0;
     (function Future$chainRec$recur(state){
-      let isSync = null;
+      let timing = Undetermined;
       function Future$chainRec$res(it){
         check$chainRec$it(it, i);
         i = i + 1;
-        if(isSync === null){
-          isSync = true;
+        if(timing === Undetermined){
+          timing = Synchronous;
           state = it;
         }else{
           Future$chainRec$recur(it);
         }
       }
       while(!state.done){
-        isSync = null;
+        timing = Undetermined;
         const m = _this._iterate(Next, Done, state.value);
         check$chainRec$f(m, _this._iterate, i, state.value);
         cancel = m._f(rej, Future$chainRec$res);
-        if(isSync === true){
-          continue;
-        }else{
-          isSync = false;
+        if(timing !== Synchronous){
+          timing = Asynchronous;
           return;
         }
       }
