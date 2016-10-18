@@ -250,8 +250,8 @@ describe('Constructors', () => {
     });
 
     it('has custom toString and inspect', () => {
-      const m = Future.encase((a) => (a), 1);
-      const s = 'Future.encase((a) => (a), 1)';
+      const m = Future.encase(a => a, 1);
+      const s = 'Future.encase(a => a, 1)';
       expect(m.toString()).to.equal(s);
       expect(m.inspect()).to.equal(s);
     });
@@ -291,8 +291,8 @@ describe('Constructors', () => {
     });
 
     it('has custom toString and inspect', () => {
-      const m = Future.encase2((a, b) => (b), 1, 2);
-      const s = 'Future.encase2((a, b) => (b), 1, 2)';
+      const m = Future.encase2((a, b) => b, 1, 2);
+      const s = 'Future.encase2((a, b) => b, 1, 2)';
       expect(m.toString()).to.equal(s);
       expect(m.inspect()).to.equal(s);
     });
@@ -337,8 +337,8 @@ describe('Constructors', () => {
     });
 
     it('has custom toString and inspect', () => {
-      const m = Future.encase3((a, b, c) => (c), 1, 2, 3);
-      const s = 'Future.encase3((a, b, c) => (c), 1, 2, 3)';
+      const m = Future.encase3((a, b, c) => c, 1, 2, 3);
+      const s = 'Future.encase3((a, b, c) => c, 1, 2, 3)';
       expect(m.toString()).to.equal(s);
       expect(m.inspect()).to.equal(s);
     });
