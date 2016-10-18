@@ -949,7 +949,7 @@
         rej(reason);
       }, function Future$parallel$fork$res(value){
         out[j] = value;
-        ok += 1;
+        ok = ok + 1;
         if(i < _this._length) run(_this._futures[i], i++, c);
         else if(ok === _this._length) res(out);
       });
