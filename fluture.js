@@ -41,7 +41,7 @@
   }
 
   function isFuture(m){
-    return (m instanceof Future) || Boolean(m) && m['@@type'] === TYPEOF_FUTURE;
+    return m instanceof Future || Boolean(m) && m['@@type'] === TYPEOF_FUTURE;
   }
 
   function isFunction(f){
