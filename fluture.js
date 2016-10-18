@@ -1074,7 +1074,7 @@
       check$chain$f(m, _this._chainer, x);
       cancel = m._f(rej, res);
     });
-    return cancel ? cancel : (cancel = r, function FutureChain$fork$cancel(){ cancel() });
+    return cancel || (cancel = r, function FutureChain$fork$cancel(){ cancel() });
   }
 
   FutureChain.prototype.toString = function FutureChain$toString(){
@@ -1098,7 +1098,7 @@
       check$chainRej$f(m, _this._chainer, x);
       cancel = m._f(rej, res);
     }, res);
-    return cancel ? cancel : (cancel = r, function FutureChainRej$fork$cancel(){ cancel() });
+    return cancel || (cancel = r, function FutureChainRej$fork$cancel(){ cancel() });
   }
 
   FutureChainRej.prototype.toString = function FutureChainRej$toString(){
@@ -1342,7 +1342,7 @@
     }, function FutureFinally$fork$res(x){
       cancel = _this._right._f(rej, function FutureFinally$fork$res$res(){ res(x) });
     });
-    return cancel ? cancel : (cancel = r, function FutureFinally$fork$cancel(){ cancel() });
+    return cancel || (cancel = r, function FutureFinally$fork$cancel(){ cancel() });
   }
 
   FutureFinally.prototype.toString = function FutureFinally$toString(){
