@@ -733,30 +733,41 @@
 
   //----------
 
+  //data State = Cold | Pending | Rejected | Resolved
+  const Cold = 0;
+  const Pending = 1;
+  const Rejected = 2;
+  const Resolved = 3;
+
+  function Queued(rej, res){
+    this[Rejected] = rej;
+    this[Resolved] = res;
+  }
+
   function CachedFuture(pure){
     this._pure = pure;
     this._cancel = noop;
     this._queue = [];
     this._queued = 0;
     this._value = null;
-    this._state = 0;
+    this._state = Cold;
   }
 
   CachedFuture.STATE = {
-    0: 'cold',
-    1: 'pending',
-    2: 'rejected',
-    3: 'resolved'
+    [Cold]: 'cold',
+    [Pending]: 'pending',
+    [Rejected]: 'rejected',
+    [Resolved]: 'resolved'
   };
 
   CachedFuture.prototype = Object.create(Future.prototype);
 
   CachedFuture.prototype._addToQueue = function CachedFuture$addToQueue(rej, res){
     const _this = this;
-    const i = _this._queue.push({2: rej, 3: res}) - 1;
+    const i = _this._queue.push(new Queued(rej, res)) - 1;
     _this._queued = _this._queued + 1;
     return function CachedFuture$removeFromQueue(){
-      if(_this._state > 1) return;
+      if(_this._state > Pending) return;
       _this._queue[i] = undefined;
       _this._queued = _this._queued - 1;
       if(_this._queued === 0) _this.reset();
@@ -764,32 +775,35 @@
   }
 
   CachedFuture.prototype._drainQueue = function CachedFuture$drainQueue(){
-    const q = this._queue, l = q.length, s = this._state, v = this._value;
-    for(let i = 0; i < l; i++){
-      q[i] && q[i][s](v);
-      q[i] = undefined;
+    const queue = this._queue;
+    const length = queue.length;
+    const state = this._state;
+    const value = this._value;
+    for(let i = 0; i < length; i++){
+      queue[i] && queue[i][state](value);
+      queue[i] = undefined;
     }
     this._queue = undefined;
     this._queued = 0;
   }
 
   CachedFuture.prototype.reject = function CachedFuture$reject(reason){
-    if(this._state > 1) return;
+    if(this._state > Pending) return;
     this._value = reason;
-    this._state = 2;
+    this._state = Rejected;
     this._drainQueue();
   }
 
   CachedFuture.prototype.resolve = function CachedFuture$resolve(value){
-    if(this._state > 1) return;
+    if(this._state > Pending) return;
     this._value = value;
-    this._state = 3;
+    this._state = Resolved;
     this._drainQueue();
   }
 
   CachedFuture.prototype.run = function CachedFuture$run(){
     const _this = this;
-    _this._state = 1;
+    _this._state = Pending;
     _this._cancel = _this._pure._f(
       function CachedFuture$fork$rej(x){ _this.reject(x) },
       function CachedFuture$fork$res(x){ _this.resolve(x) }
@@ -802,7 +816,7 @@
     this._queue = [];
     this._queued = 0;
     this._value = undefined;
-    this._state = 0;
+    this._state = Cold;
   }
 
   CachedFuture.prototype.getState = function CachedFuture$getState(){
@@ -822,9 +836,9 @@
   }
 
   CachedFuture.prototype.inspect = function CachedFuture$inspect(){
-    const repr = this._state === 3
+    const repr = this._state === Resolved
       ? show(this._value)
-      : `<${this.getState()}>` + (this._state === 2 ? ` ${this._value}` : '');
+      : `<${this.getState()}>` + (this._state === Rejected ? ` ${this._value}` : '');
     return `CachedFuture({ ${repr} })`;
   }
 
