@@ -764,6 +764,7 @@
 
   CachedFuture.prototype._addToQueue = function CachedFuture$addToQueue(rej, res){
     const _this = this;
+    if(_this._state > Pending) return noop;
     const i = _this._queue.push(new Queued(rej, res)) - 1;
     _this._queued = _this._queued + 1;
     return function CachedFuture$removeFromQueue(){
@@ -775,6 +776,8 @@
   }
 
   CachedFuture.prototype._drainQueue = function CachedFuture$drainQueue(){
+    if(this._state <= Pending) return;
+    if(this._queued === 0) return;
     const queue = this._queue;
     const length = queue.length;
     const state = this._state;
@@ -803,6 +806,7 @@
 
   CachedFuture.prototype.run = function CachedFuture$run(){
     const _this = this;
+    if(_this._state > Cold) return;
     _this._state = Pending;
     _this._cancel = _this._pure._f(
       function CachedFuture$fork$rej(x){ _this.reject(x) },
@@ -811,7 +815,8 @@
   }
 
   CachedFuture.prototype.reset = function CachedFuture$reset(){
-    this._cancel();
+    if(this._state === Cold) return;
+    if(this._state > Pending) this._cancel();
     this._cancel = noop;
     this._queue = [];
     this._queued = 0;

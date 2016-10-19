@@ -1566,6 +1566,36 @@ describe('Future', () => {
       expect(m.getState()).to.equal('rejected');
     });
 
+    it('does not _addToQueue after being settled', () => {
+      const m = Future.cache(Future(noop));
+      m.resolve(1);
+      m._addToQueue(noop, noop);
+      expect(m._queued).to.equal(0);
+    });
+
+    it('has idempotent _drainQueue', () => {
+      const m = Future.cache(Future.of(1));
+      m._drainQueue();
+      m._drainQueue();
+      m.fork(noop, noop);
+      m._drainQueue();
+      m._drainQueue();
+    });
+
+    it('has idempotent run', () => {
+      const m = Future.cache(Future.of(1));
+      m.run();
+      m.run();
+    });
+
+    it('has idempotent reset', () => {
+      const m = Future.cache(Future.of(1));
+      m.reset();
+      m.fork(noop, noop);
+      m.reset();
+      m.reset();
+    });
+
     it('does not change when cancelled after settled', done => {
       const m = Future.cache(Future((rej, res) => {
         res(1);
