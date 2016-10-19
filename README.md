@@ -516,7 +516,7 @@ program('Hello')
 ##### `#fork :: Future a b ~> (a -> ()), (b -> ()) -> Cancel`
 ##### `.fork :: (a -> ()) -> (b -> ()) -> Future a b -> Cancel`
 
-Execute the computation that was passed to the Future at [construction](#Future)
+Execute the computation that was passed to the Future at [construction](#future)
 using the given `reject` and `resolve` callbacks.
 
 ```js
