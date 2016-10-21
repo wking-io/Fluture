@@ -536,7 +536,6 @@
   Future.bimap = createBinaryDispatcher(FL.bimap);
   Future.chain = createUnaryDispatcher(FL.chain);
   Future.chainRec = Future$chainRec;
-  Future.recur = createUnaryDispatcher('recur');
   Future.chainRej = createUnaryDispatcher('chainRej');
   Future.mapRej = createUnaryDispatcher('mapRej');
   Future.swap = createNullaryDispatcher('swap');
