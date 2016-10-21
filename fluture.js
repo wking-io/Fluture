@@ -423,110 +423,103 @@
     return new ChainRec(f, init);
   }
 
-  Future.prototype = {
+  Future.prototype['@@type'] = TYPEOF_FUTURE;
+  Future.prototype._f = null;
+  Future.prototype.of = Future$of;
 
-    //Properties.
-    '@@type': TYPEOF_FUTURE,
-    _f: null,
+  Future.prototype.ap = function Future$ap(m){
+    check$ap(this, m);
+    return new FutureAp(this, m);
+  };
 
-    //Subclass creators.
-    of: Future$of,
+  Future.prototype.map = function Future$map(f){
+    check$map(this, f);
+    return new FutureMap(this, f);
+  };
 
-    ap: function Future$ap(m){
-      check$ap(this, m);
-      return new FutureAp(this, m);
-    },
+  Future.prototype.bimap = function Future$bimap(f, g){
+    check$bimap(this, f, g);
+    return new FutureBimap(this, f, g);
+  };
 
-    map: function Future$map(f){
-      check$map(this, f);
-      return new FutureMap(this, f);
-    },
+  Future.prototype.chain = function Future$chain(f){
+    check$chain(this, f);
+    return new FutureChain(this, f);
+  };
 
-    bimap: function Future$bimap(f, g){
-      check$bimap(this, f, g);
-      return new FutureBimap(this, f, g);
-    },
+  Future.prototype.chainRej = function Future$chainRej(f){
+    check$chainRej(this, f);
+    return new FutureChainRej(this, f);
+  };
 
-    chain: function Future$chain(f){
-      check$chain(this, f);
-      return new FutureChain(this, f);
-    },
+  Future.prototype.mapRej = function Future$mapRej(f){
+    check$mapRej(this, f);
+    return new FutureMapRej(this, f);
+  };
 
-    chainRej: function Future$chainRej(f){
-      check$chainRej(this, f);
-      return new FutureChainRej(this, f);
-    },
+  Future.prototype.swap = function Future$swap(){
+    check$swap(this);
+    return new FutureSwap(this);
+  };
 
-    mapRej: function Future$mapRej(f){
-      check$mapRej(this, f);
-      return new FutureMapRej(this, f);
-    },
+  Future.prototype.race = function Future$race(m){
+    check$race(this, m);
+    return new FutureRace(this, m);
+  };
 
-    swap: function Future$swap(){
-      check$swap(this);
-      return new FutureSwap(this);
-    },
+  Future.prototype.or = function Future$or(m){
+    check$or(this, m);
+    return new FutureOr(this, m);
+  };
 
-    race: function Future$race(m){
-      check$race(this, m);
-      return new FutureRace(this, m);
-    },
+  Future.prototype.fold = function Future$fold(f, g){
+    check$fold(this, f, g);
+    return new FutureFold(this, f, g);
+  };
 
-    or: function Future$or(m){
-      check$or(this, m);
-      return new FutureOr(this, m);
-    },
+  Future.prototype.hook = function Future$hook(dispose, consume){
+    check$hook(this, dispose, consume);
+    return new FutureHook(this, dispose, consume);
+  };
 
-    fold: function Future$fold(f, g){
-      check$fold(this, f, g);
-      return new FutureFold(this, f, g);
-    },
+  Future.prototype.finally = function Future$finally(m){
+    check$finally(this, m);
+    return new FutureFinally(this, m);
+  };
 
-    hook: function Future$hook(dispose, consume){
-      check$hook(this, dispose, consume);
-      return new FutureHook(this, dispose, consume);
-    },
-
-    finally: function Future$finally(m){
-      check$finally(this, m);
-      return new FutureFinally(this, m);
-    },
-
-    cache: function Future$cache(){
-      check$cache(this);
-      return new CachedFuture(this);
-    },
+  Future.prototype.cache = function Future$cache(){
+    check$cache(this);
+    return new CachedFuture(this);
+  };
 
     //Other methods.
-    fork: function Future$fork(rej, res){
-      check$fork(this, rej, res);
-      return this._f(rej, res);
-    },
+  Future.prototype.fork = function Future$fork(rej, res){
+    check$fork(this, rej, res);
+    return this._f(rej, res);
+  };
 
-    inspect: function Future$inspect(){
-      return this.toString();
-    },
+  Future.prototype.inspect = function Future$inspect(){
+    return this.toString();
+  };
 
-    value: function Future$value(f){
-      check$value(this, f);
-      return this._f(
-        function Future$value$rej(e){
-          throw new Error(
-            `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
-          );
-        },
-        f
-      );
-    },
+  Future.prototype.value = function Future$value(f){
+    check$value(this, f);
+    return this._f(
+      function Future$value$rej(e){
+        throw new Error(
+          `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
+        );
+      },
+      f
+    );
+  };
 
-    promise: function Future$promise(){
-      check$promise(this);
-      const _this = this;
-      return new Promise(function Future$promise$do(resolve, reject){
-        _this._f(reject, resolve);
-      });
-    }
-
+  Future.prototype.promise = function Future$promise(){
+    check$promise(this);
+    const _this = this;
+    return new Promise(function Future$promise$do(resolve, reject){
+      _this._f(reject, resolve);
+    });
   };
 
   //Static functions.
