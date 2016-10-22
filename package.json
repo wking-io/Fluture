@@ -16,7 +16,7 @@
     "test:opt": "node --allow-natives-syntax --trace-opt --trace-deopt --trace-inlining scripts/test-opt",
     "test:mem": "node scripts/test-mem",
     "test:unit": "node ./node_modules/.bin/_mocha --ui bdd --reporter spec --check-leaks --full-trace",
-    "test:coverage": "node node_modules/.bin/istanbul cover --report html ./node_modules/.bin/_mocha -- --ui bdd --reporter dot --bail --check-leaks && codecov"
+    "test:coverage": "node node_modules/.bin/istanbul cover --report html ./node_modules/.bin/_mocha -- --ui bdd --reporter dot --bail && codecov"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
   "homepage": "https://github.com/Avaq/Fluture",
