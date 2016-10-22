@@ -1636,6 +1636,54 @@ describe('Future', () => {
 
   });
 
+  describe('#extractLeft()', () => {
+
+    it('returns empty array', () => {
+      expect(Future(noop).extractLeft()).to.deep.equal([]);
+    });
+
+    it('returns array with reason for FutureRejects', () => {
+      expect(Future.reject(1).extractLeft()).to.deep.equal([1]);
+    });
+
+    it('returns empty array for cold CachedFutures', () => {
+      expect(Future.cache(Future.reject(1)).extractLeft()).to.deep.equal([]);
+    });
+
+    it('returns array with reason for rejected CachedFutures', () => {
+      const m = Future.cache(Future.reject(1));
+      m.run();
+      expect(m.extractLeft()).to.deep.equal([1]);
+    });
+
+  });
+
+  describe('#extractRight()', () => {
+
+    it('returns empty array', () => {
+      expect(Future(noop).extractRight()).to.deep.equal([]);
+    });
+
+    it('returns array with value for FutureOfs', () => {
+      expect(Future.of(1).extractRight()).to.deep.equal([1]);
+    });
+
+    it('returns array with value for FutureAfters', () => {
+      expect(Future.after(300, 1).extractRight()).to.deep.equal([1]);
+    });
+
+    it('returns empty array for cold CachedFutures', () => {
+      expect(Future.cache(Future.of(1)).extractRight()).to.deep.equal([]);
+    });
+
+    it('returns array with value for resolved CachedFutures', () => {
+      const m = Future.cache(Future.of(1));
+      m.run();
+      expect(m.extractRight()).to.deep.equal([1]);
+    });
+
+  });
+
 });
 
 describe('Compliance', function(){
@@ -2153,6 +2201,32 @@ describe('Dispatchers', () => {
 
     it('dispatches to #cache', () => {
       return assertResolved(Future.cache(Future.of(1)), 1);
+    });
+
+  });
+
+  describe('.extractLeft()', () => {
+
+    it('throws when not given a Future', () => {
+      const f = () => Future.extractLeft(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('dispatches to #extractLeft', () => {
+      expect(Future.extractLeft(Future.reject(1))).to.deep.equal([1]);
+    });
+
+  });
+
+  describe('.extractRight()', () => {
+
+    it('throws when not given a Future', () => {
+      const f = () => Future.extractRight(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('dispatches to #extractRight', () => {
+      expect(Future.extractRight(Future.of(1))).to.deep.equal([1]);
     });
 
   });

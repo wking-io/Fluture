@@ -400,6 +400,8 @@
 
   Future.prototype['@@type'] = TYPEOF_FUTURE;
   Future.prototype._f = null;
+  Future.prototype.extractLeft = function Future$extractLeft(){ return []; }
+  Future.prototype.extractRight = function Future$extractRight(){ return []; }
   Future.prototype.of = Future$of;
 
   Future.prototype.ap = function Future$ap(m){
@@ -562,6 +564,8 @@
   Future.value = createUnaryDispatcher('value');
   Future.promise = createNullaryDispatcher('promise');
   Future.cache = createNullaryDispatcher('cache');
+  Future.extractLeft = createNullaryDispatcher('extractLeft');
+  Future.extractRight = createNullaryDispatcher('extractRight');
   Future.Future = Future;
   Future.isFuture = isFuture;
   Future.isForkable = isForkable;
@@ -773,6 +777,14 @@
 
   CachedFuture.prototype = Object.create(Future.prototype);
 
+  CachedFuture.prototype.extractLeft = function CachedFuture$extractLeft(){
+    return this._state === Rejected ? [this._value] : [];
+  }
+
+  CachedFuture.prototype.extractRight = function CachedFuture$extractRight(){
+    return this._state === Resolved ? [this._value] : [];
+  }
+
   CachedFuture.prototype._addToQueue = function CachedFuture$addToQueue(rej, res){
     const _this = this;
     if(_this._state > Pending) return noop;
@@ -870,6 +882,10 @@
 
   FutureOf.prototype = Object.create(Future.prototype);
 
+  FutureOf.prototype.extractRight = function FutureOf$extractRight(){
+    return [this._value];
+  }
+
   FutureOf.prototype._f = function FutureOf$fork(rej, res){
     res(this._value);
     return noop;
@@ -886,6 +902,10 @@
   }
 
   FutureReject.prototype = Object.create(Future.prototype);
+
+  FutureReject.prototype.extractLeft = function FutureReject$extractLeft(){
+    return [this._reason];
+  }
 
   FutureReject.prototype._f = function FutureReject$fork(rej){
     rej(this._reason);
@@ -927,6 +947,10 @@
   }
 
   FutureAfter.prototype = Object.create(Future.prototype);
+
+  FutureAfter.prototype.extractRight = function FutureAfter$extractRight(){
+    return [this._value];
+  }
 
   FutureAfter.prototype._f = function FutureAfter$fork(rej, res){
     const id = setTimeout(res, this._time, this._value);
