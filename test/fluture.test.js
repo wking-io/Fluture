@@ -2,7 +2,6 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture');
-const Readable = require('stream').Readable;
 const jsc = require('jsverify');
 const S = require('sanctuary');
 const FL = require('fantasy-land');
@@ -10,6 +9,7 @@ const FL = require('fantasy-land');
 const STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
 const noop = () => {};
 const add = a => b => a + b;
+const B = f => g => x => f(g(x));
 const error = new Error('Intentional error for unit testing');
 
 const repeat = (n, x) => {
@@ -1641,7 +1641,6 @@ describe('Compliance', function(){
 
   const I = x => x;
   const T = x => f => f(x);
-  const B = f => g => x => f(g(x));
 
   const sub3 = x => x - 3;
   const mul3 = x => x * 3;
@@ -1837,13 +1836,19 @@ describe('Dispatchers', () => {
       expect(Future.map(noop)).to.be.a('function');
     });
 
-    it('throws when not given a Future', () => {
-      const f = () => Future.map(add(1))(1);
-      expect(f).to.throw(TypeError, /Future/);
+    it('throws when not given a Function as first argument', () => {
+      const f = () => Future.map(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('dispatches to #map', () => {
-      return assertResolved(Future.map(add(1))(Future.of(1)), 2);
+    it('throws when not given a Future as second argument', () => {
+      const f = () => Future.map(add(1), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
+    });
+
+    it('returns a FutureMap', () => {
+      const actual = Future.map(add(1), Future.of(1));
+      expect(actual).to.be.an.instanceof(Future.subclasses.FutureMap);
     });
 
   });
@@ -1874,13 +1879,24 @@ describe('Dispatchers', () => {
       expect(Future.bimap(noop)(noop)).to.be.a('function');
     });
 
-    it('throws when not given a Future', () => {
-      const f = () => Future.bimap(add(1), add(1))(1);
-      expect(f).to.throw(TypeError, /Future/);
+    it('throws when not given a Function as first argument', () => {
+      const f = () => Future.bimap(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('dispatches to #bimap', () => {
-      return assertResolved(Future.bimap(add(1), add(1))(Future.of(1)), 2);
+    it('throws when not given a Function as second argument', () => {
+      const f = () => Future.bimap(add(1), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
+    });
+
+    it('throws when not given a Future as third argument', () => {
+      const f = () => Future.bimap(add(1), add(1), 1);
+      expect(f).to.throw(TypeError, /Future.*third/);
+    });
+
+    it('returns a FutureBimap', () => {
+      const actual = Future.bimap(add(1), add(1), Future.of(1));
+      expect(actual).to.be.an.instanceof(Future.subclasses.FutureBimap);
     });
 
   });
@@ -1892,13 +1908,19 @@ describe('Dispatchers', () => {
       expect(Future.chain(noop)).to.be.a('function');
     });
 
-    it('throws when not given a Future', () => {
-      const f = () => Future.chain(noop)(1);
-      expect(f).to.throw(TypeError, /Future/);
+    it('throws when not given a Function as first argument', () => {
+      const f = () => Future.chain(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('dispatches to #chain', () => {
-      return assertResolved(Future.chain(x => Future.of(x + 1))(Future.of(1)), 2);
+    it('throws when not given a Future as second argument', () => {
+      const f = () => Future.chain(B(Future.of)(add(1)), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
+    });
+
+    it('returns a FutureChain', () => {
+      const actual = Future.chain(B(Future.of)(add(1)), Future.of(1));
+      expect(actual).to.be.an.instanceof(Future.subclasses.FutureChain);
     });
 
   });
@@ -1928,13 +1950,19 @@ describe('Dispatchers', () => {
       expect(Future.ap(Future.of(1))).to.be.a('function');
     });
 
-    it('throws when not given a Future', () => {
-      const f = () => Future.ap(1)(Future.of(noop));
-      expect(f).to.throw(TypeError, /Future/);
+    it('throws when not given a Function as first argument', () => {
+      const f = () => Future.ap(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('dispatches to #ap', () => {
-      return assertResolved(Future.ap(Future.of(add(1)))(Future.of(1)), 2);
+    it('throws when not given a Future as second argument', () => {
+      const f = () => Future.ap(Future.of(1), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
+    });
+
+    it('returns a FutureAp', () => {
+      const actual = Future.ap(Future.of(1), Future.of(add(1)));
+      expect(actual).to.be.an.instanceof(Future.subclasses.FutureAp);
     });
 
   });
@@ -2264,49 +2292,6 @@ describe('Utility functions', () => {
 
   });
 
-  describe('.preview()', () => {
-
-    it('represents values as strings', () => {
-      const tests = {
-        '"foo"': 'foo',
-        '[Array: 1]': ['a'],
-        '[Function: foo]': function foo(){},
-        '[Object: foo, bar]': {foo: 1, bar: 2},
-        '1': 1,
-        'undefined': undefined};
-      Object.keys(tests).forEach(k => expect(util.preview(tests[k])).to.equal(k));
-    });
-
-  });
-
-  describe('.show()', () => {
-
-    it('casts values to strings', () => {
-      const tests = {
-        '"foo"': 'foo',
-        '["a"]': ['a'],
-        'function foo(){}': function foo(){},
-        'function (){}': function(){},
-        '{"foo": 1, "bar": 2}': {foo: 1, bar: 2},
-        'Hello world': {toString: () => 'Hello world'},
-        '1': 1,
-        'undefined': undefined};
-      Object.keys(tests).forEach(k => expect(util.show(tests[k])).to.equal(k));
-    });
-
-    it('casts nested values using preview()', () => {
-      const recursive = {x: 1}; recursive.recursive = recursive;
-      const array = [{a: 1}, {b: 1}];
-      expect(util.show(recursive)).to.equal('{"x": 1, "recursive": [Object: x, recursive]}');
-      expect(util.show(array)).to.equal('[[Object: a], [Object: b]]');
-    });
-
-    it('handles nested objects with custom toString functions', () => {
-      expect(util.show(new Readable)).to.be.a('string');
-    });
-
-  });
-
   describe('.padf()', () => {
 
     it('left-pads string representations of functions', () => {
@@ -2398,36 +2383,6 @@ describe('Utility functions', () => {
       expect(actual.value).to.equal(42);
     });
 
-  });
-
-});
-
-describe('Error messages', () => {
-
-  it('take it easy with the recursive data structures', () => {
-    const data = {foo: 'bar'};
-    data.data = data;
-    const f = () => Future(data);
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
-  it('display nested named functions by their name', () => {
-    function nyerk(){}
-    const data = {foo: nyerk};
-    const f = () => Future(data);
-    expect(f).to.throw(TypeError, /\[Function: nyerk\]/);
-  });
-
-  it('display nested anonymous functions', () => {
-    const data = {foo: () => {}};
-    const f = () => Future(data);
-    expect(f).to.throw(TypeError, /\[Function(: foo)?\]/);
-  });
-
-  it('display nested arrays', () => {
-    const data = {foo: ['a', 'b', 'c']};
-    const f = () => Future(data);
-    expect(f).to.throw(TypeError, /\[Array: 3\]/);
   });
 
 });
