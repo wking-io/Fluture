@@ -11,14 +11,14 @@
 
   /*istanbul ignore next*/
   if(module && typeof module.exports !== 'undefined'){
-    module.exports = f(require('inspect-f'));
+    module.exports = f(require('inspect-f'), require('sanctuary-type-classes'));
   }
 
   else{
-    global.Fluture = f(global.inspectf);
+    global.Fluture = f(global.inspectf, global.sanctuaryTypeClasses);
   }
 
-}(/*istanbul ignore next*/(global || window || this), function(inspectf){
+}(/*istanbul ignore next*/(global || window || this), function(inspectf, Z){
 
   'use strict';
 
@@ -76,32 +76,7 @@
   // Utilities //
   ///////////////
 
-  //A small string representing a value, but not containing the whole value.
-  const preview = x =>
-    typeof x === 'string'
-    ? JSON.stringify(x)
-    : Array.isArray(x)
-    ? `[Array: ${x.length}]`
-    : typeof x === 'function'
-    ? typeof x.name === 'string' && x.name.length > 0
-    ? `[Function: ${x.name}]`
-    : /*istanbul ignore next*/ '[Function]' //Only for older JS engines.
-    : x && typeof x === 'object'
-    ? `[Object: ${Object.keys(x).map(String).join(', ')}]`
-    : String(x);
-
-  //A show function to provide a slightly more meaningful representation of values.
-  const show = x =>
-    typeof x === 'string'
-    ? preview(x)
-    : Array.isArray(x)
-    ? `[${x.map(preview).join(', ')}]`
-    : x && (typeof x.toString === 'function')
-    ? x.toString === Object.prototype.toString
-    ? `{${Object.keys(x).reduce((o, k) => o.concat(`${preview(k)}: ${preview(x[k])}`), []).join(', ')}}`
-    : x.toString()
-    : preview(x);
-
+  const show = Z.toString;
   const noop = function noop(){};
   const padf = (sf, s) => s.replace(/^/gm, sf).replace(sf, '');
   const showf = f => padf('  ', inspectf(2, f));
@@ -522,12 +497,58 @@
     });
   };
 
-  //Static functions.
   Future.of = Future$of;
-  Future.ap = createUnaryDispatcher(FL.ap);
-  Future.map = createUnaryDispatcher(FL.map);
-  Future.bimap = createBinaryDispatcher(FL.bimap);
-  Future.chain = createUnaryDispatcher(FL.chain);
+
+  function ap$mval(mval, mfunc){
+    if(!Z.Apply.test(mfunc)) error$invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
+    return Z.ap(mval, mfunc);
+  }
+
+  Future.ap = function ap(mval, mfunc){
+    if(!Z.Apply.test(mval)) error$invalidArgument('Future.ap', 0, 'be an Apply', mval);
+    if(arguments.length === 1) return unaryPartial(ap$mval, mval);
+    return ap$mval(mval, mfunc);
+  }
+
+  function map$mapper(mapper, m){
+    if(!Z.Functor.test(m)) error$invalidArgument('Future.map', 1, 'be a Functor', m);
+    return Z.map(mapper, m);
+  }
+
+  Future.map = function map(mapper, m){
+    if(!isFunction(mapper)) error$invalidArgument('Future.map', 0, 'be a Function', mapper);
+    if(arguments.length === 1) return unaryPartial(map$mapper, mapper);
+    return map$mapper(mapper, m);
+  }
+
+  function bimap$lmapper$rmapper(lmapper, rmapper, m){
+    if(!Z.Bifunctor.test(m)) error$invalidArgument('Future.bimap', 2, 'be a Bifunctor', m);
+    return Z.bimap(lmapper, rmapper, m);
+  }
+
+  function bimap$lmapper(lmapper, rmapper, m){
+    if(!isFunction(rmapper)) error$invalidArgument('Future.bimap', 1, 'be a Function', rmapper);
+    if(arguments.length === 2) return binaryPartial(bimap$lmapper$rmapper, lmapper, rmapper);
+    return bimap$lmapper$rmapper(lmapper, rmapper, m);
+  }
+
+  Future.bimap = function bimap(lmapper, rmapper, m){
+    if(!isFunction(lmapper)) error$invalidArgument('Future.bimap', 0, 'be a Function', lmapper);
+    if(arguments.length === 1) return unaryPartial(bimap$lmapper, lmapper);
+    return bimap$lmapper(lmapper, rmapper, m);
+  }
+
+  function chain$chainer(chainer, m){
+    if(!Z.Chain.test(m)) error$invalidArgument('Future.chain', 1, 'be a Chain', m);
+    return Z.chain(chainer, m);
+  }
+
+  Future.chain = function chain(chainer, m){
+    if(!isFunction(chainer)) error$invalidArgument('Future.chain', 0, 'be a Function', chainer);
+    if(arguments.length === 1) return unaryPartial(chain$chainer, chainer);
+    return chain$chainer(chainer, m);
+  }
+
   Future.chainRec = Future$chainRec;
   Future.chainRej = createUnaryDispatcher('chainRej');
   Future.mapRej = createUnaryDispatcher('mapRej');
@@ -621,8 +642,6 @@
     isObject,
     isIterator,
     isIteration,
-    preview,
-    show,
     padf,
     showf,
     fid,
@@ -1345,6 +1364,33 @@
   FutureFinally.prototype.toString = function FutureFinally$toString(){
     return `${this._left.toString()}.finally(${this._right.toString()})`;
   }
+
+  Future.subclasses = {
+    SafeFuture,
+    ChainRec,
+    CachedFuture,
+    FutureOf,
+    FutureReject,
+    FutureNode,
+    FutureAfter,
+    FutureParallel,
+    FutureDo,
+    FutureCast,
+    FutureTry,
+    FutureEncase,
+    FutureChain,
+    FutureChainRej,
+    FutureMap,
+    FutureMapRej,
+    FutureBimap,
+    FutureAp,
+    FutureSwap,
+    FutureRace,
+    FutureOr,
+    FutureFold,
+    FutureHook,
+    FutureFinally
+  };
 
   return Future;
 

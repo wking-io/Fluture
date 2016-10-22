@@ -115,10 +115,14 @@ A list of all types used within the signatures follows:
   arguments. This includes instances of Fluture, instances of Task from
   [`data.task`][10] or instances of Future from [`ramda-fantasy`][11].
 - **Future** - Instances of Future provided by Fluture.
-- **Functor** - Values which conform to the [Fantasy Land Functor specification][12].
-- **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][24].
-- **Chain** - Values which conform to the [Fantasy Land Chain specification][13].
-- **Apply** - Values which conform to the [Fantasy Land Apply specification][14].
+- **Functor** - Values which conform to the [Fantasy Land Functor specification][12]
+  as determined by [Sanctuary Type Classes][27].
+- **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][24]
+  as determined by [Sanctuary Type Classes][28].
+- **Chain** - Values which conform to the [Fantasy Land Chain specification][13]
+  as determined by [Sanctuary Type Classes][29].
+- **Apply** - Values which conform to the [Fantasy Land Apply specification][14]
+  as determined by [Sanctuary Type Classes][30].
 - **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][18].
 - **Iteration** - `{done, value}`-Objects as defined by the [Iterator protocol][18].
 - **Next** - An incomplete (`{done: false}`) Iteration.
@@ -842,3 +846,7 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [24]: https://github.com/fantasyland/fantasy-land#bifunctor
 [25]: https://github.com/rpominov/static-land
 [26]: https://github.com/fantasyland/fantasy-land#chainrec
+[27]: https://github.com/sanctuary-js/sanctuary-type-classes#Functor
+[28]: https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
+[29]: https://github.com/sanctuary-js/sanctuary-type-classes#Chain
+[30]: https://github.com/sanctuary-js/sanctuary-type-classes#Apply

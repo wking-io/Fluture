@@ -50,7 +50,8 @@
     "sequential"
   ],
   "dependencies": {
-    "inspect-f": "^1.1.0"
+    "inspect-f": "^1.1.0",
+    "sanctuary-type-classes": "^0.1.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",
