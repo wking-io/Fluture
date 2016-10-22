@@ -1193,20 +1193,17 @@
 
   FutureAp.prototype = Object.create(Future.prototype);
 
-  FutureAp.prototype._f = function FutureAp$fork(_rej, res){
-    let _f, _x, ok1, ok2, ko;
-    const rej = x => ko || (ko = 1, _rej(x));
-    const c1 = this._mval._f(rej, function FutureAp$fork$resThis(x){
-      if(!ok1) return void (ok2 = 1, _x = x)
-      check$ap$f(_f);
-      res(_f(x));
+  FutureAp.prototype._f = function FutureAp$fork(rej, res){
+    const _this = this;
+    let cancel;
+    const r = _this._mval._f(rej, function FutureAp$fork$res$x(x){
+      cancel = _this._mfunc._f(rej, function FutureAp$fork$res$f(f){
+        check$ap$f(f);
+        cancel = noop;
+        res(f(x));
+      });
     });
-    const c2 = this._mfunc._f(rej, function FutureAp$fork$resThat(f){
-      if(!ok2) return void (ok1 = 1, _f = f);
-      check$ap$f(f);
-      res(f(_x));
-    });
-    return function FutureAp$fork$cancel(){ c1(); c2() };
+    return cancel || (cancel = r, function FutureAp$fork$cancel(){ cancel() });
   }
 
   FutureAp.prototype.toString = function FutureAp$toString(){

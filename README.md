@@ -343,10 +343,10 @@ traverse a large list (10000+ items).
 ##### `#ap :: Future a b ~> Future a (b -> c) -> Future a c`
 ##### `.ap :: Apply m => m (a -> b) -> m a -> m b`
 
-Applies the function contained in the right-hand Future to the value contained
-in the left-hand Future. Both Futures involved will run in parallel, and if one
-rejects the resulting Future will also be rejected. To learn more about the
-exact behaviour of `ap`, check out its [spec][14].
+Applies the function contained in the right-hand Future or Apply to the value
+contained in the left-hand Future or Apply. If one of the Futures rejects the
+resulting Future will also be rejected. To learn more about the exact behaviour
+of `ap`, check out its [spec][14].
 
 ```js
 Future.of(1)

@@ -986,17 +986,24 @@ describe('Future', () => {
       return assertResolved(actual, 2);
     });
 
-    it('forks in parallel', function(){
-      this.slow(80);
-      this.timeout(50);
-      const actual = Future.after(30, 1).ap(Future.after(30, add(1)));
-      return assertResolved(actual, 2);
+    it('forks in sequence', done => {
+      let running = true;
+      const left = Future.after(20, 1).map(_ => { running = false });
+      const right = Future.of(_ => { expect(running).to.equal(false); done() });
+      left.ap(right).fork(noop, noop);
     });
 
-    it('creates a cancel function which cancels both Futures', done => {
-      let cancelled = false;
-      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
-      const cancel = m.ap(m).fork(noop, noop);
+    it('cancels the left Future if cancel is called while it is running', done => {
+      const left = Future(() => () => done());
+      const right = Future.after(20, add(1));
+      const cancel = left.ap(right).fork(noop, noop);
+      cancel();
+    });
+
+    it('cancels the right Future if cancel is called while it is running', done => {
+      const left = Future.of(1);
+      const right = Future(() => () => done());
+      const cancel = left.ap(right).fork(noop, noop);
       cancel();
     });
 
