@@ -89,6 +89,7 @@ getPackageName('package.json')
     * [isForkable](#isforkable)
     * [cache](#cache)
     * [do](#do)
+  1. [Sanctuary](#sanctuary)
   1. [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
 - [The name](#the-name)
@@ -785,6 +786,43 @@ Future.do(function*(){
 //> "Oh no! Failed to load /message"
 ```
 
+### Sanctuary
+
+When using this module with [Sanctuary][21], you might run into the following:
+
+```js
+const S = require('sanctuary');
+const Future = require('fluture');
+S.I(Future.of(1));
+//! Since there is no type of which all the above values are members,
+//! the type-variable constraint has been violated.
+```
+
+This happens because Sanctuary needs to know about the Future type in order to
+determine whether the type-variable used in the definition of `S.I` is
+consistent.
+
+To let Sanctuary know about Futures, we can provide it a `FutureType` using
+[Sanctuary Def][31], and pass it to Sanctuary using [`S.create`][32]
+
+```js
+const $ = require('sanctuary-def');
+const Future = require('fluture');
+const {env, create} = require('sanctuary');
+
+const FutureType = $.BinaryType(
+  Future.name,
+  Future.isFuture,
+  Future.extractLeft,
+  Future.extractRight
+);
+
+const S = create({checkTypes: true, env: env.concat([FutureType])});
+
+S.I(Future.of(1));
+//> Future.of(1)
+```
+
 ### Futurization
 
 To reduce the boilerplate of making Node or Promise functions return Futures
@@ -850,3 +888,5 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [28]: https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
 [29]: https://github.com/sanctuary-js/sanctuary-type-classes#Chain
 [30]: https://github.com/sanctuary-js/sanctuary-type-classes#Apply
+[31]: https://github.com/sanctuary-js/sanctuary-def#binarytype
+[32]: https://sanctuary.js.org/#create
