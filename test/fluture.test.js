@@ -5,6 +5,8 @@ const Future = require('../fluture');
 const jsc = require('jsverify');
 const S = require('sanctuary');
 const FL = require('fantasy-land');
+const {AssertionError} = require('assert');
+const Z = require('sanctuary-type-classes');
 
 const STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
 const noop = () => {};
@@ -38,14 +40,43 @@ const assertEqual = (a, b) => new Promise(done => {
   }));
 });
 
-const assertResolved = (m, x) => new Promise(done => {
+const forkAndGuard = (m, rej, res) => {
+  let rejected = false, resolved = false;
+  m.fork(e => {
+    if(rejected) throw new Error(`${m.toString()} rejected twice with: ${Z.toString(e)}`);
+    if(resolved) throw new Error(`${m.toString()} rejected after resolving: ${Z.toString(e)}`);
+    rejected = true;
+    rej(e);
+  }, x => {
+    if(rejected) throw new Error(`${m.toString()} resolved twice with: ${Z.toString(x)}`);
+    if(resolved) throw new Error(`${m.toString()} resolved after rejecting: ${Z.toString(x)}`);
+    resolved = true;
+    res(x);
+  })
+}
+
+const assertResolved = (m, x) => new Promise((res, rej) => {
   assertIsFuture(m);
-  m.fork(failRej, y => (expect(y).to.deep.equal(x), done()));
+  forkAndGuard(m,
+    e => rej(new Error(`Expected the Future to resolve. Instead rejected with: ${Z.toString(e)}`)),
+    y => Z.equals(x, y) ? res() : rej(new AssertionError({
+      expected: x,
+      actual: y,
+      operator: 'Future.fork'
+    }))
+  );
 });
 
-const assertRejected = (m, x) => new Promise(done => {
+const assertRejected = (m, x) => new Promise((res, rej) => {
   assertIsFuture(m);
-  m.fork(y => (expect(y).to.deep.equal(x), done()), failRes);
+  forkAndGuard(m,
+    e => Z.equals(x, e) ? res() : rej(new AssertionError({
+      expected: x,
+      actual: e,
+      operator: 'Future.fork'
+    })),
+    x => rej(new Error(`Expected the Future to reject. Instead resolved with: ${Z.toString(x)}`))
+  );
 });
 
 const immediateRes = Future.of(1);
