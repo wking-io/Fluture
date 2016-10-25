@@ -265,6 +265,11 @@
     if(!isFuture(m)) error$invalidArgument('Future#race', 0, 'be a Future', m);
   }
 
+  function check$and(it, m){
+    if(!isFuture(it)) error$invalidContext('Future#and', it);
+    if(!isFuture(m)) error$invalidArgument('Future#and', 0, 'be a Future', m);
+  }
+
   function check$or(it, m){
     if(!isFuture(it)) error$invalidContext('Future#or', it);
     if(!isFuture(m)) error$invalidArgument('Future#or', 0, 'be a Future', m);
@@ -444,6 +449,11 @@
     return new FutureRace(this, m);
   };
 
+  Future.prototype.and = function Future$and(m){
+    check$and(this, m);
+    return new FutureAnd(this, m);
+  };
+
   Future.prototype.or = function Future$or(m){
     check$or(this, m);
     return new FutureOr(this, m);
@@ -549,6 +559,17 @@
     if(!isFunction(chainer)) error$invalidArgument('Future.chain', 0, 'be a Function', chainer);
     if(arguments.length === 1) return unaryPartial(chain$chainer, chainer);
     return chain$chainer(chainer, m);
+  }
+
+  function and$left(left, right){
+    if(!isFuture(right)) error$invalidArgument('Future.and', 1, 'be a Future', right);
+    return new FutureAnd(left, right);
+  }
+
+  Future.and = function and(left, right){
+    if(!isFuture(left)) error$invalidArgument('Future.and', 0, 'be a Future', left);
+    if(arguments.length === 1) return unaryPartial(and$left, left);
+    return and$left(left, right);
   }
 
   Future.chainRec = Future$chainRec;
@@ -1275,6 +1296,32 @@
 
   //----------
 
+  function FutureAnd(left, right){
+    this._left = left;
+    this._right = right;
+  }
+
+  FutureAnd.prototype = Object.create(Future.prototype);
+
+  FutureAnd.prototype._f = function FutureAnd$fork(rej, res){
+    let rejected = false, resolved = false, val, lcancel = noop, rcancel = noop;
+    lcancel = this._left._f(
+      e => (rejected = true, rcancel(), rej(e)),
+      _ => rejected ? rej(val) : resolved ? res(val) : (resolved = true)
+    );
+    rcancel = this._right._f(
+      e => resolved ? rej(e) : (rejected = true, val = e),
+      x => resolved ? res(x) : (resolved = true, val = x)
+    );
+    return function FutureAnd$fork$cancel(){ lcancel(); rcancel() };
+  }
+
+  FutureAnd.prototype.toString = function FutureAnd$toString(){
+    return `${this._left.toString()}.and(${this._right.toString()})`;
+  }
+
+  //----------
+
   function FutureOr(left, right){
     this._left = left;
     this._right = right;
@@ -1407,6 +1454,7 @@
     FutureAp,
     FutureSwap,
     FutureRace,
+    FutureAnd,
     FutureOr,
     FutureFold,
     FutureHook,

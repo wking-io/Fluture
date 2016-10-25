@@ -614,6 +614,26 @@ first([
 //! "nope"
 ```
 
+#### and
+##### `#and :: Future a b ~> Future a b -> Future a b`
+##### `.and :: Future a b -> Future a b -> Future a b`
+
+Logical and for Futures.
+
+Returns a new Future which either rejects with the first rejection reason, or
+resolves with the last resolution value once and if both Futures resolve.
+
+This behaves analogues to how JavaScript's and operator does, except both
+Futures run simultaneously, so it is *not* short-circuited. That means that
+if the second has side-effects, they will run (and possibly be cancelled) even
+if the first rejects.
+
+```js
+//An asynchronous version of:
+//const result = isResolved() && getValue();
+const result = isResolved().and(getValue());
+```
+
 #### or
 ##### `#or :: Future a b ~> Future a b -> Future a b`
 ##### `.or :: Future a b -> Future a b -> Future a b`
