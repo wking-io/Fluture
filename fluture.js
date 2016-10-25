@@ -588,6 +588,18 @@
     return both$left(left, right);
   }
 
+  function rejectAfter$time(time, reason){
+    return new FutureRejectAfter(time, reason);
+  }
+
+  Future.rejectAfter = function rejectAfter(time, reason){
+    if(!isPositiveInteger(time)) error$invalidArgument(
+      'Future.rejectAfter', 0, 'be a positive integer', time
+    );
+    if(arguments.length === 1) return unaryPartial(rejectAfter$time, time);
+    return rejectAfter$time(time, reason);
+  }
+
   Future.chainRec = Future$chainRec;
   Future.chainRej = createUnaryDispatcher('chainRej');
   Future.mapRej = createUnaryDispatcher('mapRej');
@@ -996,6 +1008,28 @@
 
   FutureAfter.prototype.toString = function FutureAfter$toString(){
     return `Future.after(${show(this._time)}, ${show(this._value)})`;
+  }
+
+  //----------
+
+  function FutureRejectAfter(time, reason){
+    this._time = time;
+    this._reason = reason;
+  }
+
+  FutureRejectAfter.prototype = Object.create(Future.prototype);
+
+  FutureRejectAfter.prototype.extractLeft = function FutureRejectAfter$extractLeft(){
+    return [this._reason];
+  }
+
+  FutureRejectAfter.prototype._f = function FutureRejectAfter$fork(rej){
+    const id = setTimeout(rej, this._time, this._reason);
+    return function FutureRejectAfter$fork$cancel(){ clearTimeout(id) };
+  }
+
+  FutureRejectAfter.prototype.toString = function FutureRejectAfter$toString(){
+    return `Future.rejectAfter(${show(this._time)}, ${show(this._reason)})`;
   }
 
   //----------

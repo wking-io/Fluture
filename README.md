@@ -190,6 +190,17 @@ eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 //> "Hello world!"
 ```
 
+#### rejectAfter
+##### `.rejectAfter :: Number -> a -> Future a b`
+
+Creates a Future which rejects with the given reason after n milliseconds.
+
+```js
+const eventualError = Future.rejectAfter(500, new Error('Kaputt!'));
+eventualError.fork(err => console.log('Oh no - ' + err.message), console.log);
+//! Oh no - Kaputt!
+```
+
 #### cast
 ##### `.cast :: Forkable a b -> Future a b`
 

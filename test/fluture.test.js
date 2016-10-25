@@ -479,6 +479,37 @@ describe('Constructors', () => {
 
   });
 
+  describe('.rejectAfter()', () => {
+
+    it('is curried', () => {
+      expect(Future.rejectAfter(20)).to.be.a('function');
+    });
+
+    it('throws TypeError when not given a number as first argument', () => {
+      const xs = [{}, [], 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => Future.rejectAfter(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('returns a Future which eventually rejects with the given reason', () => {
+      const actual = Future.rejectAfter(20, 1);
+      return assertRejected(actual, 1);
+    });
+
+    it('clears its internal timeout when cancelled', done => {
+      Future.rejectAfter(20, 1).fork(failRej, failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.rejectAfter(1, 2);
+      const s = 'Future.rejectAfter(1, 2)';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
+  });
+
   describe('.parallel()', () => {
 
     const delayedRes = Future((rej, res) => void setTimeout(res, 20, 1));
@@ -1845,6 +1876,10 @@ describe('Future', () => {
 
     it('returns array with reason for FutureRejects', () => {
       expect(Future.reject(1).extractLeft()).to.deep.equal([1]);
+    });
+
+    it('returns array with value for FutureRejectAfters', () => {
+      expect(Future.rejectAfter(300, 1).extractLeft()).to.deep.equal([1]);
     });
 
     it('returns empty array for cold CachedFutures', () => {
