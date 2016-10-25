@@ -1346,6 +1346,91 @@ describe('Future', () => {
 
   });
 
+  describe('#both()', () => {
+
+    const resolved = Future.of('resolved');
+    const resolvedSlow = Future.after(20, 'resolvedSlow');
+    const rejected = Future.reject('rejected');
+    const rejectedSlow = Future(rej => {
+      const x = setTimeout(rej, 20, 'rejectedSlow');
+      return () => clearTimeout(x);
+    });
+
+    it('throws when invoked out of context', () => {
+      const f = () => Future.of(1).both.call(null, Future.of(1));
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throw TypeError when not given a Future', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+      const fs = xs.map(x => () => Future.of(1).both(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    describe('(res, res)', () => {
+
+      it('resolves with both if left resolves first', () => {
+        return assertResolved(resolved.both(resolvedSlow), ['resolved', 'resolvedSlow']);
+      });
+
+      it('resolves with both if left resolves last', () => {
+        return assertResolved(resolvedSlow.both(resolved), ['resolvedSlow', 'resolved']);
+      });
+
+    });
+
+    describe('(rej, rej)', () => {
+
+      it('rejects with right if right rejects first', () => {
+        return assertRejected(rejectedSlow.both(rejected), 'rejected');
+      });
+
+      it('rejects with left if right rejects last', () => {
+        return assertRejected(rejected.both(rejectedSlow), 'rejected');
+      });
+
+    });
+
+    describe('(rej, res)', () => {
+
+      it('rejects with left if right resolves first', () => {
+        return assertRejected(rejectedSlow.both(resolved), 'rejectedSlow');
+      });
+
+      it('rejects with left if right resolves last', () => {
+        return assertRejected(rejected.both(resolvedSlow), 'rejected');
+      });
+
+    });
+
+    describe('(res, rej)', () => {
+
+      it('rejects with right if left resolves first', () => {
+        return assertRejected(resolved.both(rejectedSlow), 'rejectedSlow');
+      });
+
+      it('rejects with right if left resolves last', () => {
+        return assertRejected(resolvedSlow.both(rejected), 'rejected');
+      });
+
+    });
+
+    it('creates a cancel function which cancels both Futures', done => {
+      let cancelled = false;
+      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
+      const cancel = m.both(m).fork(noop, noop);
+      cancel();
+    });
+
+    it('has custom toString and inspect', () => {
+      const m = Future.of(1).both(Future.of(2));
+      const s = 'Future.of(1).both(Future.of(2))';
+      expect(m.toString()).to.equal(s);
+      expect(m.inspect()).to.equal(s);
+    });
+
+  });
+
   describe('#fold()', () => {
 
     it('throws when invoked out of context', () => {
@@ -2237,6 +2322,30 @@ describe('Dispatchers', () => {
         assertResolved(any([Future.reject(1), Future.of(2)]), 2),
         assertResolved(any([Future.reject(1), Future.after(20, 2), Future.of(3)]), 2)
       ]);
+    });
+
+  });
+
+  describe('.both()', () => {
+
+    it('is curried', () => {
+      expect(Future.both).to.be.a('function');
+      expect(Future.both(Future.of(1))).to.be.a('function');
+    });
+
+    it('throws when not given a Future as first argument', () => {
+      const f = () => Future.both(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
+    });
+
+    it('throws when not given a Future as second argument', () => {
+      const f = () => Future.both(Future.of(1), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
+    });
+
+    it('returns a FutureBoth', () => {
+      const actual = Future.both(Future.of(1), Future.of(1));
+      expect(actual).to.be.an.instanceof(Future.subclasses.FutureBoth);
     });
 
   });

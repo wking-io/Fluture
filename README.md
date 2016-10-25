@@ -84,6 +84,7 @@ getPackageName('package.json')
     * [race](#race)
     * [and](#and)
     * [or](#or)
+    * [both](#both)
     * [parallel](#parallel)
   1. [Utility functions](#utility-functions)
     * [isFuture](#isfuture)
@@ -666,6 +667,21 @@ In the example, assume both plans return Futures. Both plans are executed in
 parallel. If `planA` resolves, the returned Future will resolve with its value.
 If `planA` fails there is always `planB`. If both plans fail then the returned
 Future will also reject using the rejection reason of `planB`.
+
+#### both
+##### `#both :: Future a b ~> Future a b -> Future a b`
+##### `.both :: Future a b -> Future a b -> Future a b`
+
+Run two Futures in parallel. Basically like calling
+[`Future.parallel`](#parallel) with exactly two Futures:
+
+```js
+Future.parallel(2, [a, b])
+===
+Future.both(a, b)
+===
+a.both(b)
+```
 
 #### parallel
 ##### `.parallel :: PositiveInteger -> Array (Future a b) -> Future a (Array b)`

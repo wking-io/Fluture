@@ -459,6 +459,12 @@
     return new FutureOr(this, m);
   };
 
+  Future.prototype.both = function Future$both(m){
+    if(!isFuture(this)) error$invalidContext('Future#both', this);
+    if(!isFuture(m)) error$invalidArgument('Future#both', 0, 'be a Future', m);
+    return new FutureBoth(this, m);
+  };
+
   Future.prototype.fold = function Future$fold(f, g){
     check$fold(this, f, g);
     return new FutureFold(this, f, g);
@@ -570,6 +576,17 @@
     if(!isFuture(left)) error$invalidArgument('Future.and', 0, 'be a Future', left);
     if(arguments.length === 1) return unaryPartial(and$left, left);
     return and$left(left, right);
+  }
+
+  function both$left(left, right){
+    if(!isFuture(right)) error$invalidArgument('Future.both', 1, 'be a Future', right);
+    return new FutureBoth(left, right);
+  }
+
+  Future.both = function both(left, right){
+    if(!isFuture(left)) error$invalidArgument('Future.both', 0, 'be a Future', left);
+    if(arguments.length === 1) return unaryPartial(both$left, left);
+    return both$left(left, right);
   }
 
   Future.chainRec = Future$chainRec;
@@ -1348,6 +1365,39 @@
 
   //----------
 
+  function FutureBoth(left, right){
+    this._left = left;
+    this._right = right;
+  }
+
+  FutureBoth.prototype = Object.create(Future.prototype);
+
+  FutureBoth.prototype._f = function FutureBoth$fork(rej, res){
+    let resolved = false, rejected = false, lcancel = noop, rcancel = noop;
+    const tuple = new Array(2);
+    lcancel = this._left._f(function FutureBoth$fork$rejLeft(e){
+      rejected = true; rcancel(); rej(e);
+    }, function FutureBoth$fork$resLeft(x){
+      tuple[0] = x;
+      if(resolved) res(tuple);
+      else (resolved = true);
+    });
+    rejected || (rcancel = this._right._f(function FutureBoth$fork$rejRight(e){
+      rejected = true; lcancel(); rej(e);
+    }, function FutureBoth$fork$resRight(x){
+      tuple[1] = x;
+      if(resolved) res(tuple);
+      else (resolved = true);
+    }));
+    return function FutureBoth$fork$cancel(){ lcancel(); rcancel() };
+  }
+
+  FutureBoth.prototype.toString = function FutureBoth$toString(){
+    return `${this._left.toString()}.both(${this._right.toString()})`;
+  }
+
+  //----------
+
   function FutureFold(parent, lfold, rfold){
     this._parent = parent;
     this._lfold = lfold;
@@ -1456,6 +1506,7 @@
     FutureRace,
     FutureAnd,
     FutureOr,
+    FutureBoth,
     FutureFold,
     FutureHook,
     FutureFinally
