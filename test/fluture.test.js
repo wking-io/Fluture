@@ -62,7 +62,7 @@ const assertResolved = (m, x) => new Promise((res, rej) => {
     y => Z.equals(x, y) ? res() : rej(new AssertionError({
       expected: x,
       actual: y,
-      operator: 'Future.fork'
+      message: `Expected the Future to resolve with ${Z.toString(x)}; got: ${Z.toString(y)}`
     }))
   );
 });
@@ -73,16 +73,16 @@ const assertRejected = (m, x) => new Promise((res, rej) => {
     e => Z.equals(x, e) ? res() : rej(new AssertionError({
       expected: x,
       actual: e,
-      operator: 'Future.fork'
+      message: `Expected the Future to reject with ${Z.toString(x)}; got: ${Z.toString(e)}`
     })),
     x => rej(new Error(`Expected the Future to reject. Instead resolved with: ${Z.toString(x)}`))
   );
 });
 
-const immediateRes = Future.of(1);
-const immediateRej = Future.reject(1);
-const delayedRes = Future((rej, res) => void setTimeout(res, 20, 1));
-const delayedRej = Future(rej => void setTimeout(rej, 20, 1));
+const resolved = Future.of('resolved');
+const rejected = Future.reject('rejected');
+const resolvedSlow = Future.after(20, 'resolvedSlow');
+const rejectedSlow = Future.rejectAfter(20, 'rejectedSlow');
 
 describe('Constructors', () => {
 
@@ -512,9 +512,6 @@ describe('Constructors', () => {
 
   describe('.parallel()', () => {
 
-    const delayedRes = Future((rej, res) => void setTimeout(res, 20, 1));
-    const delayedRej = Future(rej => void setTimeout(rej, 20, 1));
-
     it('is curried', () => {
       expect(Future.parallel(1)).to.be.a('function');
     });
@@ -584,7 +581,7 @@ describe('Constructors', () => {
     });
 
     it('does not reject multiple times', done => {
-      const actual = Future.parallel(2, [delayedRej, immediateRej]);
+      const actual = Future.parallel(2, [rejectedSlow, rejected]);
       actual.fork(_ => done(), failRes);
     });
 
@@ -613,13 +610,13 @@ describe('Constructors', () => {
     })
 
     it('does not resolve after being cancelled', done => {
-      const cancel = Future.parallel(1, [delayedRes, delayedRes]).fork(failRej, failRes);
+      const cancel = Future.parallel(1, [resolvedSlow, resolvedSlow]).fork(failRej, failRes);
       setTimeout(cancel, 10);
       setTimeout(done, 50);
     });
 
     it('does not reject after being cancelled', done => {
-      const cancel = Future.parallel(1, [delayedRej, delayedRej]).fork(failRej, failRes);
+      const cancel = Future.parallel(1, [rejectedSlow, rejectedSlow]).fork(failRej, failRes);
       setTimeout(cancel, 10);
       setTimeout(done, 50);
     });
@@ -860,47 +857,47 @@ describe('Future', () => {
   describe('#chain()', () => {
 
     it('throws when invoked out of context', () => {
-      const f = () => immediateRes.chain.call(null, noop);
+      const f = () => resolved.chain.call(null, noop);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('throws TypeError when not given a function', () => {
-      const fs = xs.map(x => () => immediateRes.chain(x));
+      const fs = xs.map(x => () => resolved.chain(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws TypeError when the given function does not return Future', () => {
-      const fs = xs.map(x => () => immediateRes.chain(() => x).fork(noop, noop));
+      const fs = xs.map(x => () => resolved.chain(() => x).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('calls the given function with the inner of the Future', () => {
-      immediateRes.chain(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
+      resolved.chain(x => (expect(x).to.equal('resolved'), Future.of(null))).fork(noop, noop);
     });
 
     it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = immediateRes.chain(() => Future.of(2));
-      return assertResolved(actual, 2);
+      const actual = resolved.chain(() => resolvedSlow);
+      return assertResolved(actual, 'resolvedSlow');
     });
 
     it('maintains rejected state', () => {
-      const actual = immediateRej.chain(() => immediateRes);
-      return assertRejected(actual, 1);
+      const actual = rejected.chain(() => resolved);
+      return assertRejected(actual, 'rejected');
     });
 
     it('assumes rejected state', () => {
-      const actual = immediateRes.chain(() => immediateRej);
-      return assertRejected(actual, 1);
+      const actual = resolved.chain(() => rejected);
+      return assertRejected(actual, 'rejected');
     });
 
     it('does not chain after being cancelled', done => {
-      delayedRes.chain(failRes).fork(failRej, failRes)();
+      resolvedSlow.chain(failRes).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
     it('does not reject after being cancelled', done => {
-      delayedRej.chain(failRes).fork(failRej, failRes)();
-      immediateRes.chain(() => delayedRej).fork(failRej, failRes)();
+      rejectedSlow.chain(failRes).fork(failRej, failRes)();
+      resolved.chain(() => rejectedSlow).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
@@ -916,41 +913,41 @@ describe('Future', () => {
   describe('#chainRej()', () => {
 
     it('throws when invoked out of context', () => {
-      const f = () => immediateRej.chainRej.call(null, noop);
+      const f = () => rejected.chainRej.call(null, noop);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('throws TypeError when not given a function', () => {
-      const fs = xs.map(x => () => immediateRej.chainRej(x));
+      const fs = xs.map(x => () => rejected.chainRej(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('throws TypeError when the given function does not return Future', () => {
-      const fs = xs.map(x => () => immediateRej.chainRej(() => x).fork(noop, noop));
+      const fs = xs.map(x => () => rejected.chainRej(() => x).fork(noop, noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
     it('calls the given function with the inner of the Future', () => {
-      immediateRej.chainRej(x => (expect(x).to.equal(1), Future.of(null))).fork(noop, noop);
+      rejected.chainRej(x => (expect(x).to.equal('rejected'), Future.of(null))).fork(noop, noop);
     });
 
     it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = immediateRej.chainRej(() => Future.of(2));
-      return assertResolved(actual, 2);
+      const actual = rejected.chainRej(() => resolved);
+      return assertResolved(actual, 'resolved');
     });
 
     it('maintains resolved state', () => {
-      const actual = immediateRes.chainRej(() => immediateRes);
-      return assertResolved(actual, 1);
+      const actual = resolved.chainRej(() => resolvedSlow);
+      return assertResolved(actual, 'resolved');
     });
 
     it('assumes rejected state', () => {
-      const actual = immediateRej.chainRej(() => immediateRej);
-      return assertRejected(actual, 1);
+      const actual = rejected.chainRej(() => rejectedSlow);
+      return assertRejected(actual, 'rejectedSlow');
     });
 
     it('does not chain after being cancelled', done => {
-      delayedRej.chainRej(failRej).fork(failRej, failRes)();
+      rejectedSlow.chainRej(failRej).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
@@ -982,17 +979,17 @@ describe('Future', () => {
     });
 
     it('does not map rejected state', () => {
-      const actual = immediateRej.map(x => x + 1);
-      return assertRejected(actual, 1);
+      const actual = rejected.map(_ => 'mapped');
+      return assertRejected(actual, 'rejected');
     });
 
     it('does not resolve after being cancelled', done => {
-      delayedRes.map(failRes).fork(failRej, failRes)();
+      resolvedSlow.map(failRes).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
     it('does not reject after being cancelled', done => {
-      delayedRej.map(failRes).fork(failRej, failRes)();
+      rejectedSlow.map(failRes).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
@@ -1211,14 +1208,6 @@ describe('Future', () => {
   });
 
   describe('#and()', () => {
-
-    const resolved = Future.of('resolved');
-    const resolvedSlow = Future.after(20, 'resolvedSlow');
-    const rejected = Future.reject('rejected');
-    const rejectedSlow = Future(rej => {
-      const x = setTimeout(rej, 20, 'rejectedSlow');
-      return () => clearTimeout(x);
-    });
 
     it('throws when invoked out of context', () => {
       const f = () => Future.of(1).and.call(null, Future.of(1));
@@ -1570,19 +1559,19 @@ describe('Future', () => {
     });
 
     it('does not hook after being cancelled', done => {
-      delayedRes.hook(_ => Future.of('cleanup'), failRes).fork(failRej, failRes)();
+      resolvedSlow.hook(_ => Future.of('cleanup'), failRes).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
     it('does not reject after being cancelled', done => {
-      delayedRej.hook(_ => Future.of('cleanup'), failRes).fork(failRej, failRes)();
-      immediateRes.hook(_ => Future.of('cleanup'), () => delayedRej).fork(failRej, failRes)();
+      rejectedSlow.hook(_ => Future.of('cleanup'), failRes).fork(failRej, failRes)();
+      resolved.hook(_ => Future.of('cleanup'), () => rejectedSlow).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
     it('immediately runs and cancels the disposal Future when cancelled after acquire', done => {
-      const cancel = immediateRes
-        .hook(_ => Future(() => () => done()), () => delayedRes)
+      const cancel = resolved
+        .hook(_ => Future(() => () => done()), () => resolvedSlow)
         .fork(failRej, failRes);
       setTimeout(cancel, 10);
     });
@@ -1637,10 +1626,10 @@ describe('Future', () => {
     });
 
     it('does nothing after being cancelled', done => {
-      delayedRes.finally(immediateRes).fork(failRej, failRes)();
-      immediateRes.finally(delayedRes).fork(failRej, failRes)();
-      delayedRej.finally(immediateRej).fork(failRej, failRes)();
-      immediateRej.finally(delayedRej).fork(failRej, failRes)();
+      resolvedSlow.finally(resolved).fork(failRej, failRes)();
+      resolved.finally(resolvedSlow).fork(failRej, failRes)();
+      rejectedSlow.finally(rejected).fork(failRej, failRes)();
+      rejected.finally(rejectedSlow).fork(failRej, failRes)();
       setTimeout(done, 25);
     });
 
