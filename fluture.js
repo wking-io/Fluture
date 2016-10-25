@@ -485,7 +485,6 @@
     return new CachedFuture(this);
   };
 
-    //Other methods.
   Future.prototype.fork = function Future$fork(rej, res){
     check$fork(this, rej, res);
     return this._f(rej, res);
