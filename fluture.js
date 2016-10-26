@@ -288,14 +288,11 @@
   Future.prototype.value = function Future$value(f){
     if(!isFuture(this)) error$invalidContext('Future#value', this);
     if(!isFunction(f)) error$invalidArgument('Future#value', 0, 'be a function', f);
-    return this._f(
-      function Future$value$rej(e){
-        throw new Error(
-          `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
-        );
-      },
-      f
-    );
+    return this._f(function Future$value$rej(e){
+      throw new Error(
+        `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
+      );
+    }, f);
   };
 
   Future.prototype.promise = function Future$promise(){
@@ -307,6 +304,10 @@
   };
 
   Future.of = Future$of;
+  Future.chainRec = Future$chainRec;
+  Future.Future = Future;
+  Future.isFuture = isFuture;
+  Future.isForkable = isForkable;
 
   function ap$mval(mval, mfunc){
     if(!Z.Apply.test(mfunc)) error$invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
@@ -380,6 +381,16 @@
     return both$left(left, right);
   }
 
+  Future.reject = function Future$reject(x){
+    return new FutureReject(x);
+  };
+
+  Future.after = function Future$after(n, x){
+    if(arguments.length === 1) return unaryPartial(Future$after, n);
+    if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
+    return new FutureAfter(n, x);
+  };
+
   function rejectAfter$time(time, reason){
     return new FutureRejectAfter(time, reason);
   }
@@ -391,35 +402,6 @@
     if(arguments.length === 1) return unaryPartial(rejectAfter$time, time);
     return rejectAfter$time(time, reason);
   }
-
-  Future.chainRec = Future$chainRec;
-  Future.chainRej = createUnaryDispatcher('chainRej');
-  Future.mapRej = createUnaryDispatcher('mapRej');
-  Future.swap = createNullaryDispatcher('swap');
-  Future.fork = createBinaryDispatcher('fork');
-  Future.race = createUnaryDispatcher('race');
-  Future.or = createUnaryDispatcher('or');
-  Future.fold = createBinaryDispatcher('fold');
-  Future.hook = createInvertedBinaryDispatcher('hook');
-  Future.finally = createUnaryDispatcher('finally');
-  Future.value = createUnaryDispatcher('value');
-  Future.promise = createNullaryDispatcher('promise');
-  Future.cache = createNullaryDispatcher('cache');
-  Future.extractLeft = createNullaryDispatcher('extractLeft');
-  Future.extractRight = createNullaryDispatcher('extractRight');
-  Future.Future = Future;
-  Future.isFuture = isFuture;
-  Future.isForkable = isForkable;
-
-  Future.reject = function Future$reject(x){
-    return new FutureReject(x);
-  };
-
-  Future.after = function Future$after(n, x){
-    if(arguments.length === 1) return unaryPartial(Future$after, n);
-    if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
-    return new FutureAfter(n, x);
-  };
 
   Future.cast = function Future$cast(m){
     if(!isForkable(m)) error$invalidArgument('Future.cast', 0, 'be a Forkable', m);
@@ -476,6 +458,21 @@
     if(!isFunction(f)) error$invalidArgument('Future.do', 0, 'be a function', f);
     return new FutureDo(f);
   };
+
+  Future.chainRej = createUnaryDispatcher('chainRej');
+  Future.mapRej = createUnaryDispatcher('mapRej');
+  Future.swap = createNullaryDispatcher('swap');
+  Future.fork = createBinaryDispatcher('fork');
+  Future.race = createUnaryDispatcher('race');
+  Future.or = createUnaryDispatcher('or');
+  Future.fold = createBinaryDispatcher('fold');
+  Future.hook = createInvertedBinaryDispatcher('hook');
+  Future.finally = createUnaryDispatcher('finally');
+  Future.value = createUnaryDispatcher('value');
+  Future.promise = createNullaryDispatcher('promise');
+  Future.cache = createNullaryDispatcher('cache');
+  Future.extractLeft = createNullaryDispatcher('extractLeft');
+  Future.extractRight = createNullaryDispatcher('extractRight');
 
   //Utilities.
   Future.util = {
