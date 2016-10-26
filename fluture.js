@@ -158,99 +158,6 @@
     )
   }
 
-  //-----
-
-  function check$fork$f(f, c){
-    if(!(f === undefined || (isFunction(f) && f.length === 0))) throw new TypeError(
-      'Future#fork expected the computation to return a nullary function or void'
-      + `\n  Actual: ${show(f)}\n  From calling: ${showf(c)}`
-    );
-  }
-
-  function check$chainRec$f(m, f, i, x){
-    if(!isFuture(m)) throw new TypeError(
-      'Future.chainRec expects the function its given to return a Future every'
-      + ' time it is called. The value returned from'
-      + (ordinal[i] ? ` the ${ordinal[i]} call` : ` call ${i}`)
-      + ' was not a Future.'
-      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: (Next, Done, ${show(x)})`
-    );
-  }
-
-  function check$chainRec$it(it, i){
-    if(!isIteration(it)) throw new TypeError(
-      'Future.chainRec expects the function its given to return a Future of an'
-      + ' Iteration every time it is called. The Future returned from'
-      + (ordinal[i] ? ` the ${ordinal[i]} call` : ` call ${i}`)
-      + ' did not resolve to a member of Iteration.'
-      + '\n  You can create an uncomplete or complete Iteration using the next'
-      + ' or done functions respectively. These are passed into your callback'
-      + ' as first and second arguments.'
-      + `\n  Actual: Future.of(${show(it)})`
-    );
-  }
-
-  function check$chain$f(m, f, x){
-    if(!isFuture(m)) throw new TypeError(
-      'Future#chain expects the function its given to return a Future'
-      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
-    );
-  }
-
-  function check$chainRej$f(m, f, x){
-    if(!isFuture(m)) throw new TypeError(
-      'Future.chainRej expects the function its given to return a Future'
-      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
-    );
-  }
-
-  function check$ap$f(f){
-    if(!isFunction(f)) throw new TypeError(
-      'Future#ap expects its first argument to be a Future of a Function'
-      + `\n  Actual: Future.of(${show(f)})`
-    );
-  }
-
-  function check$hook$f(m, f, x){
-    if(!isFuture(m)) throw new TypeError(
-      'Future#hook expects the first function its given to return a Future'
-      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
-    );
-  }
-
-  function check$hook$g(m, g, x){
-    if(!isFuture(m)) throw new TypeError(
-      'Future#hook expects the second function its given to return a Future'
-      + `\n  Actual: ${show(m)}\n  From calling: ${showf(g)}\n  With: ${show(x)}`
-    );
-  }
-
-  function check$parallel$m(m, i){
-    if(!isFuture(m)) throw new TypeError(
-      'Future.parallel expects its second argument to be an array of Futures.'
-      + ` The value at position ${i} in the array was not a Future\n  Actual: ${show(m)}`
-    );
-  }
-
-  function check$do$g(g){
-    if(!isIterator(g)) error$invalidArgument(
-      'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
-    );
-  }
-
-  function check$do$next(o){
-    if(!isIteration(o)) throw new TypeError(
-      'Future.do was given an invalid generator:'
-      + ' Its iterator did not return a valid iteration from iterator.next()'
-      + `\n  Actual: ${show(o)}`
-    );
-    if(!o.done && !isFuture(o.value)) throw new TypeError(
-      'A non-Future was produced by iterator.next() in Future.do.'
-      + ' If you\'re using a generator, make sure you always `yield` a Future'
-      + `\n  Actual: ${o.value}`
-    );
-  }
-
   ////////////////
   // Base class //
   ////////////////
@@ -603,6 +510,13 @@
   // Sub classes //
   /////////////////
 
+  function check$fork$f(f, c){
+    if(!(f === undefined || (isFunction(f) && f.length === 0))) throw new TypeError(
+      'Future#fork expected the computation to return a nullary function or void'
+      + `\n  Actual: ${show(f)}\n  From calling: ${showf(c)}`
+    );
+  }
+
   function SafeFuture(computation){
     this._computation = computation;
   }
@@ -639,6 +553,29 @@
   const Undetermined = 0;
   const Synchronous = 1;
   const Asynchronous = 2;
+
+  function check$chainRec$f(m, f, i, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future.chainRec expects the function its given to return a Future every'
+      + ' time it is called. The value returned from'
+      + (ordinal[i] ? ` the ${ordinal[i]} call` : ` call ${i}`)
+      + ' was not a Future.'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: (Next, Done, ${show(x)})`
+    );
+  }
+
+  function check$chainRec$it(it, i){
+    if(!isIteration(it)) throw new TypeError(
+      'Future.chainRec expects the function its given to return a Future of an'
+      + ' Iteration every time it is called. The Future returned from'
+      + (ordinal[i] ? ` the ${ordinal[i]} call` : ` call ${i}`)
+      + ' did not resolve to a member of Iteration.'
+      + '\n  You can create an uncomplete or complete Iteration using the next'
+      + ' or done functions respectively. These are passed into your callback'
+      + ' as first and second arguments.'
+      + `\n  Actual: Future.of(${show(it)})`
+    );
+  }
 
   function ChainRec(iterate, init){
     this._iterate = iterate;
@@ -920,6 +857,13 @@
 
   //----------
 
+  function check$parallel$m(m, i){
+    if(!isFuture(m)) throw new TypeError(
+      'Future.parallel expects its second argument to be an array of Futures.'
+      + ` The value at position ${i} in the array was not a Future\n  Actual: ${show(m)}`
+    );
+  }
+
   function FutureParallel$emptyFork(rej, res){
     res([]);
   }
@@ -960,6 +904,25 @@
   }
 
   //----------
+
+  function check$do$g(g){
+    if(!isIterator(g)) error$invalidArgument(
+      'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
+    );
+  }
+
+  function check$do$next(o){
+    if(!isIteration(o)) throw new TypeError(
+      'Future.do was given an invalid generator:'
+      + ' Its iterator did not return a valid iteration from iterator.next()'
+      + `\n  Actual: ${show(o)}`
+    );
+    if(!o.done && !isFuture(o.value)) throw new TypeError(
+      'A non-Future was produced by iterator.next() in Future.do.'
+      + ' If you\'re using a generator, make sure you always `yield` a Future'
+      + `\n  Actual: ${o.value}`
+    );
+  }
 
   function FutureDo(generator){
     this._generator = generator;
@@ -1056,6 +1019,13 @@
 
   //----------
 
+  function check$chain$f(m, f, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future#chain expects the function its given to return a Future'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+    );
+  }
+
   function FutureChain(parent, chainer){
     this._parent = parent;
     this._chainer = chainer;
@@ -1079,6 +1049,13 @@
   }
 
   //----------
+
+  function check$chainRej$f(m, f, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future.chainRej expects the function its given to return a Future'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+    );
+  }
 
   function FutureChainRej(parent, chainer){
     this._parent = parent;
@@ -1166,6 +1143,13 @@
   }
 
   //----------
+
+  function check$ap$f(f){
+    if(!isFunction(f)) throw new TypeError(
+      'Future#ap expects its first argument to be a Future of a Function'
+      + `\n  Actual: Future.of(${show(f)})`
+    );
+  }
 
   function FutureAp(mval, mfunc){
     this._mval = mval;
@@ -1339,6 +1323,20 @@
   }
 
   //----------
+
+  function check$hook$f(m, f, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future#hook expects the first function its given to return a Future'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+    );
+  }
+
+  function check$hook$g(m, g, x){
+    if(!isFuture(m)) throw new TypeError(
+      'Future#hook expects the second function its given to return a Future'
+      + `\n  Actual: ${show(m)}\n  From calling: ${showf(g)}\n  With: ${show(x)}`
+    );
+  }
 
   function FutureHook(acquire, dispose, consume){
     this._acquire = acquire;
