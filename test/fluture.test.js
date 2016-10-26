@@ -456,7 +456,7 @@ describe('Constructors', () => {
 
     it('throws TypeError when not given a number as first argument', () => {
       const xs = [{}, [], 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => Future.after(x)(1));
+      const fs = xs.map(x => () => Future.after(x));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 

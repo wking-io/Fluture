@@ -385,10 +385,14 @@
     return new FutureReject(x);
   };
 
-  Future.after = function Future$after(n, x){
-    if(arguments.length === 1) return unaryPartial(Future$after, n);
-    if(typeof n !== 'number') error$invalidArgument('Future.after', 0, 'be a number', n);
+  function Future$after$n(n, x){
     return new FutureAfter(n, x);
+  }
+
+  Future.after = function Future$after(n, x){
+    if(!isPositiveInteger(n)) error$invalidArgument('Future.after', 0, 'be a positive integer', n);
+    if(arguments.length === 1) return unaryPartial(Future$after$n, n);
+    return Future$after$n(n, x);
   };
 
   function rejectAfter$time(time, reason){
