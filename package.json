@@ -52,7 +52,7 @@
   ],
   "dependencies": {
     "inspect-f": "^1.1.0",
-    "sanctuary-type-classes": "^0.1.0"
+    "sanctuary-type-classes": "^0.3.0"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",
@@ -60,7 +60,7 @@
     "codecov": "^1.0.1",
     "data.task": "^3.0.0",
     "eslint": "^3.0.1",
-    "fantasy-land": "^1.0.1",
+    "fantasy-land": "^2.0.0",
     "fun-task": "^1.5.1",
     "istanbul": "^0.4.2",
     "jsverify": "^0.7.1",

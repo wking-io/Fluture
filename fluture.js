@@ -706,12 +706,10 @@
   //Fantasy-Land compatibility.
   Future[FL.of] = Future.of;
   Future[FL.chainRec] = Future$chainRec;
-  Future.prototype[FL.of] = Future.prototype.of;
   Future.prototype[FL.ap] = Future.prototype.ap;
   Future.prototype[FL.map] = Future.prototype.map;
   Future.prototype[FL.bimap] = Future.prototype.bimap;
   Future.prototype[FL.chain] = Future.prototype.chain;
-  Future.prototype[FL.chainRec] = Future.prototype.chainRec;
 
   /////////////////
   // Sub classes //

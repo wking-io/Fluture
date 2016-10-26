@@ -157,12 +157,10 @@ cancellation logic. This function is executed when the Future is cancelled
 after it's [forked](#fork).
 
 #### of
-##### `#of :: a -> Future _ a`
 ##### `.of :: a -> Future _ a`
 
 Creates a Future which immediately resolves with the given value. This function
-is compliant with the [Fantasy Land Applicative specification][16] and is
-also available on the prototype.
+is compliant with the [Fantasy Land Applicative specification][16].
 
 ```js
 const eventualThing = Future.of('world');
