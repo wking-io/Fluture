@@ -10,6 +10,7 @@
     "lint": "eslint fluture.js test",
     "post-merge": "npm install && npm dedupe && npm run check-security && npm outdated --long",
     "pre-push": "npm run lint && npm run test:unit",
+    "release": "xyz --edit --tag 'X.Y.Z' --increment",
     "setup": "npm run post-merge && cp scripts/hooks/* .git/hooks && git config push.followTags true",
     "toc": "node scripts/toc.js",
     "test": "npm run test:all && codecov",
@@ -73,6 +74,7 @@
     "ramda": "^0.22.1",
     "ramda-fantasy": "^0.7.0",
     "rimraf": "^2.4.3",
-    "sanctuary": "^0.11.1"
+    "sanctuary": "^0.11.1",
+    "xyz": "^1.1.0"
   }
 }
