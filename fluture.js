@@ -739,7 +739,7 @@
   CachedFuture.prototype.inspect = function CachedFuture$inspect(){
     const repr = this._state === Resolved
       ? show(this._value)
-      : `<${this.getState()}>` + (this._state === Rejected ? ` ${this._value}` : '');
+      : `<${this.getState()}>` + (this._state === Rejected ? ` ${show(this._value)}` : '');
     return `CachedFuture({ ${repr} })`;
   }
 
@@ -1401,12 +1401,13 @@
     return `${this._left.toString()}.finally(${this._right.toString()})`;
   }
 
-  Future.subclasses = {
+  Future.classes = {
     SafeFuture,
     ChainRec,
     CachedFuture,
     FutureOf,
     FutureReject,
+    FutureRejectAfter,
     FutureNode,
     FutureAfter,
     FutureParallel,
