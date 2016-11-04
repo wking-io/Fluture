@@ -1,6 +1,6 @@
 {
   "name": "fluture",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "FantasyLand compliant (monadic) alternative to Promises",
   "main": "fluture.js",
   "repository": "https://github.com/Avaq/fluture.git",
