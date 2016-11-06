@@ -30,13 +30,22 @@ exports.failRej = x => {
 
 exports.assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 
-exports.assertEqual = (a, b) => new Promise(done => {
-  if(!(a instanceof Future && b instanceof Future)) return done(false);
-  a.fork(exports.failRej, a => b.fork(exports.failRej, b => {
-    expect(a).to.equal(b);
-    done(true);
-  }));
-});
+exports.assertEqual = (a, b) => {
+  const states = ['pending', 'rejected', 'resolved'];
+  if(!(a instanceof Future && b instanceof Future)) throw new Error('Both values must be Futures');
+  let astate = 0, aval;
+  let bstate = 0, bval;
+  a.fork(x => {astate = 1; aval = x}, x => {astate = 2, aval = x});
+  b.fork(x => {bstate = 1; bval = x}, x => {bstate = 2, bval = x});
+  if(astate === 0) throw new Error('First Future passed to assertEqual did not resolve instantly');
+  if(bstate === 0) throw new Error('Second Future passed to assertEqual did not resolve instantly');
+  if(astate === bstate && Z.equals(aval, bval)) return true;
+  throw new Error(`
+    ${a.toString()} :: Future({ <${states[astate]}> ${Z.toString(aval)} })
+    does not equal:
+    ${b.toString()} :: Future({ <${states[bstate]}> ${Z.toString(bval)} })
+  `);
+};
 
 exports.forkAndGuard = (m, rej, res) => {
   let rejected = false, resolved = false;
