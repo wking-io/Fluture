@@ -1359,15 +1359,15 @@
       }
       const consumption = _this._consume(resource);
       check$hook$g(consumption, _this._consume, resource);
+      const cancelConsume = consumption._f(
+        x => disposer(_ => rej(x)),
+        x => disposer(_ => res(x))
+      );
       cancel = function FutureHook$fork$cancelConsume(){
         disposer(noop)();
         cancelAcquire();
         cancelConsume();
       }
-      const cancelConsume = consumption._f(
-        x => disposer(_ => rej(x)),
-        x => disposer(_ => res(x))
-      );
     });
     cancel = cancel || cancelAcquire;
     return function FutureHook$fork$cancel(){ cancel() };
