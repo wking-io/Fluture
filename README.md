@@ -618,9 +618,9 @@ Future.after(100, 'hello')
 
 const first = futures => futures.reduce(race);
 first([
-  after(100, 'hello'),
-  after(50, 'bye'),
-  Future(rej => setTimeout(rej, 25, 'nope'))
+  Future.after(100, 'hello'),
+  Future.after(50, 'bye'),
+  Future.rejectAfter(25, 'nope')
 ])
 .fork(console.error, console.log)
 //! "nope"
@@ -722,19 +722,13 @@ If you want to settle all Futures, even if some may fail, you can use this in
 combination with [fold](#fold):
 
 ```js
-const fourInstableFutures = Array.from(Array(4).keys()).map(
-  i => Future(
-    (rej, res) => setTimeout(
-      () => Math.random() > 0.8 ? rej('failed') : res(i),
-      20
-    )
-  )
+const instableFutures = Array.from({length: 4}, (_, i) =>
+  Future.node(done => done(Math.random() > 0.75 ? 'failed' : null, i))
 );
 
-const stabalizedFutures = fourInstableFutures.map(Future.fold(S.Left, S.Right))
+const stabalizedFutures = instableFutures.map(Future.fold(S.Left, S.Right))
 
-Future.parallel(2, stabalizedFutures).fork(console.error, console.log);
-//after about 40ms:
+Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
 ```
 
