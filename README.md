@@ -59,7 +59,6 @@ getPackageName('package.json')
     * [reject](#reject)
     * [after](#after)
     * [rejectAfter](#rejectafter)
-    * [cast](#cast)
     * [try](#try)
     * [encase](#encase)
     * [node](#node)
@@ -89,7 +88,6 @@ getPackageName('package.json')
     * [parallel](#parallel)
   1. [Utility functions](#utility-functions)
     * [isFuture](#isfuture)
-    * [isForkable](#isforkable)
     * [cache](#cache)
     * [do](#do)
   1. [Sanctuary](#sanctuary)
@@ -115,9 +113,6 @@ with a `#` refer to functions on the prototype.
 
 A list of all types used within the signatures follows:
 
-- **Forkable** - Any Object with a `fork` method that takes at least two
-  arguments. This includes instances of Fluture, instances of Task from
-  [`data.task`][10] or instances of Future from [`ramda-fantasy`][11].
 - **Future** - Instances of Future provided by Fluture.
 - **Functor** - Values which conform to the [Fantasy Land Functor specification][12]
   as determined by [Sanctuary Type Classes][27].
@@ -198,16 +193,6 @@ Creates a Future which rejects with the given reason after n milliseconds.
 const eventualError = Future.rejectAfter(500, new Error('Kaputt!'));
 eventualError.fork(err => console.log('Oh no - ' + err.message), console.log);
 //! Oh no - Kaputt!
-```
-
-#### cast
-##### `.cast :: Forkable a b -> Future a b`
-
-Cast any [Forkable](#type-signatures) to a [Future](#type-signatures).
-
-```js
-Future.cast(require('data.task').of('hello')).value(console.log);
-//> "hello"
 ```
 
 #### try
@@ -753,11 +738,6 @@ Future1.isFuture(m1) === (m1 instanceof Future1);
 const m2 = Future2(noop);
 Future1.isFuture(m2) !== (m2 instanceof Future1);
 ```
-
-#### isForkable
-##### `.isForkable :: a -> Boolean`
-
-Returns true for [Forkables](#type-signatures) and false for everything else.
 
 #### cache
 ##### `.cache :: Future a b -> Future a b`

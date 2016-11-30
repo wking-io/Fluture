@@ -22,6 +22,11 @@
 
   'use strict';
 
+  /*istanbul ignore next*/
+  function deprecate(message){
+    (console.warn || console.log || noop).call(console, message); //eslint-disable-line
+  }
+
   ///////////////////
   // Type checking //
   ///////////////////
@@ -37,6 +42,7 @@
   };
 
   function isForkable(m){
+    deprecate('Future.isForkable() is deprecated.');
     return Boolean(m) && typeof m.fork === 'function' && m.fork.length >= 2;
   }
 
@@ -307,7 +313,6 @@
   Future.chainRec = Future$chainRec;
   Future.Future = Future;
   Future.isFuture = isFuture;
-  Future.isForkable = isForkable;
 
   function ap$mval(mval, mfunc){
     if(!Z.Apply.test(mfunc)) error$invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
@@ -408,8 +413,8 @@
   }
 
   Future.cast = function Future$cast(m){
-    if(!isForkable(m)) error$invalidArgument('Future.cast', 0, 'be a Forkable', m);
-    return new FutureCast(m);
+    deprecate('Future.cast() is deprecated. Please use Future((l, r) => {m.fork(l, r)})');
+    return new SafeFuture((l, r) => void m.fork(l, r));
   };
 
   Future.try = function Future$try(f){
@@ -948,19 +953,6 @@
 
   //----------
 
-  function FutureCast(forkable){
-    SafeFuture.call(this, (l, r) => forkable.fork(l, r));
-    this._forkable = forkable;
-  }
-
-  FutureCast.prototype = Object.create(SafeFuture.prototype);
-
-  FutureCast.prototype.toString = function FutureCast$toString(){
-    return `Future.cast(${show(this._forkable)})`;
-  }
-
-  //----------
-
   function FutureTry(fn){
     this._fn = fn;
   }
@@ -1412,7 +1404,6 @@
     FutureAfter,
     FutureParallel,
     FutureDo,
-    FutureCast,
     FutureTry,
     FutureEncase,
     FutureChain,
