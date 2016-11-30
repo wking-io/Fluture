@@ -50,6 +50,10 @@
     return m instanceof Future || Boolean(m) && m['@@type'] === TYPEOF_FUTURE;
   }
 
+  function isThenable(m){
+    return m instanceof Promise || Boolean(m) && typeof m.then === 'function';
+  }
+
   function isFunction(f){
     return typeof f === 'function';
   }
@@ -451,6 +455,35 @@
     }
   };
 
+  Future.fromPromise = function Future$fromPromise(f, x){
+    if(arguments.length === 1) return unaryPartial(Future$fromPromise, f);
+    if(!isFunction(f)) error$invalidArgument('Future.fromPromise', 0, 'be a function', f);
+    return new FutureFromPromise(f, x);
+  };
+
+  Future.fromPromise2 = function Future$fromPromise2(f, x, y){
+    switch(arguments.length){
+      case 1: return unaryPartial(Future$fromPromise2, f);
+      case 2: return binaryPartial(Future$fromPromise2, f, x);
+      default:
+        if(!isFunction(f)) error$invalidArgument('Future.fromPromise2', 0, 'be a function', f);
+        if(!isBinary(f)) error$invalidArgument('Future.fromPromise2', 0, 'take two arguments', f);
+        return new FutureFromPromise(f, x, y);
+    }
+  };
+
+  Future.fromPromise3 = function Future$fromPromise3(f, x, y, z){
+    switch(arguments.length){
+      case 1: return unaryPartial(Future$fromPromise3, f);
+      case 2: return binaryPartial(Future$fromPromise3, f, x);
+      case 3: return ternaryPartial(Future$fromPromise3, f, x, y);
+      default:
+        if(!isFunction(f)) error$invalidArgument('Future.fromPromise3', 0, 'be a function', f);
+        if(!isTernary(f)) error$invalidArgument('Future.fromPromise3', 0, 'take three arguments', f);
+        return new FutureFromPromise(f, x, y, z);
+    }
+  };
+
   Future.node = function Future$node(f){
     if(!isFunction(f)) error$invalidArgument('Future.node', 0, 'be a function', f);
     return new FutureNode(f);
@@ -489,6 +522,7 @@
     Done,
     isForkable,
     isFuture,
+    isThenable,
     isFunction,
     isBinary,
     isTernary,
@@ -1012,6 +1046,56 @@
 
   //----------
 
+  function check$fromPromise$p(p, f, a, b, c){
+    if(!isThenable(p)) throw new TypeError(
+      'Future.fromPromise expects the function its given to return a Promise/Thenable'
+      + `\n  Actual: ${show(p)}\n  From calling: ${showf(f)}`
+      + `\n  With a: ${show(a)}`
+      + (arguments.length > 3 ? `\n  With b: ${show(b)}` : '')
+      + (arguments.length > 4 ? `\n  With c: ${show(c)}` : '')
+    );
+  }
+
+  function FutureFromPromise(fn, a, b, c){
+    this._length = arguments.length - 1;
+    this._fn = fn;
+    this._a = a;
+    this._b = b;
+    this._c = c;
+    this._f = FutureFromPromise.FS[this._length];
+  }
+
+  FutureFromPromise.FS = {
+    1: function FutureFromPromise$1$fork(rej, res){
+      const promise = this._fn(this._a);
+      check$fromPromise$p(promise, this._fn, this._a);
+      promise.then(res, rej);
+      return noop;
+    },
+    2: function FutureFromPromise$2$fork(rej, res){
+      const promise = this._fn(this._a, this._b);
+      check$fromPromise$p(promise, this._fn, this._a, this._b);
+      promise.then(res, rej);
+      return noop;
+    },
+    3: function FutureFromPromise$3$fork(rej, res){
+      const promise = this._fn(this._a, this._b, this._c);
+      check$fromPromise$p(promise, this._fn, this._a, this._b, this._c);
+      promise.then(res, rej);
+      return noop;
+    }
+  }
+
+  FutureFromPromise.prototype = Object.create(Future.prototype);
+
+  FutureFromPromise.prototype.toString = function FutureFromPromise$toString(){
+    const args = [this._a, this._b, this._c].slice(0, this._length).map(show).join(', ');
+    const name = `fromPromise${this._length > 1 ? this._length : ''}`;
+    return `Future.${name}(${show(this._fn)}, ${args})`;
+  }
+
+  //----------
+
   function check$chain$f(m, f, x){
     if(!isFuture(m)) throw new TypeError(
       'Future#chain expects the function its given to return a Future'
@@ -1406,6 +1490,7 @@
     FutureDo,
     FutureTry,
     FutureEncase,
+    FutureFromPromise,
     FutureChain,
     FutureChainRej,
     FutureMap,

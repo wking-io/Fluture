@@ -47,6 +47,30 @@ describe('Future', () => {
 
     });
 
+    describe('.isThenable()', () => {
+
+      const ps = [
+        Promise.resolve(1),
+        Promise.reject(1),
+        new Promise(U.noop),
+        {then: U.noop},
+        {then: a => a},
+        {then: (a, b) => b}
+      ];
+
+      const values = [NaN, 1, true, undefined, null, [], {}];
+      const xs = values.concat([U.noop]).concat(values.map(x => ({then: x})));
+
+      it('returns true when given a Thenable', () => {
+        ps.forEach(p => expect(util.isThenable(p)).to.equal(true));
+      });
+
+      it('returns false when not given a Thenable', () => {
+        xs.forEach(x => expect(util.isThenable(x)).to.equal(false));
+      });
+
+    });
+
     describe('.isFunction()', () => {
 
       const fs = [() => {}, function(){}, Future];
