@@ -439,7 +439,7 @@ resolution value, depending on which is present, and resolves with the result.
 
 This provides a convenient means to ensure a Future is always resolved. It can
 be used with other type constructors, like [`S.Either`][7], to maintain a
-representataion of failures:
+representation of failures:
 
 ```js
 Future.of('hello')
