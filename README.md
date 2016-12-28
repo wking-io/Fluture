@@ -133,7 +133,7 @@ A list of all types used within the signatures follows:
 ### Creating Futures
 
 #### Future
-##### `Future :: ((a -> ()), (b -> ()) -> Cancel) -> Future a b`
+##### `Future :: ((a -> (), b -> ()) -> Cancel) -> Future a b`
 
 Creates a Future with the given computation. A computation is a function which
 takes two callbacks. Both are continuations for the computation. The first is
@@ -267,7 +267,7 @@ Furthermore; `fromPromise2` and `fromPromise3` are binary and ternary versions
 of `fromPromise`, applying two or three arguments to the given function respectively.
 
 #### node
-##### `.node :: ((a, b -> ()) -> ()) -> Future a b`
+##### `.node :: (((a, b) -> ()) -> ()) -> Future a b`
 
 Creates a Future which rejects with the first argument given to the function,
 or resolves with the second if the first is not present.
@@ -431,7 +431,7 @@ Future.reject(new Error('It broke!')).chainRej(err => {
 ```
 
 #### fold
-##### `#fold :: Future a b ~> (a -> c), (b -> c) -> Future _ c`
+##### `#fold :: Future a b ~> (a -> c, b -> c) -> Future _ c`
 ##### `.fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c`
 
 Applies the left function to the rejection value, or the right function to the
@@ -541,7 +541,7 @@ program('Hello')
 ### Consuming Futures
 
 #### fork
-##### `#fork :: Future a b ~> (a -> ()), (b -> ()) -> Cancel`
+##### `#fork :: Future a b ~> (a -> (), b -> ()) -> Cancel`
 ##### `.fork :: (a -> ()) -> (b -> ()) -> Future a b -> Cancel`
 
 Execute the computation that was passed to the Future at [construction](#future)
