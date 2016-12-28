@@ -8,6 +8,7 @@
     "check-security": "nsp check",
     "clean": "rimraf npm-debug.log coverage",
     "lint": "eslint fluture.js test",
+    "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "post-merge": "npm install && npm dedupe && npm run check-security && npm outdated --long",
     "pre-push": "npm run lint && npm run test:unit",
     "release": "xyz --edit --repo git@github.com:Avaq/Fluture.git --tag 'X.Y.Z' --increment",
@@ -16,7 +17,7 @@
     "test": "npm run test:all && codecov",
     "test:opt": "node --allow-natives-syntax --trace-opt --trace-deopt --trace-inlining scripts/test-opt",
     "test:mem": "node scripts/test-mem",
-    "test:all": "npm run lint && npm run test:unit && npm run test:coverage",
+    "test:all": "npm run lint && npm run lint:readme && npm run test:unit && npm run test:coverage",
     "test:unit": "node ./node_modules/.bin/_mocha --ui bdd --reporter list --check-leaks --full-trace test/**.test.js",
     "test:coverage": "npm run clean && node node_modules/.bin/istanbul cover --report html ./node_modules/.bin/_mocha -- --ui bdd --reporter dot --bail test/**.test.js"
   },
@@ -73,6 +74,8 @@
     "pacta": "^0.9.0",
     "ramda": "^0.22.1",
     "ramda-fantasy": "^0.7.0",
+    "remark-cli": "^2.1.0",
+    "remark-validate-links": "^5.0.0",
     "rimraf": "^2.4.3",
     "sanctuary": "^0.11.1",
     "xyz": "^2.0.1"
