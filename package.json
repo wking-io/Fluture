@@ -53,7 +53,7 @@
   ],
   "dependencies": {
     "inspect-f": "^1.1.0",
-    "sanctuary-type-classes": "^1.2.0"
+    "sanctuary-type-classes": "^2.0.1"
   },
   "devDependencies": {
     "benchmark": "^2.1.0",
