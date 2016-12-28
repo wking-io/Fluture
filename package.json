@@ -67,7 +67,7 @@
     "jsverify": "^0.7.1",
     "lazy-either": "^1.0.3",
     "lodash.curry": "^4.1.1",
-    "markdown-toc": "^0.13.0",
+    "markdown-toc": "^1.0.2",
     "mocha": "^3.0.2",
     "nsp": "^2.2.0",
     "pacta": "^0.9.0",
@@ -75,6 +75,6 @@
     "ramda-fantasy": "^0.7.0",
     "rimraf": "^2.4.3",
     "sanctuary": "^0.11.1",
-    "xyz": "^1.1.0"
+    "xyz": "^2.0.1"
   }
 }
