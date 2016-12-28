@@ -61,6 +61,7 @@ getPackageName('package.json')
     * [rejectAfter](#rejectafter)
     * [try](#try)
     * [encase](#encase)
+    * [fromForkable](#fromForkable)
     * [fromPromise](#frompromise)
     * [node](#node)
     * [chainRec](#chainrec)
@@ -89,6 +90,7 @@ getPackageName('package.json')
     * [parallel](#parallel)
   1. [Utility functions](#utility-functions)
     * [isFuture](#isfuture)
+    * [isForkable](#isforkable)
     * [cache](#cache)
     * [do](#do)
   1. [Sanctuary](#sanctuary)
@@ -114,6 +116,9 @@ with a `#` refer to functions on the prototype.
 
 A list of all types used within the signatures follows:
 
+- **Forkable** - Any Object with a `fork` method that takes at least two
+  arguments. This includes instances of Fluture, instances of Task from
+  [`data.task`][10] or instances of Future from [`ramda-fantasy`][11].
 - **Future** - Instances of Future provided by Fluture.
 - **Promise** - Values which conform to the [Promises/A+ specification][33].
 - **Functor** - Values which conform to the [Fantasy Land Functor specification][12]
@@ -241,6 +246,16 @@ safeJsonParse(data).fork(console.error, console.log)
 
 Furthermore; `encase2` and `encase3` are binary and ternary versions of
 `encase`, applying two or three arguments to the given function respectively.
+
+#### fromForkable
+##### `.fromForkable :: Forkable a b -> Future a b`
+
+Cast any [Forkable](#type-signatures) to a [Future](#type-signatures).
+
+```js
+Future.fromForkable(require('data.task').of('hello')).value(console.log);
+//> "hello"
+```
 
 #### fromPromise
 ##### `.fromPromise :: (a -> Promise e r) -> a -> Future e r`
@@ -764,6 +779,11 @@ Future1.isFuture(m1) === (m1 instanceof Future1);
 const m2 = Future2(noop);
 Future1.isFuture(m2) !== (m2 instanceof Future1);
 ```
+
+#### isForkable
+##### `.isForkable :: a -> Boolean`
+
+Returns true for [Forkables](#type-signatures) and false for everything else.
 
 #### cache
 ##### `.cache :: Future a b -> Future a b`

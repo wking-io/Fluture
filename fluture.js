@@ -42,7 +42,6 @@
   };
 
   function isForkable(m){
-    deprecate('Future.isForkable() is deprecated.');
     return Boolean(m) && typeof m.fork === 'function' && m.fork.length >= 2;
   }
 
@@ -317,6 +316,7 @@
   Future.chainRec = Future$chainRec;
   Future.Future = Future;
   Future.isFuture = isFuture;
+  Future.isForkable = isForkable;
 
   function ap$mval(mval, mfunc){
     if(!Z.Apply.test(mfunc)) error$invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
@@ -417,8 +417,8 @@
   }
 
   Future.cast = function Future$cast(m){
-    deprecate('Future.cast() is deprecated. Please use Future((l, r) => {m.fork(l, r)})');
-    return new SafeFuture((l, r) => void m.fork(l, r));
+    deprecate('Future.cast has been renamed to Future.fromForkable and will soon be removed');
+    return Future.fromForkable(m);
   };
 
   Future.try = function Future$try(f){
@@ -454,6 +454,11 @@
         return new FutureEncase(f, x, y, z);
     }
   };
+
+  Future.fromForkable = function Future$fromForkable(f){
+    if(!isForkable(f)) error$invalidArgument('Future.fromForkable', 0, 'be a forkable', f);
+    return new FutureFromForkable(f);
+  }
 
   Future.fromPromise = function Future$fromPromise(f, x){
     if(arguments.length === 1) return unaryPartial(Future$fromPromise, f);
@@ -987,6 +992,33 @@
 
   //----------
 
+  function FutureFromForkable(forkable){
+    this._forkable = forkable;
+  }
+
+  FutureFromForkable.prototype = Object.create(Future.prototype);
+
+  FutureFromForkable.prototype._f = function FutureFromForkable$fork(rej, res){
+    let pending = true;
+    return this._forkable.fork(function FutureFromForkable$fork$rej(reason){
+      if(pending){
+        pending = false;
+        rej(reason);
+      }
+    }, function FutureFromForkable$res(value){
+      if(pending){
+        pending = false;
+        res(value);
+      }
+    });
+  }
+
+  FutureFromForkable.prototype.toString = function FutureFromForkable$toString(){
+    return `Future.fromForkable(${show(this._forkable)})`;
+  }
+
+  //----------
+
   function FutureTry(fn){
     this._fn = fn;
   }
@@ -1490,6 +1522,7 @@
     FutureDo,
     FutureTry,
     FutureEncase,
+    FutureFromForkable,
     FutureFromPromise,
     FutureChain,
     FutureChainRej,
