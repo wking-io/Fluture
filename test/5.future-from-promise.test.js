@@ -71,7 +71,8 @@ describe('Future.fromPromise3()', () => {
   });
 
   it('returns an instance of FutureFromPromise', () => {
-    expect(Future.fromPromise3(ternaryNoop, null, null, null)).to.be.an.instanceof(FutureFromPromise);
+    expect(Future.fromPromise3(ternaryNoop, null, null, null))
+    .to.be.an.instanceof(FutureFromPromise);
   });
 
 });
@@ -149,9 +150,15 @@ describe('FutureFromPromise', () => {
       const m1 = new FutureFromPromise(unaryNoop, null);
       const m2 = new FutureFromPromise(binaryNoop, null, null);
       const m3 = new FutureFromPromise(ternaryNoop, null, null, null);
-      expect(m1.toString()).to.equal('Future.fromPromise(a => Promise.resolve(a), null)');
-      expect(m2.toString()).to.equal('Future.fromPromise2((a, b) => Promise.resolve(b), null, null)');
-      expect(m3.toString()).to.equal('Future.fromPromise3((a, b, c) => Promise.resolve(c), null, null, null)');
+      expect(m1.toString()).to.equal(
+        'Future.fromPromise(a => Promise.resolve(a), null)'
+      );
+      expect(m2.toString()).to.equal(
+        'Future.fromPromise2((a, b) => Promise.resolve(b), null, null)'
+      );
+      expect(m3.toString()).to.equal(
+        'Future.fromPromise3((a, b, c) => Promise.resolve(c), null, null, null)'
+      );
     });
 
   });

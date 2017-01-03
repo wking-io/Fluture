@@ -182,8 +182,8 @@ describe('Future', () => {
       it('left-pads string representations of functions', () => {
         const f = () => {
           return 42;
-        }
-        const input = f.toString()
+        };
+        const input = f.toString();
         const inputLines = input.split('\n');
         const actualLines = util.padf('--', input).split('\n');
         expect(actualLines[0]).to.equal(inputLines[0]);
@@ -430,7 +430,7 @@ describe('Future', () => {
     it('returns the return value of #_f()', () => {
       const mock = Object.create(Future.prototype);
       const sentinel = {};
-      mock._f = () => { return sentinel };
+      mock._f = () => sentinel;
       expect(mock.value(U.noop)).to.equal(sentinel);
     });
 

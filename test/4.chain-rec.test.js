@@ -47,7 +47,9 @@ describe('ChainRec', () => {
 
     it('throws TypeError when the returned Future does not contain an iteration', () => {
       const xs = [null, '', {}, {value: 1, done: 1}];
-      const fs = xs.map(x => _ => new ChainRec((a, b, c) => Future.of((c, x)), 1).fork(U.noop, U.noop));
+      const fs = xs.map(x => _ =>
+        new ChainRec((a, b, c) => Future.of((c, x)), 1).fork(U.noop, U.noop)
+      );
       fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
     });
 

@@ -41,11 +41,11 @@ describe('CachedFuture', () => {
   describe('#fork()', () => {
 
     it('resolves with the resolution value of the given Future', () => {
-      return U.assertResolved(Future.of(1).cache(), 1);
+      U.assertResolved(Future.of(1).cache(), 1);
     });
 
     it('rejects with the rejection reason of the given Future', () => {
-      return U.assertRejected(Future.reject(U.error).cache(), U.error);
+      U.assertRejected(Future.reject(U.error).cache(), U.error);
     });
 
     it('only forks its given Future once', () => {
@@ -120,7 +120,7 @@ describe('CachedFuture', () => {
     it('does nothing when state is rejected', () => {
       const m = Future.cache(Future(U.noop));
       m.reject(1);
-      m.resolve(2)
+      m.resolve(2);
       expect(m.getState()).to.equal('rejected');
     });
 
@@ -130,7 +130,7 @@ describe('CachedFuture', () => {
 
     it('does nothing when state is resolved', () => {
       const m = Future.cache(Future(U.noop));
-      m.resolve(1)
+      m.resolve(1);
       m.reject(2);
       expect(m.getState()).to.equal('resolved');
     });

@@ -57,10 +57,8 @@ describe('FutureParallel', () => {
       let running = 0;
       const m = Future((rej, res) => {
         running++;
-        if(running > 2){
-          return rej(new Error('More than two running in parallel'));
-        }
-        setTimeout(() => {
+        if(running > 2) return void rej(new Error('More than two running in parallel'));
+        return void setTimeout(() => {
           running--;
           res('a');
         }, 20);
@@ -108,7 +106,7 @@ describe('FutureParallel', () => {
       const m = Future((rej, res) => {
         const x = setTimeout(x => {j += 1; res(x)}, 20, 1);
         return () => {
-          i += 1
+          i += 1;
           clearTimeout(x);
         };
       });
@@ -119,16 +117,18 @@ describe('FutureParallel', () => {
         expect(j).to.equal(2);
         done();
       }, 30);
-    })
+    });
 
     it('does not resolve after being cancelled', done => {
-      const cancel = new FutureParallel(1, [F.resolvedSlow, F.resolvedSlow]).fork(U.failRej, U.failRes);
+      const cancel = new FutureParallel(1, [F.resolvedSlow, F.resolvedSlow])
+      .fork(U.failRej, U.failRes);
       setTimeout(cancel, 10);
       setTimeout(done, 50);
     });
 
     it('does not reject after being cancelled', done => {
-      const cancel = new FutureParallel(1, [F.rejectedSlow, F.rejectedSlow]).fork(U.failRej, U.failRes);
+      const cancel = new FutureParallel(1, [F.rejectedSlow, F.rejectedSlow])
+      .fork(U.failRej, U.failRes);
       setTimeout(cancel, 10);
       setTimeout(done, 50);
     });

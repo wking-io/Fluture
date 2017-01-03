@@ -39,7 +39,7 @@ describe('SafeFuture', () => {
   describe('#fork()', () => {
 
     it('throws TypeError when the computation returns nonsense', () => {
-      const xs = [null, 1, (_) => {}, (a, b) => b, 'hello'];
+      const xs = [null, 1, _ => {}, (a, b) => b, 'hello'];
       const ms = xs.map(x => Future(_ => x));
       const fs = ms.map(m => () => m.fork(U.noop, U.noop));
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));

@@ -75,12 +75,12 @@ describe('FutureHook', () => {
       let ran = false;
       m.hook(
         x => {
-          expect(x).to.equal('resolved')
-          return Future((rej, res) => res(done(ran ? null : new Error('Second did not run'))))
+          expect(x).to.equal('resolved');
+          return Future((rej, res) => res(done(ran ? null : new Error('Second did not run'))));
         },
         x => {
-          expect(x).to.equal('resolved')
-          return Future((rej, res) => res(ran = true))
+          expect(x).to.equal('resolved');
+          return Future((rej, res) => res(ran = true));
         }
       ).fork(done, U.noop);
     });

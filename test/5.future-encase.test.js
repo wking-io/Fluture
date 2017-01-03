@@ -5,9 +5,9 @@ const Future = require('../fluture.js');
 const FutureEncase = Future.classes.FutureEncase;
 const U = require('./util');
 
-const unaryNoop = a => {a};
-const binaryNoop = (a, b) => {b};
-const ternaryNoop = (a, b, c) => {c};
+const unaryNoop = a => void a;
+const binaryNoop = (a, b) => void b;
+const ternaryNoop = (a, b, c) => void c;
 
 describe('Future.encase()', () => {
 
@@ -100,7 +100,7 @@ describe('FutureEncase', () => {
         const f = () =>
           (new FutureEncase(x => x, 1))
           .map(() => { throw U.error })
-          .fork(U.noop, U.noop)
+          .fork(U.noop, U.noop);
         expect(f).to.throw(U.error);
       });
 
@@ -122,7 +122,7 @@ describe('FutureEncase', () => {
         const f = () =>
           (new FutureEncase((a, x) => x, 1, 1))
           .map(() => { throw U.error })
-          .fork(U.noop, U.noop)
+          .fork(U.noop, U.noop);
         expect(f).to.throw(U.error);
       });
 
@@ -144,7 +144,7 @@ describe('FutureEncase', () => {
         const f = () =>
           (new FutureEncase((a, b, x) => x, 1, 1, 1))
           .map(() => { throw U.error })
-          .fork(U.noop, U.noop)
+          .fork(U.noop, U.noop);
         expect(f).to.throw(U.error);
       });
 
@@ -158,9 +158,9 @@ describe('FutureEncase', () => {
       const m1 = new FutureEncase(unaryNoop, null);
       const m2 = new FutureEncase(binaryNoop, null, null);
       const m3 = new FutureEncase(ternaryNoop, null, null, null);
-      expect(m1.toString()).to.equal('Future.encase(a => {a}, null)');
-      expect(m2.toString()).to.equal('Future.encase2((a, b) => {b}, null, null)');
-      expect(m3.toString()).to.equal('Future.encase3((a, b, c) => {c}, null, null, null)');
+      expect(m1.toString()).to.equal('Future.encase(a => void a, null)');
+      expect(m2.toString()).to.equal('Future.encase2((a, b) => void b, null, null)');
+      expect(m3.toString()).to.equal('Future.encase3((a, b, c) => void c, null, null, null)');
     });
 
   });
