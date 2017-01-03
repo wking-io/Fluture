@@ -32,7 +32,7 @@ For more information:
 
 ## Usage
 
-> `npm install --save fluture` <sup>Requires a node 4.0.0 compatible environment</sup>
+> `npm install --save fluture`
 
 ```js
 const fs = require('fs');
@@ -47,6 +47,8 @@ getPackageName('package.json')
 .fork(console.error, console.log);
 //> "fluture"
 ```
+
+For front-end applications and node <v4, please use `require('fluture/es5')`.
 
 ## Table of contents
 
