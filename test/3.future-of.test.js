@@ -9,7 +9,7 @@ const U = require('./util');
 describe('Future.of()', () => {
 
   it('is also available as fantasy-land function', () => {
-    expect(Future.of).to.equal(Future[FL.of])
+    expect(Future.of).to.equal(Future[FL.of]);
   });
 
   it('returns an instance of FutureOf', () => {

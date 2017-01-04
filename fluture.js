@@ -12,9 +12,7 @@
   /*istanbul ignore next*/
   if(module && typeof module.exports !== 'undefined'){
     module.exports = f(require('inspect-f'), require('sanctuary-type-classes'));
-  }
-
-  else{
+  }else{
     global.Fluture = f(global.inspectf, global.sanctuaryTypeClasses);
   }
 
@@ -66,7 +64,7 @@
   }
 
   function isPositiveInteger(n){
-    return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0 && n === n);
+    return n === Infinity || (typeof n === 'number' && n > 0 && n % 1 === 0);
   }
 
   function isObject(o){
@@ -119,7 +117,7 @@
   function createNullaryDispatcher(method){
     return function nullaryDispatch(m){
       if(m && typeof m[method] === 'function') return m[method]();
-      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+      return error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
     };
   }
 
@@ -128,7 +126,7 @@
     return function unaryDispatch(a, m){
       if(arguments.length === 1) return unaryPartial(unaryDispatch, a);
       if(m && typeof m[method] === 'function') return m[method](a);
-      error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
+      return error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
     };
   }
 
@@ -138,7 +136,7 @@
       if(arguments.length === 1) return unaryPartial(binaryDispatch, a);
       if(arguments.length === 2) return binaryPartial(binaryDispatch, a, b);
       if(m && typeof m[method] === 'function') return m[method](a, b);
-      error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
+      return error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
     };
   }
 
@@ -148,7 +146,7 @@
       if(arguments.length === 1) return unaryPartial(invertedBinaryDispatch, m);
       if(arguments.length === 2) return binaryPartial(invertedBinaryDispatch, m, a);
       if(m && typeof m[method] === 'function') return m[method](a, b);
-      error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
+      return error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
     };
   }
 
@@ -164,7 +162,7 @@
     throw new TypeError(
       `${it} was invoked outside the context of a Future. You might want to use`
       + ` a dispatcher instead\n  Called on: ${show(actual)}`
-    )
+    );
   }
 
   ////////////////
@@ -188,8 +186,8 @@
 
   Future.prototype['@@type'] = TYPEOF_FUTURE;
   Future.prototype._f = null;
-  Future.prototype.extractLeft = function Future$extractLeft(){ return []; }
-  Future.prototype.extractRight = function Future$extractRight(){ return []; }
+  Future.prototype.extractLeft = function Future$extractLeft(){ return [] };
+  Future.prototype.extractRight = function Future$extractRight(){ return [] };
   Future.prototype.of = Future$of;
 
   Future.prototype.ap = function Future$ap(m){
@@ -327,7 +325,7 @@
     if(!Z.Apply.test(mval)) error$invalidArgument('Future.ap', 0, 'be an Apply', mval);
     if(arguments.length === 1) return unaryPartial(ap$mval, mval);
     return ap$mval(mval, mfunc);
-  }
+  };
 
   function map$mapper(mapper, m){
     if(!Z.Functor.test(m)) error$invalidArgument('Future.map', 1, 'be a Functor', m);
@@ -338,7 +336,7 @@
     if(!isFunction(mapper)) error$invalidArgument('Future.map', 0, 'be a Function', mapper);
     if(arguments.length === 1) return unaryPartial(map$mapper, mapper);
     return map$mapper(mapper, m);
-  }
+  };
 
   function bimap$lmapper$rmapper(lmapper, rmapper, m){
     if(!Z.Bifunctor.test(m)) error$invalidArgument('Future.bimap', 2, 'be a Bifunctor', m);
@@ -355,7 +353,7 @@
     if(!isFunction(lmapper)) error$invalidArgument('Future.bimap', 0, 'be a Function', lmapper);
     if(arguments.length === 1) return unaryPartial(bimap$lmapper, lmapper);
     return bimap$lmapper(lmapper, rmapper, m);
-  }
+  };
 
   function chain$chainer(chainer, m){
     if(!Z.Chain.test(m)) error$invalidArgument('Future.chain', 1, 'be a Chain', m);
@@ -366,7 +364,7 @@
     if(!isFunction(chainer)) error$invalidArgument('Future.chain', 0, 'be a Function', chainer);
     if(arguments.length === 1) return unaryPartial(chain$chainer, chainer);
     return chain$chainer(chainer, m);
-  }
+  };
 
   function and$left(left, right){
     if(!isFuture(right)) error$invalidArgument('Future.and', 1, 'be a Future', right);
@@ -377,7 +375,7 @@
     if(!isFuture(left)) error$invalidArgument('Future.and', 0, 'be a Future', left);
     if(arguments.length === 1) return unaryPartial(and$left, left);
     return and$left(left, right);
-  }
+  };
 
   function both$left(left, right){
     if(!isFuture(right)) error$invalidArgument('Future.both', 1, 'be a Future', right);
@@ -388,7 +386,7 @@
     if(!isFuture(left)) error$invalidArgument('Future.both', 0, 'be a Future', left);
     if(arguments.length === 1) return unaryPartial(both$left, left);
     return both$left(left, right);
-  }
+  };
 
   Future.reject = function Future$reject(x){
     return new FutureReject(x);
@@ -414,7 +412,7 @@
     );
     if(arguments.length === 1) return unaryPartial(rejectAfter$time, time);
     return rejectAfter$time(time, reason);
-  }
+  };
 
   Future.cast = function Future$cast(m){
     deprecate('Future.cast has been renamed to Future.fromForkable and will soon be removed');
@@ -458,7 +456,7 @@
   Future.fromForkable = function Future$fromForkable(f){
     if(!isForkable(f)) error$invalidArgument('Future.fromForkable', 0, 'be a forkable', f);
     return new FutureFromForkable(f);
-  }
+  };
 
   Future.fromPromise = function Future$fromPromise(f, x){
     if(arguments.length === 1) return unaryPartial(Future$fromPromise, f);
@@ -483,8 +481,10 @@
       case 2: return binaryPartial(Future$fromPromise3, f, x);
       case 3: return ternaryPartial(Future$fromPromise3, f, x, y);
       default:
-        if(!isFunction(f)) error$invalidArgument('Future.fromPromise3', 0, 'be a function', f);
-        if(!isTernary(f)) error$invalidArgument('Future.fromPromise3', 0, 'take three arguments', f);
+        if(!isFunction(f))
+          error$invalidArgument('Future.fromPromise3', 0, 'be a function', f);
+        if(!isTernary(f))
+          error$invalidArgument('Future.fromPromise3', 0, 'take three arguments', f);
         return new FutureFromPromise(f, x, y, z);
     }
   };
@@ -496,8 +496,10 @@
 
   Future.parallel = function Future$parallel(i, ms){
     if(arguments.length === 1) return unaryPartial(Future$parallel, i);
-    if(!isPositiveInteger(i)) error$invalidArgument('Future.parallel', 0, 'be a positive integer', i);
-    if(!Array.isArray(ms)) error$invalidArgument('Future.parallel', 1, 'be an array', ms);
+    if(!isPositiveInteger(i))
+      error$invalidArgument('Future.parallel', 0, 'be a positive integer', i);
+    if(!Array.isArray(ms))
+      error$invalidArgument('Future.parallel', 1, 'be an array', ms);
     return new FutureParallel(i, ms);
   };
 
@@ -586,11 +588,11 @@
       open && f && f();
       open = false;
     };
-  }
+  };
 
   SafeFuture.prototype.toString = function SafeFuture$toString(){
     return `Future(${showf(this._computation)})`;
-  }
+  };
 
   //----------
 
@@ -639,7 +641,7 @@
         i = i + 1;
         if(timing === Undetermined){
           timing = Synchronous;
-          state = it;
+          state = it; //eslint-disable-line
         }else{
           Future$chainRec$recur(it);
         }
@@ -657,11 +659,11 @@
       res(state.value);
     }(Next(_this._init)));
     return function Future$chainRec$cancel(){ cancel() };
-  }
+  };
 
   ChainRec.prototype.toString = function ChainRec$toString(){
     return `Future.chainRec(${showf(this._iterate)}, ${show(this._init)})`;
-  }
+  };
 
   //----------
 
@@ -696,11 +698,11 @@
 
   CachedFuture.prototype.extractLeft = function CachedFuture$extractLeft(){
     return this._state === Rejected ? [this._value] : [];
-  }
+  };
 
   CachedFuture.prototype.extractRight = function CachedFuture$extractRight(){
     return this._state === Resolved ? [this._value] : [];
-  }
+  };
 
   CachedFuture.prototype._addToQueue = function CachedFuture$addToQueue(rej, res){
     const _this = this;
@@ -713,7 +715,7 @@
       _this._queued = _this._queued - 1;
       if(_this._queued === 0) _this.reset();
     };
-  }
+  };
 
   CachedFuture.prototype._drainQueue = function CachedFuture$drainQueue(){
     if(this._state <= Pending) return;
@@ -728,21 +730,21 @@
     }
     this._queue = undefined;
     this._queued = 0;
-  }
+  };
 
   CachedFuture.prototype.reject = function CachedFuture$reject(reason){
     if(this._state > Pending) return;
     this._value = reason;
     this._state = Rejected;
     this._drainQueue();
-  }
+  };
 
   CachedFuture.prototype.resolve = function CachedFuture$resolve(value){
     if(this._state > Pending) return;
     this._value = value;
     this._state = Resolved;
     this._drainQueue();
-  }
+  };
 
   CachedFuture.prototype.run = function CachedFuture$run(){
     const _this = this;
@@ -752,7 +754,7 @@
       function CachedFuture$fork$rej(x){ _this.reject(x) },
       function CachedFuture$fork$res(x){ _this.resolve(x) }
     );
-  }
+  };
 
   CachedFuture.prototype.reset = function CachedFuture$reset(){
     if(this._state === Cold) return;
@@ -762,11 +764,11 @@
     this._queued = 0;
     this._value = undefined;
     this._state = Cold;
-  }
+  };
 
   CachedFuture.prototype.getState = function CachedFuture$getState(){
     return CachedFuture.STATE[this._state];
-  }
+  };
 
   CachedFuture.prototype._f = function CachedFuture$fork(rej, res){
     const _this = this;
@@ -778,18 +780,18 @@
       default: cancel = _this._addToQueue(rej, res); _this.run();
     }
     return cancel;
-  }
+  };
 
   CachedFuture.prototype.inspect = function CachedFuture$inspect(){
     const repr = this._state === Resolved
       ? show(this._value)
       : `<${this.getState()}>` + (this._state === Rejected ? ` ${show(this._value)}` : '');
     return `CachedFuture({ ${repr} })`;
-  }
+  };
 
   CachedFuture.prototype.toString = function CachedFuture$toString(){
     return `${this._pure.toString()}.cache()`;
-  }
+  };
 
   //----------
 
@@ -801,16 +803,16 @@
 
   FutureOf.prototype.extractRight = function FutureOf$extractRight(){
     return [this._value];
-  }
+  };
 
   FutureOf.prototype._f = function FutureOf$fork(rej, res){
     res(this._value);
     return noop;
-  }
+  };
 
   FutureOf.prototype.toString = function FutureOf$toString(){
     return `Future.of(${show(this._value)})`;
-  }
+  };
 
   //----------
 
@@ -822,16 +824,16 @@
 
   FutureReject.prototype.extractLeft = function FutureReject$extractLeft(){
     return [this._reason];
-  }
+  };
 
   FutureReject.prototype._f = function FutureReject$fork(rej){
     rej(this._reason);
     return noop;
-  }
+  };
 
   FutureReject.prototype.toString = function FutureReject$toString(){
     return `Future.reject(${show(this._reason)})`;
-  }
+  };
 
   //----------
 
@@ -850,11 +852,11 @@
       }
     });
     return function FutureNode$fork$cancel(){ open = false };
-  }
+  };
 
   FutureNode.prototype.toString = function FutureNode$toString(){
     return `Future.node(${showf(this._computation)})`;
-  }
+  };
 
   //----------
 
@@ -867,16 +869,16 @@
 
   FutureAfter.prototype.extractRight = function FutureAfter$extractRight(){
     return [this._value];
-  }
+  };
 
   FutureAfter.prototype._f = function FutureAfter$fork(rej, res){
     const id = setTimeout(res, this._time, this._value);
     return function FutureAfter$fork$cancel(){ clearTimeout(id) };
-  }
+  };
 
   FutureAfter.prototype.toString = function FutureAfter$toString(){
     return `Future.after(${show(this._time)}, ${show(this._value)})`;
-  }
+  };
 
   //----------
 
@@ -889,16 +891,16 @@
 
   FutureRejectAfter.prototype.extractLeft = function FutureRejectAfter$extractLeft(){
     return [this._reason];
-  }
+  };
 
   FutureRejectAfter.prototype._f = function FutureRejectAfter$fork(rej){
     const id = setTimeout(rej, this._time, this._reason);
     return function FutureRejectAfter$fork$cancel(){ clearTimeout(id) };
-  }
+  };
 
   FutureRejectAfter.prototype.toString = function FutureRejectAfter$toString(){
     return `Future.rejectAfter(${show(this._time)}, ${show(this._reason)})`;
-  }
+  };
 
   //----------
 
@@ -939,14 +941,14 @@
         if(i < _this._length) run(_this._futures[i], i++, c);
         else if(ok === _this._length) res(out);
       });
-    }
+    };
     for(let n = 0; n < _this._max; n++) run(_this._futures[n], n, n);
     return cancelAll;
-  }
+  };
 
   FutureParallel.prototype.toString = function FutureParallel$toString(){
     return `Future.parallel(${show(this._max)}, [${this._futures.map(show).join(', ')}])`;
-  }
+  };
 
   //----------
 
@@ -984,11 +986,11 @@
       return iteration.done ? new FutureOf(iteration) : iteration.value.map(next);
     }, undefined);
     return recurser._f(rej, res);
-  }
+  };
 
   FutureDo.prototype.toString = function FutureDo$toString(){
     return `Future.do(${showf(this._generator)})`;
-  }
+  };
 
   //----------
 
@@ -1011,11 +1013,11 @@
         res(value);
       }
     });
-  }
+  };
 
   FutureFromForkable.prototype.toString = function FutureFromForkable$toString(){
     return `Future.fromForkable(${show(this._forkable)})`;
-  }
+  };
 
   //----------
 
@@ -1030,11 +1032,11 @@
     try{ r = this._fn() }catch(e){ rej(e); return noop }
     res(r);
     return noop;
-  }
+  };
 
   FutureTry.prototype.toString = function FutureTry$toString(){
     return `Future.try(${show(this._fn)})`;
-  }
+  };
 
   //----------
 
@@ -1066,7 +1068,7 @@
       res(r);
       return noop;
     }
-  }
+  };
 
   FutureEncase.prototype = Object.create(Future.prototype);
 
@@ -1074,7 +1076,7 @@
     const args = [this._a, this._b, this._c].slice(0, this._length).map(show).join(', ');
     const name = `encase${this._length > 1 ? this._length : ''}`;
     return `Future.${name}(${show(this._fn)}, ${args})`;
-  }
+  };
 
   //----------
 
@@ -1116,7 +1118,7 @@
       promise.then(res, rej);
       return noop;
     }
-  }
+  };
 
   FutureFromPromise.prototype = Object.create(Future.prototype);
 
@@ -1124,7 +1126,7 @@
     const args = [this._a, this._b, this._c].slice(0, this._length).map(show).join(', ');
     const name = `fromPromise${this._length > 1 ? this._length : ''}`;
     return `Future.${name}(${show(this._fn)}, ${args})`;
-  }
+  };
 
   //----------
 
@@ -1151,11 +1153,11 @@
       cancel = m._f(rej, res);
     });
     return cancel || (cancel = r, function FutureChain$fork$cancel(){ cancel() });
-  }
+  };
 
   FutureChain.prototype.toString = function FutureChain$toString(){
     return `${this._parent.toString()}.chain(${showf(this._chainer)})`;
-  }
+  };
 
   //----------
 
@@ -1182,11 +1184,11 @@
       cancel = m._f(rej, res);
     }, res);
     return cancel || (cancel = r, function FutureChainRej$fork$cancel(){ cancel() });
-  }
+  };
 
   FutureChainRej.prototype.toString = function FutureChainRej$toString(){
     return `${this._parent.toString()}.chainRej(${showf(this._chainer)})`;
-  }
+  };
 
   //----------
 
@@ -1202,11 +1204,11 @@
     return _this._parent._f(rej, function FutureMap$fork$res(x){
       res(_this._mapper(x));
     });
-  }
+  };
 
   FutureMap.prototype.toString = function FutureMap$toString(){
     return `${this._parent.toString()}.map(${showf(this._mapper)})`;
-  }
+  };
 
   //----------
 
@@ -1222,11 +1224,11 @@
     return _this._parent._f(function FutureMapRej$fork$rej(x){
       rej(_this._mapper(x));
     }, res);
-  }
+  };
 
   FutureMapRej.prototype.toString = function FutureMapRej$toString(){
     return `${this._parent.toString()}.mapRej(${showf(this._mapper)})`;
-  }
+  };
 
   //----------
 
@@ -1245,11 +1247,11 @@
     }, function FutureBimap$fork$res(x){
       res(_this._rmapper(x));
     });
-  }
+  };
 
   FutureBimap.prototype.toString = function FutureBimap$toString(){
     return `${this._parent.toString()}.bimap(${showf(this._lmapper)}, ${showf(this._rmapper)})`;
-  }
+  };
 
   //----------
 
@@ -1278,11 +1280,11 @@
       });
     });
     return cancel || (cancel = r, function FutureAp$fork$cancel(){ cancel() });
-  }
+  };
 
   FutureAp.prototype.toString = function FutureAp$toString(){
     return `${this._mval.toString()}.ap(${this._mfunc.toString()})`;
-  }
+  };
 
   //----------
 
@@ -1294,11 +1296,11 @@
 
   FutureSwap.prototype._f = function FutureSwap$fork(rej, res){
     return this._parent._f(res, rej);
-  }
+  };
 
   FutureSwap.prototype.toString = function FutureSwap$toString(){
     return `${this._parent.toString()}.swap()`;
-  }
+  };
 
   //----------
 
@@ -1312,16 +1314,16 @@
   FutureRace.prototype._f = function FutureRace$fork(rej, res){
     let cancelled = false, lcancel = noop, rcancel = noop;
     const cancel = function FutureRace$fork$cancel(){ cancelled = true; lcancel(); rcancel() };
-    const reject = function FutureRace$fork$rej(x){ cancel(); rej(x) }
-    const resolve = function FutureRace$fork$res(x){ cancel(); res(x) }
+    const reject = function FutureRace$fork$rej(x){ cancel(); rej(x) };
+    const resolve = function FutureRace$fork$res(x){ cancel(); res(x) };
     lcancel = this._left._f(reject, resolve);
     cancelled || (rcancel = this._right._f(reject, resolve));
     return cancel;
-  }
+  };
 
   FutureRace.prototype.toString = function FutureRace$toString(){
     return `${this._left.toString()}.race(${this._right.toString()})`;
-  }
+  };
 
   //----------
 
@@ -1335,7 +1337,7 @@
   FutureAnd.prototype._f = function FutureAnd$fork(rej, res){
     let rejected = false, resolved = false, val, lcancel = noop, rcancel = noop;
     lcancel = this._left._f(
-      e => (rejected = true, rcancel(), rej(e)),
+      e => {rejected = true; rcancel(); rej(e)},
       _ => rejected ? rej(val) : resolved ? res(val) : (resolved = true)
     );
     rcancel = this._right._f(
@@ -1343,11 +1345,11 @@
       x => resolved ? res(x) : (resolved = true, val = x)
     );
     return function FutureAnd$fork$cancel(){ lcancel(); rcancel() };
-  }
+  };
 
   FutureAnd.prototype.toString = function FutureAnd$toString(){
     return `${this._left.toString()}.and(${this._right.toString()})`;
-  }
+  };
 
   //----------
 
@@ -1362,18 +1364,18 @@
     let resolved = false, rejected = false, val, err, lcancel = noop, rcancel = noop;
     lcancel = this._left._f(
       _ => rejected ? rej(err) : resolved ? res(val) : (rejected = true),
-      x => (resolved = true, rcancel(), res(x))
+      x => {resolved = true; rcancel(); res(x)}
     );
     resolved || (rcancel = this._right._f(
       e => resolved || (rejected ? rej(e) : (err = e, rejected = true)),
       x => resolved || (rejected ? res(x) : (val = x, resolved = true))
     ));
     return function FutureOr$fork$cancel(){ lcancel(); rcancel() };
-  }
+  };
 
   FutureOr.prototype.toString = function FutureOr$toString(){
     return `${this._left.toString()}.or(${this._right.toString()})`;
-  }
+  };
 
   //----------
 
@@ -1402,11 +1404,11 @@
       else (resolved = true);
     }));
     return function FutureBoth$fork$cancel(){ lcancel(); rcancel() };
-  }
+  };
 
   FutureBoth.prototype.toString = function FutureBoth$toString(){
     return `${this._left.toString()}.both(${this._right.toString()})`;
-  }
+  };
 
   //----------
 
@@ -1425,11 +1427,11 @@
     }, function FutureFold$fork$res(x){
       res(_this._rfold(x));
     });
-  }
+  };
 
   FutureFold.prototype.toString = function FutureFold$toString(){
     return `${this._parent.toString()}.fold(${showf(this._lfold)}, ${showf(this._rfold)})`;
-  }
+  };
 
   //----------
 
@@ -1464,7 +1466,7 @@
         check$hook$f(disposal, _this._dispose, resource);
         cancel = disposal._f(rej, callback);
         return cancel;
-      }
+      };
       const consumption = _this._consume(resource);
       check$hook$g(consumption, _this._consume, resource);
       const cancelConsume = consumption._f(
@@ -1475,15 +1477,15 @@
         disposer(noop)();
         cancelAcquire();
         cancelConsume();
-      }
+      };
     });
     cancel = cancel || cancelAcquire;
     return function FutureHook$fork$cancel(){ cancel() };
-  }
+  };
 
   FutureHook.prototype.toString = function FutureHook$toString(){
     return `${this._acquire.toString()}.hook(${showf(this._dispose)}, ${showf(this._consume)})`;
-  }
+  };
 
   //----------
 
@@ -1503,11 +1505,11 @@
       cancel = _this._right._f(rej, function FutureFinally$fork$res$res(){ res(x) });
     });
     return cancel || (cancel = r, function FutureFinally$fork$cancel(){ cancel() });
-  }
+  };
 
   FutureFinally.prototype.toString = function FutureFinally$toString(){
     return `${this._left.toString()}.finally(${this._right.toString()})`;
-  }
+  };
 
   Future.classes = {
     SafeFuture,

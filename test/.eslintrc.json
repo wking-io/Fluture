@@ -1,10 +1,11 @@
 {
-  "rules": {
-    "no-unused-expressions": 0,
-    "no-invalid-this": 0,
-    "no-var": 0
-  },
   "env": {
-    "mocha": true
+    "node": true,
+    "mocha": true,
+    "browser": false
+  },
+  "rules": {
+    "arrow-body-style": 0,
+    "no-sequences": 0
   }
 }

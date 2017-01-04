@@ -14,9 +14,7 @@ exports.error = new Error('Intentional error for unit testing');
 
 exports.repeat = (n, x) => {
   const out = new Array(n);
-  while(n-- > 0){
-    out[n] = x;
-  }
+  while(n-- > 0){ out[n] = x } //eslint-disable-line
   return out;
 };
 
@@ -35,8 +33,8 @@ exports.assertEqual = (a, b) => {
   if(!(a instanceof Future && b instanceof Future)) throw new Error('Both values must be Futures');
   let astate = 0, aval;
   let bstate = 0, bval;
-  a.fork(x => {astate = 1; aval = x}, x => {astate = 2, aval = x});
-  b.fork(x => {bstate = 1; bval = x}, x => {bstate = 2, bval = x});
+  a.fork(x => {astate = 1; aval = x}, x => {astate = 2; aval = x});
+  b.fork(x => {bstate = 1; bval = x}, x => {bstate = 2; bval = x});
   if(astate === 0) throw new Error('First Future passed to assertEqual did not resolve instantly');
   if(bstate === 0) throw new Error('Second Future passed to assertEqual did not resolve instantly');
   if(astate === bstate && Z.equals(aval, bval)) return true;
@@ -59,8 +57,8 @@ exports.forkAndGuard = (m, rej, res) => {
     if(resolved) throw new Error(`${m.toString()} resolved after rejecting: ${Z.toString(x)}`);
     resolved = true;
     res(x);
-  })
-}
+  });
+};
 
 exports.assertResolved = (m, x) => new Promise((res, rej) => {
   exports.assertIsFuture(m);
@@ -87,10 +85,10 @@ exports.assertRejected = (m, x) => new Promise((res, rej) => {
 });
 
 exports.onceOrError = f => {
-  var called = false;
+  let called = false;
   return function(){
     if(called) throw new Error(`Function ${f} was called twice`);
     called = true;
     f.apply(null, arguments);
-  }
+  };
 };

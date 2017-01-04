@@ -59,7 +59,10 @@ describe('FutureChainRej', () => {
   describe('#fork()', () => {
 
     it('calls the given function with the inner of the Future', () => {
-      F.rejected.chainRej(x => (expect(x).to.equal('rejected'), Future.of(null))).fork(U.noop, U.noop);
+      F.rejected.chainRej(x => {
+        expect(x).to.equal('rejected');
+        return Future.of(null);
+      }).fork(U.noop, U.noop);
     });
 
     it('returns a Future with an inner equal to the returned Future', () => {

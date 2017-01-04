@@ -90,7 +90,7 @@ describe('FutureAp', () => {
 
     it('forks in sequence', done => {
       let running = true;
-      const left = Future.after(20, 1).map(_ => { running = false });
+      const left = Future.after(20, 1).map(x => { running = false; return x });
       const right = Future.of(_ => { expect(running).to.equal(false); done() });
       left.ap(right).fork(U.noop, U.noop);
     });
