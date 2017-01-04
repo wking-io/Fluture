@@ -5,6 +5,7 @@ const Future = require('../fluture.js');
 const FutureParallel = Future.classes.FutureParallel;
 const U = require('./util');
 const F = require('./futures');
+const type = require('sanctuary-type-identifiers');
 
 describe('Future.parallel()', () => {
 
@@ -36,6 +37,10 @@ describe('FutureParallel', () => {
 
   it('extends Future', () => {
     expect(new FutureParallel(1, [])).to.be.an.instanceof(Future);
+  });
+
+  it('is considered a member of fluture/Fluture', () => {
+    expect(type(new FutureParallel(1, []))).to.equal('fluture/Future');
   });
 
   describe('#fork()', () => {

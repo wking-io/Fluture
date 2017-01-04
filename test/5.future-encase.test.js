@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const FutureEncase = Future.classes.FutureEncase;
 const U = require('./util');
+const type = require('sanctuary-type-identifiers');
 
 const unaryNoop = a => void a;
 const binaryNoop = (a, b) => void b;
@@ -81,6 +82,10 @@ describe('FutureEncase', () => {
 
   it('extends Future', () => {
     expect(new FutureEncase).to.be.an.instanceof(Future);
+  });
+
+  it('is considered a member of fluture/Fluture', () => {
+    expect(type(new FutureEncase)).to.equal('fluture/Future');
   });
 
   describe('#fork()', () => {

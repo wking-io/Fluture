@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const FutureFromPromise = Future.classes.FutureFromPromise;
 const U = require('./util');
+const type = require('sanctuary-type-identifiers');
 
 const unaryNoop = a => Promise.resolve(a);
 const binaryNoop = (a, b) => Promise.resolve(b);
@@ -82,6 +83,10 @@ describe('FutureFromPromise', () => {
 
   it('extends Future', () => {
     expect(new FutureFromPromise).to.be.an.instanceof(Future);
+  });
+
+  it('is considered a member of fluture/Fluture', () => {
+    expect(type(new FutureFromPromise)).to.equal('fluture/Future');
   });
 
   describe('#fork()', () => {
