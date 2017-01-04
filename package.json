@@ -3,14 +3,19 @@
   "version": "4.2.0",
   "description": "FantasyLand compliant (monadic) alternative to Promises",
   "main": "fluture.js",
+  "files": [
+    "es5.js"
+  ],
   "repository": "https://github.com/Avaq/fluture.git",
   "scripts": {
+    "build": "babel fluture.js -o es5.js",
     "clean": "rimraf npm-debug.log coverage",
     "lint": "eslint fluture.js test",
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "postcheckout": "npm install",
     "postmerge": "npm install",
     "precommit": "npm run lint && npm run lint:readme && npm run test:unit",
+    "prepublish": "npm run build",
     "release": "npm outdated --long && xyz --edit --repo git@github.com:Avaq/Fluture.git --tag 'X.Y.Z' --increment",
     "toc": "node scripts/toc.js",
     "test": "npm run test:all && codecov",
@@ -29,9 +34,6 @@
   "engines": {
     "node": ">=4.0.0"
   },
-  "files": [
-    "fluture.js"
-  ],
   "keywords": [
     "algebraic",
     "async",
@@ -52,10 +54,12 @@
     "sequential"
   ],
   "dependencies": {
-    "inspect-f": "^1.1.0",
+    "inspect-f": "^1.2.0",
     "sanctuary-type-classes": "^2.0.1"
   },
   "devDependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-preset-latest": "^6.16.0",
     "benchmark": "^2.1.0",
     "chai": "^3.4.0",
     "codecov": "^1.0.1",

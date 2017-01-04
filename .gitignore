@@ -28,5 +28,8 @@ coverage/
 # Test file - who doesn't have a test file?
 test.js
 
+# Transpiled ES5 file - for publishing only
+es5.js
+
 # Heap snapshots
 *.heapsnapshot
