@@ -67,7 +67,7 @@
     "data.task": "^3.0.0",
     "eslint": "^3.0.1",
     "eslint-config-warp": "^1.2.0",
-    "fantasy-land": "^2.0.0",
+    "fantasy-land": "^3.0.0",
     "fun-task": "^1.5.1",
     "husky": "^0.12.0",
     "istanbul": "^0.4.2",
