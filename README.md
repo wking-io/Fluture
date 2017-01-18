@@ -11,7 +11,7 @@ what-have-you. Let's call them Futures.
 
 Much like Promises, Futures represent the value arising from the success or
 failure of an asynchronous operation (I/O). Though unlike Promises Futures are
-*lazy* and *monadic* by design. They conform to the [Fantasy Land][1] algebraic
+*lazy* and *monadic* by design. They conform to the [Fantasy Land][FL] algebraic
 JavaScript specification.
 
 Fluture boasts the following features:
@@ -103,11 +103,12 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
 
 ## Interoperability
 
-[<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][1]
+[<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][FL]
 [<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][25]
 
-Fluture implements [FantasyLand 1.x][1] and [Static Land][25] compatible
-`Functor`, `Bifunctor`, `Apply`, `Applicative`, `Chain`, `ChainRec` and `Monad`.
+Fluture implements [FantasyLand 1][FL1], [FantasyLand 2][FL2],
+[FantasyLand 3][FL3] and [Static Land][25] compatible `Functor`, `Bifunctor`,
+`Apply`, `Applicative`, `Chain`, `ChainRec` and `Monad`.
 
 ## Documentation
 
@@ -928,7 +929,11 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 
 <!-- References -->
 
-[1]:  https://github.com/fantasyland/fantasy-land
+[FL]:  https://github.com/fantasyland/fantasy-land
+[FL1]: https://github.com/fantasyland/fantasy-land/tree/v1.0.1
+[FL2]: https://github.com/fantasyland/fantasy-land/tree/v2.2.0
+[FL3]: https://github.com/fantasyland/fantasy-land
+
 [2]:  http://sanctuary.js.org/#pipe
 [3]:  http://ramdajs.com/docs/#map
 [4]:  http://ramdajs.com/docs/#chain
