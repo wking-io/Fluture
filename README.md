@@ -1,4 +1,4 @@
-# Fluture
+# [![Fluture](logo.png)](#butterfly)
 
 [![Chat](https://badges.gitter.im/Avaq/Fluture.svg)](https://gitter.im/Avaq/Fluture)
 [![NPM Version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
@@ -99,7 +99,7 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
   1. [Sanctuary](#sanctuary)
   1. [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
-- [The name](#the-name)
+- [Butterfly](#butterfly)
 
 ## Interoperability
 
@@ -918,10 +918,13 @@ implementations in `data.task`, `ramda-fantasy.Future` and `Promise`*.
 \* Promise is not included in all benchmarks because it tends to make the
   process run out of memory.
 
-## The name
+## Butterfly
 
-A conjunction of the acronym to Fantasy Land (FL) and Future. Also "fluture"
-means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
+The name "Fluture" is a conjunction of "FL" (the acronym to [Fantasy Land][FL])
+and "future". Fluture means butterfly in Romanian: A creature you might expect
+to see in Fantasy Land.
+
+Credits for the logo go to [Erik Fuente][34].
 
 ----
 
@@ -966,3 +969,4 @@ means butterfly in Romanian; A creature you might expect to see in Fantasy Land.
 [31]: https://github.com/sanctuary-js/sanctuary-def#binarytype
 [32]: https://sanctuary.js.org/#create
 [33]: https://promisesaplus.com/
+[34]: http://erikfuente.com/
