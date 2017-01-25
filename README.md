@@ -106,9 +106,11 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][FL]
 [<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][25]
 
-Fluture implements [FantasyLand 1][FL1], [FantasyLand 2][FL2],
+Fluture implements [FantasyLand 1][FL1]\*, [FantasyLand 2][FL2],
 [FantasyLand 3][FL3] and [Static Land][25] compatible `Functor`, `Bifunctor`,
 `Apply`, `Applicative`, `Chain`, `ChainRec` and `Monad`.
+
+\* FantasyLand 1.0 not fully supported. The `Apply` instance is non-conformant.
 
 ## Documentation
 
