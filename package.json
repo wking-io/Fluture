@@ -56,7 +56,7 @@
   ],
   "dependencies": {
     "inspect-f": "^1.2.0",
-    "sanctuary-type-classes": "^2.0.1"
+    "sanctuary-type-classes": "^3.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
