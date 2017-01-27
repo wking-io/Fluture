@@ -862,7 +862,8 @@ Future.do(function*(){
 
 ### Sanctuary
 
-When using this module with [Sanctuary][21], you might run into the following:
+When using this module with [Sanctuary Def][31] (and [Sanctuary][21] by
+extension) you might run into the following issue:
 
 ```js
 const S = require('sanctuary');
@@ -872,12 +873,11 @@ S.I(Future.of(1));
 //! the type-variable constraint has been violated.
 ```
 
-This happens because Sanctuary needs to know about the Future type in order to
-determine whether the type-variable used in the definition of `S.I` is
-consistent.
+This happens because Sanctuary Def needs to know about the Future type in order
+to determine whether the variable types are consistent.
 
 To let Sanctuary know about Futures, we can provide it a `FutureType` using
-[Sanctuary Def][31], and pass it to Sanctuary using [`S.create`][32]
+[`BinaryType`][35] from Sanctuary Def, and pass it to Sanctuary using [`S.create`][32]:
 
 ```js
 const $ = require('sanctuary-def');
@@ -886,6 +886,7 @@ const {env, create} = require('sanctuary');
 
 const FutureType = $.BinaryType(
   Future.name,
+  'https://github.com/Avaq/Fluture#future',
   Future.isFuture,
   Future.extractLeft,
   Future.extractRight
@@ -973,3 +974,4 @@ Credits for the logo go to [Erik Fuente][34].
 [32]: https://sanctuary.js.org/#create
 [33]: https://promisesaplus.com/
 [34]: http://erikfuente.com/
+[35]: https://github.com/sanctuary-js/sanctuary-def#binarytype--string---string---any-boolean---tab-arraya---tab-arrayb---type-type-type
