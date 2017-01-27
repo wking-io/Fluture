@@ -970,8 +970,8 @@ Credits for the logo go to [Erik Fuente][34].
 [28]: https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
 [29]: https://github.com/sanctuary-js/sanctuary-type-classes#Chain
 [30]: https://github.com/sanctuary-js/sanctuary-type-classes#Apply
-[31]: https://github.com/sanctuary-js/sanctuary-def#binarytype
+[31]: https://github.com/sanctuary-js/sanctuary-def
 [32]: https://sanctuary.js.org/#create
 [33]: https://promisesaplus.com/
 [34]: http://erikfuente.com/
-[35]: https://github.com/sanctuary-js/sanctuary-def#binarytype--string---string---any-boolean---tab-arraya---tab-arrayb---type-type-type
+[35]: https://github.com/sanctuary-js/sanctuary-def#BinaryType
