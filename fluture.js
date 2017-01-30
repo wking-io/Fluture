@@ -113,52 +113,15 @@
     return function partial(d){ return f(a, b, c, d) };
   }
 
-  //Creates a dispatcher for a nullary method.
-  function createNullaryDispatcher(method){
-    return function nullaryDispatch(m){
-      if(m && typeof m[method] === 'function') return m[method]();
-      return error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
-    };
-  }
-
-  //Creates a dispatcher for a unary method.
-  function createUnaryDispatcher(method){
-    return function unaryDispatch(a, m){
-      if(arguments.length === 1) return unaryPartial(unaryDispatch, a);
-      if(m && typeof m[method] === 'function') return m[method](a);
-      return error$invalidArgument(`Future.${method}`, 1, `have a "${method}" method`, m);
-    };
-  }
-
-  //Creates a dispatcher for a binary method.
-  function createBinaryDispatcher(method){
-    return function binaryDispatch(a, b, m){
-      if(arguments.length === 1) return unaryPartial(binaryDispatch, a);
-      if(arguments.length === 2) return binaryPartial(binaryDispatch, a, b);
-      if(m && typeof m[method] === 'function') return m[method](a, b);
-      return error$invalidArgument(`Future.${method}`, 2, `have a "${method}" method`, m);
-    };
-  }
-
-  //Creates a dispatcher for a binary method, but takes the object first rather than last.
-  function createInvertedBinaryDispatcher(method){
-    return function invertedBinaryDispatch(m, a, b){
-      if(arguments.length === 1) return unaryPartial(invertedBinaryDispatch, m);
-      if(arguments.length === 2) return binaryPartial(invertedBinaryDispatch, m, a);
-      if(m && typeof m[method] === 'function') return m[method](a, b);
-      return error$invalidArgument(`Future.${method}`, 0, `have a "${method}" method`, m);
-    };
-  }
-
   //Creates an error about an invalid argument.
-  function error$invalidArgument(it, at, expected, actual){
+  function invalidArgument(it, at, expected, actual){
     throw new TypeError(
       `${it} expects its ${ordinal[at]} argument to ${expected}\n  Actual: ${show(actual)}`
     );
   }
 
   //Creates an error message about a method being called with an invalid context.
-  function error$invalidContext(it, actual){
+  function invalidContext(it, actual){
     throw new TypeError(
       `${it} was invoked outside the context of a Future. You might want to use`
       + ` a dispatcher instead\n  Called on: ${show(actual)}`
@@ -170,7 +133,7 @@
   ////////////////
 
   function Future(f){
-    if(!isFunction(f)) error$invalidArgument('Future', 0, 'be a function', f);
+    if(!isFunction(f)) invalidArgument('Future', 0, 'be a function', f);
     return new SafeFuture(f);
   }
 
@@ -180,7 +143,7 @@
 
   function Future$chainRec(f, init){
     if(arguments.length === 1) return unaryPartial(Future$chainRec, f);
-    if(!isFunction(f)) error$invalidArgument('Future.chainRec', 0, 'be a function', f);
+    if(!isFunction(f)) invalidArgument('Future.chainRec', 0, 'be a function', f);
     return new ChainRec(f, init);
   }
 
@@ -191,100 +154,100 @@
   Future.prototype.of = Future$of;
 
   Future.prototype.ap = function Future$ap(m){
-    if(!isFuture(this)) error$invalidContext('Future#ap', this);
-    if(!isFuture(m)) error$invalidArgument('Future#ap', 0, 'be a Future', m);
+    if(!isFuture(this)) invalidContext('Future#ap', this);
+    if(!isFuture(m)) invalidArgument('Future#ap', 0, 'be a Future', m);
     return new FutureAp(this, m);
   };
 
   Future.prototype.map = function Future$map(f){
-    if(!isFuture(this)) error$invalidContext('Future#map', this);
-    if(!isFunction(f)) error$invalidArgument('Future#map', 0, 'be a function', f);
+    if(!isFuture(this)) invalidContext('Future#map', this);
+    if(!isFunction(f)) invalidArgument('Future#map', 0, 'be a function', f);
     return new FutureMap(this, f);
   };
 
   Future.prototype.bimap = function Future$bimap(f, g){
-    if(!isFuture(this)) error$invalidContext('Future#bimap', this);
-    if(!isFunction(f)) error$invalidArgument('Future#bimap', 0, 'be a function', f);
-    if(!isFunction(g)) error$invalidArgument('Future#bimap', 1, 'be a function', g);
+    if(!isFuture(this)) invalidContext('Future#bimap', this);
+    if(!isFunction(f)) invalidArgument('Future#bimap', 0, 'be a function', f);
+    if(!isFunction(g)) invalidArgument('Future#bimap', 1, 'be a function', g);
     return new FutureBimap(this, f, g);
   };
 
   Future.prototype.chain = function Future$chain(f){
-    if(!isFuture(this)) error$invalidContext('Future#chain', this);
-    if(!isFunction(f)) error$invalidArgument('Future#chain', 0, 'be a function', f);
+    if(!isFuture(this)) invalidContext('Future#chain', this);
+    if(!isFunction(f)) invalidArgument('Future#chain', 0, 'be a function', f);
     return new FutureChain(this, f);
   };
 
   Future.prototype.chainRej = function Future$chainRej(f){
-    if(!isFuture(this)) error$invalidContext('Future.chainRej', this);
-    if(!isFunction(f)) error$invalidArgument('Future.chainRej', 0, 'a function', f);
+    if(!isFuture(this)) invalidContext('Future.chainRej', this);
+    if(!isFunction(f)) invalidArgument('Future.chainRej', 0, 'a function', f);
     return new FutureChainRej(this, f);
   };
 
   Future.prototype.mapRej = function Future$mapRej(f){
-    if(!isFuture(this)) error$invalidContext('Future#mapRej', this);
-    if(!isFunction(f)) error$invalidArgument('Future#mapRej', 0, 'be a function', f);
+    if(!isFuture(this)) invalidContext('Future#mapRej', this);
+    if(!isFunction(f)) invalidArgument('Future#mapRej', 0, 'be a function', f);
     return new FutureMapRej(this, f);
   };
 
   Future.prototype.swap = function Future$swap(){
-    if(!isFuture(this)) error$invalidContext('Future#swap', this);
+    if(!isFuture(this)) invalidContext('Future#swap', this);
     return new FutureSwap(this);
   };
 
   Future.prototype.race = function Future$race(m){
-    if(!isFuture(this)) error$invalidContext('Future#race', this);
-    if(!isFuture(m)) error$invalidArgument('Future#race', 0, 'be a Future', m);
+    if(!isFuture(this)) invalidContext('Future#race', this);
+    if(!isFuture(m)) invalidArgument('Future#race', 0, 'be a Future', m);
     return new FutureRace(this, m);
   };
 
   Future.prototype.and = function Future$and(m){
-    if(!isFuture(this)) error$invalidContext('Future#and', this);
-    if(!isFuture(m)) error$invalidArgument('Future#and', 0, 'be a Future', m);
+    if(!isFuture(this)) invalidContext('Future#and', this);
+    if(!isFuture(m)) invalidArgument('Future#and', 0, 'be a Future', m);
     return new FutureAnd(this, m);
   };
 
   Future.prototype.or = function Future$or(m){
-    if(!isFuture(this)) error$invalidContext('Future#or', this);
-    if(!isFuture(m)) error$invalidArgument('Future#or', 0, 'be a Future', m);
+    if(!isFuture(this)) invalidContext('Future#or', this);
+    if(!isFuture(m)) invalidArgument('Future#or', 0, 'be a Future', m);
     return new FutureOr(this, m);
   };
 
   Future.prototype.both = function Future$both(m){
-    if(!isFuture(this)) error$invalidContext('Future#both', this);
-    if(!isFuture(m)) error$invalidArgument('Future#both', 0, 'be a Future', m);
+    if(!isFuture(this)) invalidContext('Future#both', this);
+    if(!isFuture(m)) invalidArgument('Future#both', 0, 'be a Future', m);
     return new FutureBoth(this, m);
   };
 
   Future.prototype.fold = function Future$fold(f, g){
-    if(!isFuture(this)) error$invalidContext('Future#fold', this);
-    if(!isFunction(f)) error$invalidArgument('Future#fold', 0, 'be a function', f);
-    if(!isFunction(g)) error$invalidArgument('Future#fold', 1, 'be a function', g);
+    if(!isFuture(this)) invalidContext('Future#fold', this);
+    if(!isFunction(f)) invalidArgument('Future#fold', 0, 'be a function', f);
+    if(!isFunction(g)) invalidArgument('Future#fold', 1, 'be a function', g);
     return new FutureFold(this, f, g);
   };
 
   Future.prototype.hook = function Future$hook(dispose, consume){
-    if(!isFuture(this)) error$invalidContext('Future#hook', this);
-    if(!isFunction(dispose)) error$invalidArgument('Future#hook', 0, 'be a function', dispose);
-    if(!isFunction(consume)) error$invalidArgument('Future#hook', 1, 'be a function', consume);
+    if(!isFuture(this)) invalidContext('Future#hook', this);
+    if(!isFunction(dispose)) invalidArgument('Future#hook', 0, 'be a function', dispose);
+    if(!isFunction(consume)) invalidArgument('Future#hook', 1, 'be a function', consume);
     return new FutureHook(this, dispose, consume);
   };
 
   Future.prototype.finally = function Future$finally(m){
-    if(!isFuture(this)) error$invalidContext('Future#finally', this);
-    if(!isFuture(m)) error$invalidArgument('Future#finally', 0, 'be a Future', m);
+    if(!isFuture(this)) invalidContext('Future#finally', this);
+    if(!isFuture(m)) invalidArgument('Future#finally', 0, 'be a Future', m);
     return new FutureFinally(this, m);
   };
 
   Future.prototype.cache = function Future$cache(){
-    if(!isFuture(this)) error$invalidContext('Future#cache', this);
+    if(!isFuture(this)) invalidContext('Future#cache', this);
     return new CachedFuture(this);
   };
 
   Future.prototype.fork = function Future$fork(rej, res){
-    if(!isFuture(this)) error$invalidContext('Future#fork', this);
-    if(!isFunction(rej)) error$invalidArgument('Future#fork', 0, 'be a function', rej);
-    if(!isFunction(res)) error$invalidArgument('Future#fork', 1, 'be a function', res);
+    if(!isFuture(this)) invalidContext('Future#fork', this);
+    if(!isFunction(rej)) invalidArgument('Future#fork', 0, 'be a function', rej);
+    if(!isFunction(res)) invalidArgument('Future#fork', 1, 'be a function', res);
     return this._f(rej, res);
   };
 
@@ -293,8 +256,8 @@
   };
 
   Future.prototype.value = function Future$value(f){
-    if(!isFuture(this)) error$invalidContext('Future#value', this);
-    if(!isFunction(f)) error$invalidArgument('Future#value', 0, 'be a function', f);
+    if(!isFuture(this)) invalidContext('Future#value', this);
+    if(!isFunction(f)) invalidArgument('Future#value', 0, 'be a function', f);
     return this._f(function Future$value$rej(e){
       throw new Error(
         `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(e)})`
@@ -303,7 +266,7 @@
   };
 
   Future.prototype.promise = function Future$promise(){
-    if(!isFuture(this)) error$invalidContext('Future#promise', this);
+    if(!isFuture(this)) invalidContext('Future#promise', this);
     const _this = this;
     return new Promise(function Future$promise$do(resolve, reject){
       _this._f(reject, resolve);
@@ -317,73 +280,74 @@
   Future.isForkable = isForkable;
 
   function ap$mval(mval, mfunc){
-    if(!Z.Apply.test(mfunc)) error$invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
+    if(!Z.Apply.test(mfunc)) invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
     return Z.ap(mval, mfunc);
   }
 
   Future.ap = function ap(mval, mfunc){
-    if(!Z.Apply.test(mval)) error$invalidArgument('Future.ap', 0, 'be an Apply', mval);
+    if(!Z.Apply.test(mval)) invalidArgument('Future.ap', 0, 'be an Apply', mval);
     if(arguments.length === 1) return unaryPartial(ap$mval, mval);
     return ap$mval(mval, mfunc);
   };
 
   function map$mapper(mapper, m){
-    if(!Z.Functor.test(m)) error$invalidArgument('Future.map', 1, 'be a Functor', m);
+    if(!Z.Functor.test(m)) invalidArgument('Future.map', 1, 'be a Functor', m);
     return Z.map(mapper, m);
   }
 
   Future.map = function map(mapper, m){
-    if(!isFunction(mapper)) error$invalidArgument('Future.map', 0, 'be a Function', mapper);
+    if(!isFunction(mapper)) invalidArgument('Future.map', 0, 'be a Function', mapper);
     if(arguments.length === 1) return unaryPartial(map$mapper, mapper);
     return map$mapper(mapper, m);
   };
 
   function bimap$lmapper$rmapper(lmapper, rmapper, m){
-    if(!Z.Bifunctor.test(m)) error$invalidArgument('Future.bimap', 2, 'be a Bifunctor', m);
+    if(!Z.Bifunctor.test(m)) invalidArgument('Future.bimap', 2, 'be a Bifunctor', m);
     return Z.bimap(lmapper, rmapper, m);
   }
 
   function bimap$lmapper(lmapper, rmapper, m){
-    if(!isFunction(rmapper)) error$invalidArgument('Future.bimap', 1, 'be a Function', rmapper);
+    if(!isFunction(rmapper)) invalidArgument('Future.bimap', 1, 'be a Function', rmapper);
     if(arguments.length === 2) return binaryPartial(bimap$lmapper$rmapper, lmapper, rmapper);
     return bimap$lmapper$rmapper(lmapper, rmapper, m);
   }
 
   Future.bimap = function bimap(lmapper, rmapper, m){
-    if(!isFunction(lmapper)) error$invalidArgument('Future.bimap', 0, 'be a Function', lmapper);
+    if(!isFunction(lmapper)) invalidArgument('Future.bimap', 0, 'be a Function', lmapper);
     if(arguments.length === 1) return unaryPartial(bimap$lmapper, lmapper);
+    if(arguments.length === 2) return bimap$lmapper(lmapper, rmapper);
     return bimap$lmapper(lmapper, rmapper, m);
   };
 
   function chain$chainer(chainer, m){
-    if(!Z.Chain.test(m)) error$invalidArgument('Future.chain', 1, 'be a Chain', m);
+    if(!Z.Chain.test(m)) invalidArgument('Future.chain', 1, 'be a Chain', m);
     return Z.chain(chainer, m);
   }
 
   Future.chain = function chain(chainer, m){
-    if(!isFunction(chainer)) error$invalidArgument('Future.chain', 0, 'be a Function', chainer);
+    if(!isFunction(chainer)) invalidArgument('Future.chain', 0, 'be a Function', chainer);
     if(arguments.length === 1) return unaryPartial(chain$chainer, chainer);
     return chain$chainer(chainer, m);
   };
 
   function and$left(left, right){
-    if(!isFuture(right)) error$invalidArgument('Future.and', 1, 'be a Future', right);
+    if(!isFuture(right)) invalidArgument('Future.and', 1, 'be a Future', right);
     return new FutureAnd(left, right);
   }
 
   Future.and = function and(left, right){
-    if(!isFuture(left)) error$invalidArgument('Future.and', 0, 'be a Future', left);
+    if(!isFuture(left)) invalidArgument('Future.and', 0, 'be a Future', left);
     if(arguments.length === 1) return unaryPartial(and$left, left);
     return and$left(left, right);
   };
 
   function both$left(left, right){
-    if(!isFuture(right)) error$invalidArgument('Future.both', 1, 'be a Future', right);
+    if(!isFuture(right)) invalidArgument('Future.both', 1, 'be a Future', right);
     return new FutureBoth(left, right);
   }
 
   Future.both = function both(left, right){
-    if(!isFuture(left)) error$invalidArgument('Future.both', 0, 'be a Future', left);
+    if(!isFuture(left)) invalidArgument('Future.both', 0, 'be a Future', left);
     if(arguments.length === 1) return unaryPartial(both$left, left);
     return both$left(left, right);
   };
@@ -397,7 +361,7 @@
   }
 
   Future.after = function Future$after(n, x){
-    if(!isPositiveInteger(n)) error$invalidArgument('Future.after', 0, 'be a positive integer', n);
+    if(!isPositiveInteger(n)) invalidArgument('Future.after', 0, 'be a positive integer', n);
     if(arguments.length === 1) return unaryPartial(Future$after$n, n);
     return Future$after$n(n, x);
   };
@@ -407,7 +371,7 @@
   }
 
   Future.rejectAfter = function rejectAfter(time, reason){
-    if(!isPositiveInteger(time)) error$invalidArgument(
+    if(!isPositiveInteger(time)) invalidArgument(
       'Future.rejectAfter', 0, 'be a positive integer', time
     );
     if(arguments.length === 1) return unaryPartial(rejectAfter$time, time);
@@ -420,13 +384,13 @@
   };
 
   Future.try = function Future$try(f){
-    if(!isFunction(f)) error$invalidArgument('Future.try', 0, 'be a function', f);
+    if(!isFunction(f)) invalidArgument('Future.try', 0, 'be a function', f);
     return new FutureTry(f);
   };
 
   Future.encase = function Future$encase(f, x){
     if(arguments.length === 1) return unaryPartial(Future$encase, f);
-    if(!isFunction(f)) error$invalidArgument('Future.encase', 0, 'be a function', f);
+    if(!isFunction(f)) invalidArgument('Future.encase', 0, 'be a function', f);
     return new FutureEncase(f, x);
   };
 
@@ -435,8 +399,8 @@
       case 1: return unaryPartial(Future$encase2, f);
       case 2: return binaryPartial(Future$encase2, f, x);
       default:
-        if(!isFunction(f)) error$invalidArgument('Future.encase2', 0, 'be a function', f);
-        if(!isBinary(f)) error$invalidArgument('Future.encase2', 0, 'take two arguments', f);
+        if(!isFunction(f)) invalidArgument('Future.encase2', 0, 'be a function', f);
+        if(!isBinary(f)) invalidArgument('Future.encase2', 0, 'take two arguments', f);
         return new FutureEncase(f, x, y);
     }
   };
@@ -447,20 +411,20 @@
       case 2: return binaryPartial(Future$encase3, f, x);
       case 3: return ternaryPartial(Future$encase3, f, x, y);
       default:
-        if(!isFunction(f)) error$invalidArgument('Future.encase3', 0, 'be a function', f);
-        if(!isTernary(f)) error$invalidArgument('Future.encase3', 0, 'take three arguments', f);
+        if(!isFunction(f)) invalidArgument('Future.encase3', 0, 'be a function', f);
+        if(!isTernary(f)) invalidArgument('Future.encase3', 0, 'take three arguments', f);
         return new FutureEncase(f, x, y, z);
     }
   };
 
   Future.fromForkable = function Future$fromForkable(f){
-    if(!isForkable(f)) error$invalidArgument('Future.fromForkable', 0, 'be a forkable', f);
+    if(!isForkable(f)) invalidArgument('Future.fromForkable', 0, 'be a forkable', f);
     return new FutureFromForkable(f);
   };
 
   Future.fromPromise = function Future$fromPromise(f, x){
     if(arguments.length === 1) return unaryPartial(Future$fromPromise, f);
-    if(!isFunction(f)) error$invalidArgument('Future.fromPromise', 0, 'be a function', f);
+    if(!isFunction(f)) invalidArgument('Future.fromPromise', 0, 'be a function', f);
     return new FutureFromPromise(f, x);
   };
 
@@ -469,8 +433,8 @@
       case 1: return unaryPartial(Future$fromPromise2, f);
       case 2: return binaryPartial(Future$fromPromise2, f, x);
       default:
-        if(!isFunction(f)) error$invalidArgument('Future.fromPromise2', 0, 'be a function', f);
-        if(!isBinary(f)) error$invalidArgument('Future.fromPromise2', 0, 'take two arguments', f);
+        if(!isFunction(f)) invalidArgument('Future.fromPromise2', 0, 'be a function', f);
+        if(!isBinary(f)) invalidArgument('Future.fromPromise2', 0, 'take two arguments', f);
         return new FutureFromPromise(f, x, y);
     }
   };
@@ -482,46 +446,178 @@
       case 3: return ternaryPartial(Future$fromPromise3, f, x, y);
       default:
         if(!isFunction(f))
-          error$invalidArgument('Future.fromPromise3', 0, 'be a function', f);
+          invalidArgument('Future.fromPromise3', 0, 'be a function', f);
         if(!isTernary(f))
-          error$invalidArgument('Future.fromPromise3', 0, 'take three arguments', f);
+          invalidArgument('Future.fromPromise3', 0, 'take three arguments', f);
         return new FutureFromPromise(f, x, y, z);
     }
   };
 
   Future.node = function Future$node(f){
-    if(!isFunction(f)) error$invalidArgument('Future.node', 0, 'be a function', f);
+    if(!isFunction(f)) invalidArgument('Future.node', 0, 'be a function', f);
     return new FutureNode(f);
   };
 
-  Future.parallel = function Future$parallel(i, ms){
-    if(arguments.length === 1) return unaryPartial(Future$parallel, i);
-    if(!isPositiveInteger(i))
-      error$invalidArgument('Future.parallel', 0, 'be a positive integer', i);
-    if(!Array.isArray(ms))
-      error$invalidArgument('Future.parallel', 1, 'be an array', ms);
+  function parallel$i(i, ms){
+    if(!Array.isArray(ms)) invalidArgument('Future.parallel', 1, 'be an array', ms);
     return new FutureParallel(i, ms);
+  }
+
+  Future.parallel = function parallel(i, ms){
+    if(!isPositiveInteger(i)) invalidArgument('Future.parallel', 0, 'be a positive integer', i);
+    if(arguments.length === 1) return unaryPartial(parallel$i, i);
+    return parallel$i(i, ms);
   };
 
   Future.do = function Future$do(f){
-    if(!isFunction(f)) error$invalidArgument('Future.do', 0, 'be a function', f);
+    if(!isFunction(f)) invalidArgument('Future.do', 0, 'be a function', f);
     return new FutureDo(f);
   };
 
-  Future.chainRej = createUnaryDispatcher('chainRej');
-  Future.mapRej = createUnaryDispatcher('mapRej');
-  Future.swap = createNullaryDispatcher('swap');
-  Future.fork = createBinaryDispatcher('fork');
-  Future.race = createUnaryDispatcher('race');
-  Future.or = createUnaryDispatcher('or');
-  Future.fold = createBinaryDispatcher('fold');
-  Future.hook = createInvertedBinaryDispatcher('hook');
-  Future.finally = createUnaryDispatcher('finally');
-  Future.value = createUnaryDispatcher('value');
-  Future.promise = createNullaryDispatcher('promise');
-  Future.cache = createNullaryDispatcher('cache');
-  Future.extractLeft = createNullaryDispatcher('extractLeft');
-  Future.extractRight = createNullaryDispatcher('extractRight');
+  function chainRej$chainer(chainer, m){
+    if(!isFuture(m)) invalidArgument('Future.chainRej', 1, 'be a Future', m);
+    return new FutureChainRej(chainer, m);
+  }
+
+  Future.chainRej = function chainRej(chainer, m){
+    if(!isFunction(chainer)) invalidArgument('Future.chainRej', 0, 'be a Function', chainer);
+    if(arguments.length === 1) return unaryPartial(chainRej$chainer, chainer);
+    return chainRej$chainer(chainer, m);
+  };
+
+  function mapRej$mapper(mapper, m){
+    if(!isFuture(m)) invalidArgument('Future.mapRej', 1, 'be a Future', m);
+    return new FutureMapRej(mapper, m);
+  }
+
+  Future.mapRej = function mapRej(mapper, m){
+    if(!isFunction(mapper)) invalidArgument('Future.mapRej', 0, 'be a Function', mapper);
+    if(arguments.length === 1) return unaryPartial(mapRej$mapper, mapper);
+    return mapRej$mapper(mapper, m);
+  };
+
+  function race$left(left, right){
+    if(!isFuture(right)) invalidArgument('Future.race', 1, 'be a Future', right);
+    return new FutureRace(left, right);
+  }
+
+  Future.race = function race(left, right){
+    if(!isFuture(left)) invalidArgument('Future.race', 0, 'be a Future', left);
+    if(arguments.length === 1) return unaryPartial(race$left, left);
+    return race$left(left, right);
+  };
+
+  function or$right(right, left){
+    if(!isFuture(left)) invalidArgument('Future.or', 1, 'be a Future', left);
+    return new FutureOr(left, right);
+  }
+
+  Future.or = function or(right, left){
+    if(!isFuture(right)) invalidArgument('Future.or', 0, 'be a Future', right);
+    if(arguments.length === 1) return unaryPartial(or$right, right);
+    return or$right(right, left);
+  };
+
+  function finally$left(left, right){
+    if(!isFuture(right)) invalidArgument('Future.finally', 1, 'be a Future', right);
+    return new FutureFinally(left, right);
+  }
+
+  Future.finally = function finally$(left, right){
+    if(!isFuture(left)) invalidArgument('Future.finally', 0, 'be a Future', left);
+    if(arguments.length === 1) return unaryPartial(finally$left, left);
+    return finally$left(left, right);
+  };
+
+  function value$cont(cont, m){
+    if(!isFuture(m)) invalidArgument('Future.value', 1, 'be a Future', m);
+    return m.value(cont);
+  }
+
+  Future.value = function value(cont, m){
+    if(!isFunction(cont)) invalidArgument('Future.value', 0, 'be a Function', cont);
+    if(arguments.length === 1) return unaryPartial(value$cont, cont);
+    return value$cont(cont, m);
+  };
+
+  Future.swap = function swap(m){
+    if(!isFuture(m)) invalidArgument('Future.swap', 0, 'be a Future', m);
+    return new FutureSwap(m);
+  };
+
+  Future.promise = function promise(m){
+    if(!isFuture(m)) invalidArgument('Future.promise', 0, 'be a Future', m);
+    return m.promise();
+  };
+
+  Future.cache = function cache(m){
+    if(!isFuture(m)) invalidArgument('Future.cache', 0, 'be a Future', m);
+    return new CachedFuture(m);
+  };
+
+  Future.extractLeft = function extractLeft(m){
+    if(!isFuture(m)) invalidArgument('Future.extractLeft', 0, 'be a Future', m);
+    return m.extractLeft();
+  };
+
+  Future.extractRight = function extractRight(m){
+    if(!isFuture(m)) invalidArgument('Future.extractRight', 0, 'be a Future', m);
+    return m.extractRight();
+  };
+
+  function fork$f$g(f, g, m){
+    if(!isFuture(m)) invalidArgument('Future.fork', 2, 'be a Future', m);
+    return m._f(f, g);
+  }
+
+  function fork$f(f, g, m){
+    if(!isFunction(g)) invalidArgument('Future.fork', 1, 'be a function', g);
+    if(arguments.length === 2) return binaryPartial(fork$f$g, f, g);
+    return fork$f$g(f, g, m);
+  }
+
+  Future.fork = function fork(f, g, m){
+    if(!isFunction(f)) invalidArgument('Future.fork', 0, 'be a function', f);
+    if(arguments.length === 1) return unaryPartial(fork$f, f);
+    if(arguments.length === 2) return fork$f(f, g);
+    return fork$f(f, g, m);
+  };
+
+  function fold$f$g(f, g, m){
+    if(!isFuture(m)) invalidArgument('Future.fold', 2, 'be a Future', m);
+    return new FutureFold(f, g, m);
+  }
+
+  function fold$f(f, g, m){
+    if(!isFunction(g)) invalidArgument('Future.fold', 1, 'be a function', g);
+    if(arguments.length === 2) return binaryPartial(fold$f$g, f, g);
+    return fold$f$g(f, g, m);
+  }
+
+  Future.fold = function fold(f, g, m){
+    if(!isFunction(f)) invalidArgument('Future.fold', 0, 'be a function', f);
+    if(arguments.length === 1) return unaryPartial(fold$f, f);
+    if(arguments.length === 2) return fold$f(f, g);
+    return fold$f(f, g, m);
+  };
+
+  function hook$acquire$cleanup(acquire, cleanup, consume){
+    if(!isFunction(consume)) invalidArgument('Future.hook', 2, 'be a Future', consume);
+    return new FutureHook(acquire, cleanup, consume);
+  }
+
+  function hook$acquire(acquire, cleanup, consume){
+    if(!isFunction(cleanup)) invalidArgument('Future.hook', 1, 'be a function', cleanup);
+    if(arguments.length === 2) return binaryPartial(hook$acquire$cleanup, acquire, cleanup);
+    return hook$acquire$cleanup(acquire, cleanup, consume);
+  }
+
+  Future.hook = function hook(acquire, cleanup, consume){
+    if(!isFuture(acquire)) invalidArgument('Future.hook', 0, 'be a Future', acquire);
+    if(arguments.length === 1) return unaryPartial(hook$acquire, acquire);
+    if(arguments.length === 2) return hook$acquire(acquire, cleanup);
+    return hook$acquire(acquire, cleanup, consume);
+  };
 
   //Utilities.
   Future.util = {
@@ -953,7 +1049,7 @@
   //----------
 
   function check$do$g(g){
-    if(!isIterator(g)) error$invalidArgument(
+    if(!isIterator(g)) invalidArgument(
       'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
     );
   }

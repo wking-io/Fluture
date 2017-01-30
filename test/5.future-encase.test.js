@@ -36,6 +36,7 @@ describe('Future.encase2()', () => {
     expect(Future.encase2.length).to.equal(3);
     expect(Future.encase2((a, b) => b)).to.be.a('function');
     expect(Future.encase2((a, b) => b)(1)).to.be.a('function');
+    expect(Future.encase2((a, b) => b, 1)).to.be.a('function');
   });
 
   it('throws TypeError when not given a binary function', () => {

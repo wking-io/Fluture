@@ -12,12 +12,23 @@ describe('Future.fold()', () => {
     expect(Future.fold).to.be.a('function');
     expect(Future.fold.length).to.equal(3);
     expect(Future.fold(U.noop)).to.be.a('function');
+    expect(Future.fold(U.noop)(U.noop)).to.be.a('function');
     expect(Future.fold(U.noop, U.noop)).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.fold(U.noop)(U.noop)(1);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Function as first argument', () => {
+    const f = () => Future.fold(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
+  });
+
+  it('throws when not given a Function as second argument', () => {
+    const f = () => Future.fold(U.add(1), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
+  });
+
+  it('throws when not given a Future as third argument', () => {
+    const f = () => Future.fold(U.add(1), U.add(1), 1);
+    expect(f).to.throw(TypeError, /Future.*third/);
   });
 
   it('returns an instance of FutureFold', () => {

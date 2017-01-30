@@ -13,6 +13,7 @@ describe('Future.bimap()', () => {
     expect(Future.bimap.length).to.equal(3);
     expect(Future.bimap(U.noop)).to.be.a('function');
     expect(Future.bimap(U.noop)(U.noop)).to.be.a('function');
+    expect(Future.bimap(U.noop, U.noop)).to.be.a('function');
   });
 
   it('throws when not given a Function as first argument', () => {
