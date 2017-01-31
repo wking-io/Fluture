@@ -14,9 +14,14 @@ describe('Future.chainRej()', () => {
     expect(Future.chainRej(U.noop)).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.chainRej(U.noop)(1);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Function as first argument', () => {
+    const f = () => Future.chainRej(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
+  });
+
+  it('throws when not given a Future as second argument', () => {
+    const f = () => Future.chainRej(U.B(Future.of)(U.add(1)), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
   });
 
   it('returns an instance of FutureChainRej', () => {

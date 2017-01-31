@@ -14,9 +14,14 @@ describe('Future.race()', () => {
     expect(Future.race(Future.of(1))).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.race(Future.of(1))(1);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Future as first argument', () => {
+    const f = () => Future.race(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
+  });
+
+  it('throws when not given a Future as second argument', () => {
+    const f = () => Future.race(Future.of(1), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
   });
 
   it('returns an instance of FutureRace', () => {

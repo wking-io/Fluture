@@ -12,12 +12,23 @@ describe('Future.hook()', () => {
     expect(Future.hook).to.be.a('function');
     expect(Future.hook.length).to.equal(3);
     expect(Future.hook(Future.of(1))).to.be.a('function');
+    expect(Future.hook(Future.of(1))(U.noop)).to.be.a('function');
     expect(Future.hook(Future.of(1), U.noop)).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.hook(1)(U.noop)(U.noop);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Future as first argument', () => {
+    const f = () => Future.hook(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
+  });
+
+  it('throws when not given a Function as second argument', () => {
+    const f = () => Future.hook(Future.of(1), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
+  });
+
+  it('throws when not given a Function as third argument', () => {
+    const f = () => Future.hook(Future.of(1), U.add(1), 1);
+    expect(f).to.throw(TypeError, /Future.*third/);
   });
 
   it('returns an instance of FutureHook', () => {

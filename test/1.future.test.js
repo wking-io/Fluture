@@ -281,19 +281,31 @@ describe('Future', () => {
       expect(Future.fork(U.noop, U.noop)).to.be.a('function');
     });
 
-    it('throws when not given a Future', () => {
-      const f = () => Future.fork(U.noop)(U.noop)(1);
-      expect(f).to.throw(TypeError, /Future/);
+    it('throws when not given a Function as first argument', () => {
+      const f = () => Future.fork(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('dispatches to #fork()', done => {
+    it('throws when not given a Function as second argument', () => {
+      const f = () => Future.fork(U.add(1), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
+    });
+
+    it('throws when not given a Future as third argument', () => {
+      const f = () => Future.fork(U.add(1), U.add(1), 1);
+      expect(f).to.throw(TypeError, /Future.*third/);
+    });
+
+    it('dispatches to #_f()', done => {
       const a = () => {};
       const b = () => {};
-      Future.fork(a, b, {fork: (x, y) => {
+      const mock = Object.create(F.mock);
+      mock._f = (x, y) => {
         expect(x).to.equal(a);
         expect(y).to.equal(b);
         done();
-      }});
+      };
+      Future.fork(a, b, mock);
     });
 
   });
@@ -306,17 +318,24 @@ describe('Future', () => {
       expect(Future.value(U.noop)).to.be.a('function');
     });
 
-    it('throws when not given a Future', () => {
-      const f = () => Future.value(U.noop)(1);
-      expect(f).to.throw(TypeError, /Future/);
+    it('throws when not given a Function as first argument', () => {
+      const f = () => Future.value(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
+    });
+
+    it('throws when not given a Future as second argument', () => {
+      const f = () => Future.value(U.add(1), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
     });
 
     it('dispatches to #value()', done => {
       const a = () => {};
-      Future.value(a, {value: x => {
+      const mock = Object.create(F.mock);
+      mock.value = x => {
         expect(x).to.equal(a);
         done();
-      }});
+      };
+      Future.value(a, mock);
     });
 
   });
@@ -329,7 +348,9 @@ describe('Future', () => {
     });
 
     it('dispatches to #promise', done => {
-      Future.promise({promise: done});
+      const mock = Object.create(F.mock);
+      mock.promise = done;
+      Future.promise(mock);
     });
 
   });
@@ -342,7 +363,9 @@ describe('Future', () => {
     });
 
     it('dispatches to #extractLeft', done => {
-      Future.extractLeft({extractLeft: done});
+      const mock = Object.create(F.mock);
+      mock.extractLeft = done;
+      Future.extractLeft(mock);
     });
 
   });
@@ -355,7 +378,9 @@ describe('Future', () => {
     });
 
     it('dispatches to #extractRight', done => {
-      Future.extractRight({extractRight: done});
+      const mock = Object.create(F.mock);
+      mock.extractRight = done;
+      Future.extractRight(mock);
     });
 
   });
