@@ -493,16 +493,6 @@ describe('Future', () => {
 
   });
 
-  describe('#inspect()', () => {
-
-    it('dispatches to #toString()', () => {
-      const sentinel = {};
-      const exhibit = Future.prototype.inspect.call({toString: () => sentinel});
-      expect(exhibit).to.equal(sentinel);
-    });
-
-  });
-
   describe('#extractLeft()', () => {
 
     it('returns empty array', () => {

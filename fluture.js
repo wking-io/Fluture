@@ -251,10 +251,6 @@
     return this._f(rej, res);
   };
 
-  Future.prototype.inspect = function Future$inspect(){
-    return this.toString();
-  };
-
   Future.prototype.value = function Future$value(f){
     if(!isFuture(this)) invalidContext('Future#value', this);
     if(!isFunction(f)) invalidArgument('Future#value', 0, 'be a function', f);
@@ -763,17 +759,6 @@
 
   //----------
 
-  //data State = Cold | Pending | Rejected | Resolved
-  const Cold = 0;
-  const Pending = 1;
-  const Rejected = 2;
-  const Resolved = 3;
-
-  function Queued(rej, res){
-    this[Rejected] = rej;
-    this[Resolved] = res;
-  }
-
   function CachedFuture(pure){
     this._pure = pure;
     this._cancel = noop;
@@ -783,12 +768,15 @@
     this._state = Cold;
   }
 
-  CachedFuture.STATE = {
-    [Cold]: 'cold',
-    [Pending]: 'pending',
-    [Rejected]: 'rejected',
-    [Resolved]: 'resolved'
-  };
+  const Cold = CachedFuture.Cold = 0;
+  const Pending = CachedFuture.Pending = 1;
+  const Rejected = CachedFuture.Rejected = 2;
+  const Resolved = CachedFuture.Resolved = 3;
+
+  function Queued(rej, res){
+    this[Rejected] = rej;
+    this[Resolved] = res;
+  }
 
   CachedFuture.prototype = Object.create(Future.prototype);
 
@@ -862,10 +850,6 @@
     this._state = Cold;
   };
 
-  CachedFuture.prototype.getState = function CachedFuture$getState(){
-    return CachedFuture.STATE[this._state];
-  };
-
   CachedFuture.prototype._f = function CachedFuture$fork(rej, res){
     const _this = this;
     let cancel = noop;
@@ -876,13 +860,6 @@
       default: cancel = _this._addToQueue(rej, res); _this.run();
     }
     return cancel;
-  };
-
-  CachedFuture.prototype.inspect = function CachedFuture$inspect(){
-    const repr = this._state === Resolved
-      ? show(this._value)
-      : `<${this.getState()}>` + (this._state === Rejected ? ` ${show(this._value)}` : '');
-    return `CachedFuture({ ${repr} })`;
   };
 
   CachedFuture.prototype.toString = function CachedFuture$toString(){

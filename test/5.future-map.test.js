@@ -78,13 +78,6 @@ describe('FutureMap', () => {
       setTimeout(done, 25);
     });
 
-    it('has custom toString and inspect', () => {
-      const m = Future.of(1).map(x => x);
-      const s = 'Future.of(1).map(x => x)';
-      expect(m.toString()).to.equal(s);
-      expect(m.inspect()).to.equal(s);
-    });
-
   });
 
   describe('#toString()', () => {
