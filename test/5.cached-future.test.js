@@ -121,7 +121,7 @@ describe('CachedFuture', () => {
       const m = Future.cache(Future(U.noop));
       m.reject(1);
       m.resolve(2);
-      expect(m.getState()).to.equal('rejected');
+      expect(m._state).to.equal(CachedFuture.Rejected);
     });
 
   });
@@ -132,7 +132,7 @@ describe('CachedFuture', () => {
       const m = Future.cache(Future(U.noop));
       m.resolve(1);
       m.reject(2);
-      expect(m.getState()).to.equal('resolved');
+      expect(m._state).to.equal(CachedFuture.Resolved);
     });
 
   });
@@ -189,33 +189,6 @@ describe('CachedFuture', () => {
       const m = Future.of(1).cache();
       const s = 'Future.of(1).cache()';
       expect(m.toString()).to.equal(s);
-    });
-
-  });
-
-  describe('#inspect()', () => {
-
-    it('Visualizes Futures in cold state', () => {
-      const m = Future.of(1).cache();
-      expect(m.inspect()).to.equal('CachedFuture({ <cold> })');
-    });
-
-    it('Visualizes Futures in pending state', () => {
-      const m = Future.after(5, 2).cache();
-      m.run();
-      expect(m.inspect()).to.equal('CachedFuture({ <pending> })');
-    });
-
-    it('Visualizes Futures in pending state', () => {
-      const m = Future(U.noop).cache();
-      m.resolve('hello');
-      expect(m.inspect()).to.equal('CachedFuture({ "hello" })');
-    });
-
-    it('Visualizes Futures in rejected state', () => {
-      const m = Future(U.noop).cache();
-      m.reject('hello');
-      expect(m.inspect()).to.equal('CachedFuture({ <rejected> "hello" })');
     });
 
   });
