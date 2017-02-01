@@ -9,6 +9,7 @@ const jsc = require('jsverify');
 describe('Compliance', function(){
 
   this.slow(200);
+  this.timeout(5000);
 
   const test = (name, f) => jsc.property(name, 'number | nat', o => f(o.value));
   const eq = U.assertEqual;
