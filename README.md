@@ -10,25 +10,22 @@ Fluture offers a control structure similar to Promises, Tasks, Deferreds, and
 what-have-you. Let's call them Futures.
 
 Much like Promises, Futures represent the value arising from the success or
-failure of an asynchronous operation (I/O). Though unlike Promises Futures are
-*lazy* and *monadic* by design. They conform to the [Fantasy Land][FL] algebraic
-JavaScript specification.
+failure of an asynchronous operation (I/O). Though unlike Promises, Futures are
+*lazy* and adhere to [the *monadic* interface](#interoperability).
 
 Fluture boasts the following features:
 
-* Fine-grained control over asynchronous flow through generic monadic
-  transformations and an array of control utilities.
 * [Cancellation](#future).
 * [Resource management utilities](#resource-management).
-* Plays nicely with functional libraries such as [Ramda][20] and [Sanctuary][21].
-* Provides a pleasant debugging experience through informative error messages.
+* Great integration with functional libraries such as [Sanctuary][S].
+* A pleasant debugging experience through informative error messages.
 * Considerable performance benefits over Promises and the likes.
 
 For more information:
 
-* [Wiki: Compare Futures to Promises][22]
-* [Wiki: Compare Fluture to similar libraries][15]
-* [Video: Monad a Day by @DrBoolean - Futures][23]
+* [Wiki: Compare Futures to Promises][wiki:promises]
+* [Wiki: Compare Fluture to similar libraries][wiki:similar]
+* [Video: Monad a Day by @DrBoolean - Futures][5]
 
 ## Usage
 
@@ -102,10 +99,10 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
 ## Interoperability
 
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][FL]
-[<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][25]
+[<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][6]
 
 Fluture implements [FantasyLand 1][FL1], [FantasyLand 2][FL2],
-[FantasyLand 3][FL3] and [Static Land][25] compatible `Functor`, `Bifunctor`,
+[FantasyLand 3][FL3] and [Static Land][6] compatible `Functor`, `Bifunctor`,
 `Apply`, `Applicative`, `Chain`, `ChainRec` and `Monad`.
 
 FantasyLand 0.x is *mostly* supported. Everything but `Apply` (`ap`) is, this
@@ -115,24 +112,24 @@ means that dispatchers to FantasyLand 0.x `ap` will not work.
 
 ### Type signatures
 
-[Hindley-Milner][9] type signatures are used to document functions. Signatures
+[Hindley-Milner][2] type signatures are used to document functions. Signatures
 starting with a `.` refer to "static" functions, whereas signatures starting
 with a `#` refer to functions on the prototype.
 
 A list of all types used within the signatures follows:
 
 - **Future** - Instances of Future provided by Fluture.
-- **Promise** - Values which conform to the [Promises/A+ specification][33].
-- **Functor** - Values which conform to the [Fantasy Land Functor specification][12]
-  as determined by [Sanctuary Type Classes][27].
-- **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][24]
-  as determined by [Sanctuary Type Classes][28].
-- **Chain** - Values which conform to the [Fantasy Land Chain specification][13]
-  as determined by [Sanctuary Type Classes][29].
-- **Apply** - Values which conform to the [Fantasy Land Apply specification][14]
-  as determined by [Sanctuary Type Classes][30].
-- **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][18].
-- **Iteration** - `{done, value}`-Objects as defined by the [Iterator protocol][18].
+- **Promise** - Values which conform to the [Promises/A+ specification][7].
+- **Functor** - Values which conform to the [Fantasy Land Functor specification][FL:functor]
+  as determined by [Sanctuary Type Classes][Z:Functor].
+- **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][FL:bifunctor]
+  as determined by [Sanctuary Type Classes][Z:Bifunctor].
+- **Chain** - Values which conform to the [Fantasy Land Chain specification][FL:chain]
+  as determined by [Sanctuary Type Classes][Z:Chain].
+- **Apply** - Values which conform to the [Fantasy Land Apply specification][FL:apply]
+  as determined by [Sanctuary Type Classes][Z:Apply].
+- **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][3].
+- **Iteration** - `{done, value}`-Objects as defined by the [Iterator protocol][3].
 - **Next** - An incomplete (`{done: false}`) Iteration.
 - **Done** - A complete (`{done: true}`) Iteration.
 - **Cancel** - The nullary cancellation functions returned from computations.
@@ -165,7 +162,7 @@ after it's [forked](#fork).
 ##### `.of :: a -> Future _ a`
 
 Creates a Future which immediately resolves with the given value. This function
-is compliant with the [Fantasy Land Applicative specification][16].
+is compliant with the [Fantasy Land Applicative specification][FL:applicative].
 
 ```js
 const eventualThing = Future.of('world');
@@ -292,7 +289,7 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 #### chainRec
 ##### `.chainRec :: ((b -> Next, c -> Done, b) -> Future a Iteration) -> b -> Future a c`
 
-Stack- and memory-safe asynchronous "recursion" based on [FantasyLand ChainRec][26].
+Stack- and memory-safe asynchronous "recursion" based on [FantasyLand ChainRec][FL:chainrec].
 
 Calls the given function with the initial value (as third argument), and expects
 a Future of an [Iteration](#type-signatures). If the Iteration is incomplete
@@ -320,7 +317,7 @@ the transformed value. This is like doing `promise.then(x => x + 1)`, except
 that it's lazy, so the transformation will not be applied before the Future is
 forked. The transformation is only applied to the resolution branch: If the
 Future is rejected, the transformation is ignored. To learn more about the exact
-behaviour of `map`, check out its [spec][12].
+behaviour of `map`, check out its [spec][FL:functor].
 
 ```js
 Future.of(1)
@@ -356,7 +353,7 @@ Allows the creation of a new Future based on the resolution value. This is like
 doing `promise.then(x => Promise.resolve(x + 1))`, except that it's lazy, so the
 new Future will not be created until the other one is forked. The function is
 only ever applied to the resolution value; it's ignored when the Future was
-rejected. To learn more about the exact behaviour of `chain`, check out its [spec][13].
+rejected. To learn more about the exact behaviour of `chain`, check out its [spec][FL:chain].
 
 ```js
 Future.of(1)
@@ -377,7 +374,7 @@ traverse a large list (10000+ items).
 Applies the function contained in the right-hand Future or Apply to the value
 contained in the left-hand Future or Apply. If one of the Futures rejects the
 resulting Future will also be rejected. To learn more about the exact behaviour
-of `ap`, check out its [spec][14].
+of `ap`, check out its [spec][FL:apply].
 
 ```js
 Future.of(1)
@@ -445,7 +442,7 @@ Applies the left function to the rejection value, or the right function to the
 resolution value, depending on which is present, and resolves with the result.
 
 This provides a convenient means to ensure a Future is always resolved. It can
-be used with other type constructors, like [`S.Either`][7], to maintain a
+be used with other type constructors, like [`S.Either`][S:Either], to maintain a
 representation of failures:
 
 ```js
@@ -756,7 +753,7 @@ Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 ##### `.isFuture :: a -> Boolean`
 
 Returns true for [Futures](#type-signatures) and false for everything else. This
-function (and [`S.is`][17]) also return `true` for instances of Future that were
+function (and [`S.is`][S:is]) also return `true` for instances of Future that were
 created within other contexts. It is therefore recommended to use this over
 `instanceof`, unless your intent is to explicitly check for Futures created
 using the exact `Future` constructor you're testing against.
@@ -798,7 +795,7 @@ eventualPackage.fork(console.error, console.log);
 #### do
 ##### `.do :: (() -> Iterator) -> Future a b`
 
-A specialized version of [fantasy-do][19] which works only for Futures, but has
+A specialized version of [fantasy-do][4] which works only for Futures, but has
 the advantage of type-checking and not having to pass `Future.of`. Another
 advantage is that the returned Future can be forked multiple times, as opposed
 to with a general `fantasy-do` solution, where forking the Future a second time
@@ -823,7 +820,7 @@ Future.do(function*(){
 ```
 
 Error handling is slightly different in do-notation, you need to [`fold`](#fold)
-the error into your control domain, I recommend folding into an [`Either`][7]:
+the error into your control domain, I recommend folding into an [`Either`][S:Either]:
 
 ```js
 const attempt = Future.fold(S.Left, S.Right);
@@ -842,7 +839,7 @@ Future.do(function*(){
 
 ### Sanctuary
 
-When using this module with [Sanctuary Def][31] (and [Sanctuary][21] by
+When using this module with [Sanctuary Def][$] (and [Sanctuary][S] by
 extension) you might run into the following issue:
 
 ```js
@@ -857,7 +854,8 @@ This happens because Sanctuary Def needs to know about the Future type in order
 to determine whether the variable types are consistent.
 
 To let Sanctuary know about Futures, we can provide it a `FutureType` using
-[`BinaryType`][35] from Sanctuary Def, and pass it to Sanctuary using [`S.create`][32]:
+[`BinaryType`][$:BinaryType] from Sanctuary Def, and pass it to Sanctuary using
+[`S.create`][S:create]:
 
 ```js
 const $ = require('sanctuary-def');
@@ -881,7 +879,7 @@ S.I(Future.of(1));
 ### Futurization
 
 To reduce the boilerplate of making Node or Promise functions return Futures
-instead, one might use the [Futurize][6] library:
+instead, one might use the [Futurize][1] library:
 
 ```js
 const Future = require('fluture');
@@ -891,7 +889,7 @@ readFile('README.md', 'utf8')
 .map(text => text.split('\n'))
 .map(lines => lines[0])
 .fork(console.error, console.log);
-//> "# Fluture"
+//> "# [![Fluture](logo.png)](#butterfly)"
 ```
 
 ## Benchmarks
@@ -908,7 +906,7 @@ The name "Fluture" is a conjunction of "FL" (the acronym to [Fantasy Land][FL])
 and "future". Fluture means butterfly in Romanian: A creature you might expect
 to see in Fantasy Land.
 
-Credits for the logo go to [Erik Fuente][34].
+Credits for the logo go to [Erik Fuente][8].
 
 ----
 
@@ -916,40 +914,38 @@ Credits for the logo go to [Erik Fuente][34].
 
 <!-- References -->
 
-[FL]:  https://github.com/fantasyland/fantasy-land
-[FL1]: https://github.com/fantasyland/fantasy-land/tree/v1.0.1
-[FL2]: https://github.com/fantasyland/fantasy-land/tree/v2.2.0
-[FL3]: https://github.com/fantasyland/fantasy-land
+[wiki:similar]:         https://github.com/Avaq/Fluture/wiki/Comparison-of-Future-Implementations
+[wiki:promises]:        https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
 
-[2]:  http://sanctuary.js.org/#pipe
-[3]:  http://ramdajs.com/docs/#map
-[4]:  http://ramdajs.com/docs/#chain
-[5]:  http://ramdajs.com/docs/#ap
-[6]:  https://github.com/futurize/futurize
-[7]:  http://sanctuary.js.org/#either-type
-[8]:  https://github.com/fantasyland/fantasy-land/pull/124
-[9]:  https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
-[12]: https://github.com/fantasyland/fantasy-land#functor
-[13]: https://github.com/fantasyland/fantasy-land#chain
-[14]: https://github.com/fantasyland/fantasy-land#apply
-[15]: https://github.com/Avaq/Fluture/wiki/Comparison-of-Future-Implementations
-[16]: https://github.com/fantasyland/fantasy-land#applicative
-[17]: http://sanctuary.js.org/#is
-[18]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterator
-[19]: https://github.com/russellmcc/fantasydo
-[20]: http://ramdajs.com/
-[21]: http://sanctuary.js.org/
-[22]: https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
-[23]: https://vimeo.com/106008027
-[24]: https://github.com/fantasyland/fantasy-land#bifunctor
-[25]: https://github.com/rpominov/static-land
-[26]: https://github.com/fantasyland/fantasy-land#chainrec
-[27]: https://github.com/sanctuary-js/sanctuary-type-classes#Functor
-[28]: https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
-[29]: https://github.com/sanctuary-js/sanctuary-type-classes#Chain
-[30]: https://github.com/sanctuary-js/sanctuary-type-classes#Apply
-[31]: https://github.com/sanctuary-js/sanctuary-def
-[32]: https://sanctuary.js.org/#create
-[33]: https://promisesaplus.com/
-[34]: http://erikfuente.com/
-[35]: https://github.com/sanctuary-js/sanctuary-def#BinaryType
+[FL]:                   https://github.com/fantasyland/fantasy-land
+[FL1]:                  https://github.com/fantasyland/fantasy-land/tree/v1.0.1
+[FL2]:                  https://github.com/fantasyland/fantasy-land/tree/v2.2.0
+[FL3]:                  https://github.com/fantasyland/fantasy-land
+[FL:functor]:           https://github.com/fantasyland/fantasy-land#functor
+[FL:chain]:             https://github.com/fantasyland/fantasy-land#chain
+[FL:apply]:             https://github.com/fantasyland/fantasy-land#apply
+[FL:applicative]:       https://github.com/fantasyland/fantasy-land#applicative
+[FL:bifunctor]:         https://github.com/fantasyland/fantasy-land#bifunctor
+[FL:chainrec]:          https://github.com/fantasyland/fantasy-land#chainrec
+
+[S]:                    https://sanctuary.js.org/
+[S:Either]:             https://sanctuary.js.org/#either-type
+[S:is]:                 https://sanctuary.js.org/#is
+[S:create]:             https://sanctuary.js.org/#create
+
+[Z:Functor]:            https://github.com/sanctuary-js/sanctuary-type-classes#Functor
+[Z:Bifunctor]:          https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
+[Z:Chain]:              https://github.com/sanctuary-js/sanctuary-type-classes#Chain
+[Z:Apply]:              https://github.com/sanctuary-js/sanctuary-type-classes#Apply
+
+[$]:                    https://github.com/sanctuary-js/sanctuary-def
+[$:BinaryType]:         https://github.com/sanctuary-js/sanctuary-def#BinaryType
+
+[1]:                    https://github.com/futurize/futurize
+[2]:                    https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
+[3]:                    https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterator
+[4]:                    https://github.com/russellmcc/fantasydo
+[5]:                    https://vimeo.com/106008027
+[6]:                    https://github.com/rpominov/static-land
+[7]:                    https://promisesaplus.com/
+[8]:                    http://erikfuente.com/
