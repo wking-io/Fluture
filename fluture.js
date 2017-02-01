@@ -40,6 +40,7 @@
   };
 
   function isForkable(m){
+    deprecate('Future.isForkable() is deprecated');
     return Boolean(m) && typeof m.fork === 'function' && m.fork.length >= 2;
   }
 
@@ -273,7 +274,6 @@
   Future.chainRec = Future$chainRec;
   Future.Future = Future;
   Future.isFuture = isFuture;
-  Future.isForkable = isForkable;
 
   function ap$mval(mval, mfunc){
     if(!Z.Apply.test(mfunc)) invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
@@ -375,8 +375,13 @@
   };
 
   Future.cast = function Future$cast(m){
-    deprecate('Future.cast has been renamed to Future.fromForkable and will soon be removed');
-    return Future.fromForkable(m);
+    deprecate('Future.cast() is deprecated. Please use Future((l, r) => {m.fork(l, r)})');
+    return new SafeFuture((l, r) => void m.fork(l, r));
+  };
+
+  Future.fromForkable = function Future$fromForkable(m){
+    deprecate('Future.fromForkable() is deprecated. Please use Future((l, r) => {m.fork(l, r)})');
+    return new SafeFuture((l, r) => void m.fork(l, r));
   };
 
   Future.try = function Future$try(f){
@@ -411,11 +416,6 @@
         if(!isTernary(f)) invalidArgument('Future.encase3', 0, 'take three arguments', f);
         return new FutureEncase(f, x, y, z);
     }
-  };
-
-  Future.fromForkable = function Future$fromForkable(f){
-    if(!isForkable(f)) invalidArgument('Future.fromForkable', 0, 'be a forkable', f);
-    return new FutureFromForkable(f);
   };
 
   Future.fromPromise = function Future$fromPromise(f, x){
@@ -1067,33 +1067,6 @@
 
   //----------
 
-  function FutureFromForkable(forkable){
-    this._forkable = forkable;
-  }
-
-  FutureFromForkable.prototype = Object.create(Future.prototype);
-
-  FutureFromForkable.prototype._f = function FutureFromForkable$fork(rej, res){
-    let pending = true;
-    return this._forkable.fork(function FutureFromForkable$fork$rej(reason){
-      if(pending){
-        pending = false;
-        rej(reason);
-      }
-    }, function FutureFromForkable$res(value){
-      if(pending){
-        pending = false;
-        res(value);
-      }
-    });
-  };
-
-  FutureFromForkable.prototype.toString = function FutureFromForkable$toString(){
-    return `Future.fromForkable(${show(this._forkable)})`;
-  };
-
-  //----------
-
   function FutureTry(fn){
     this._fn = fn;
   }
@@ -1597,7 +1570,6 @@
     FutureDo,
     FutureTry,
     FutureEncase,
-    FutureFromForkable,
     FutureFromPromise,
     FutureChain,
     FutureChainRej,
