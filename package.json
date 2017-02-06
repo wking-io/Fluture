@@ -6,7 +6,7 @@
   "files": [
     "es5.js"
   ],
-  "repository": "https://github.com/fluture-js/fluture.git",
+  "repository": "https://github.com/fluture-js/Fluture.git",
   "scripts": {
     "build": "babel fluture.js -o es5.js",
     "clean": "rimraf npm-debug.log coverage",
@@ -14,7 +14,7 @@
     "lint:fix": "npm run lint -- --fix",
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "prepublish": "npm run build",
-    "release": "npm outdated --long && xyz --edit --repo git@github.com:fluture-js/fluture.git --tag 'X.Y.Z' --increment",
+    "release": "npm outdated --long && xyz --edit --repo git@github.com:fluture-js/Fluture.git --tag 'X.Y.Z' --increment",
     "toc": "node scripts/toc.js",
     "test": "npm run test:all && npm run test:coverage && codecov",
     "test:opt": "node --allow-natives-syntax --trace-opt --trace-deopt --trace-inlining scripts/test-opt",
@@ -24,9 +24,9 @@
     "test:coverage": "npm run clean && istanbul cover --report html _mocha -- --ui bdd --reporter dot --check-leaks --bail test/**.test.js"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
-  "homepage": "https://github.com/fluture-js/fluture",
+  "homepage": "https://github.com/fluture-js/Fluture",
   "bugs": {
-    "url": "https://github.com/fluture-js/fluture/issues"
+    "url": "https://github.com/fluture-js/Fluture/issues"
   },
   "license": "MIT",
   "engines": {
