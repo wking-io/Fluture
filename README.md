@@ -1,10 +1,10 @@
 # [![Fluture](logo.png)](#butterfly)
 
-[![Chat](https://badges.gitter.im/Avaq/Fluture.svg)](https://gitter.im/Avaq/Fluture)
+[![Chat](https://badges.gitter.im/fluture-js/fluture.svg)](https://gitter.im/fluture-js/Fluture)
 [![NPM Version](https://badge.fury.io/js/fluture.svg)](https://www.npmjs.com/package/fluture)
-[![Dependencies](https://david-dm.org/avaq/fluture.svg)](https://david-dm.org/avaq/fluture)
-[![Build Status](https://travis-ci.org/Avaq/Fluture.svg?branch=master)](https://travis-ci.org/Avaq/Fluture)
-[![Code Coverage](https://codecov.io/gh/Avaq/Fluture/branch/master/graph/badge.svg)](https://codecov.io/gh/Avaq/Fluture)
+[![Dependencies](https://david-dm.org/fluture-js/fluture.svg)](https://david-dm.org/fluture-js/fluture)
+[![Build Status](https://travis-ci.org/fluture-js/fluture.svg?branch=master)](https://travis-ci.org/fluture-js/fluture)
+[![Code Coverage](https://codecov.io/gh/fluture-js/fluture/branch/master/graph/badge.svg)](https://codecov.io/gh/fluture-js/fluture)
 
 Fluture offers a control structure similar to Promises, Tasks, Deferreds, and
 what-have-you. Let's call them Futures.
@@ -864,7 +864,7 @@ const {env, create} = require('sanctuary');
 
 const FutureType = $.BinaryType(
   Future.name,
-  'https://github.com/Avaq/Fluture#future',
+  'https://github.com/fluture-js/fluture#future',
   Future.isFuture,
   Future.extractLeft,
   Future.extractRight
@@ -914,8 +914,8 @@ Credits for the logo go to [Erik Fuente][8].
 
 <!-- References -->
 
-[wiki:similar]:         https://github.com/Avaq/Fluture/wiki/Comparison-of-Future-Implementations
-[wiki:promises]:        https://github.com/Avaq/Fluture/wiki/Comparison-to-Promises
+[wiki:similar]:         https://github.com/fluture-js/fluture/wiki/Comparison-of-Future-Implementations
+[wiki:promises]:        https://github.com/fluture-js/fluture/wiki/Comparison-to-Promises
 
 [FL]:                   https://github.com/fantasyland/fantasy-land
 [FL1]:                  https://github.com/fantasyland/fantasy-land/tree/v1.0.1
