@@ -2,9 +2,60 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureChain = Future.classes.FutureChain;
 const U = require('./util');
 const F = require('./futures');
+
+const testInstance = chain => {
+
+  describe('#fork()', () => {
+
+    it('calls the given function with the inner of the Future', done => {
+      chain(F.resolved, x => {
+        expect(x).to.equal('resolved');
+        done();
+        return Future.of(null);
+      }).fork(U.noop, U.noop);
+    });
+
+    it('returns a Future with an inner equal to the returned Future', () => {
+      const actual = chain(F.resolved, () => F.resolvedSlow);
+      return U.assertResolved(actual, 'resolvedSlow');
+    });
+
+    it('maintains rejected state', () => {
+      const actual = chain(F.rejected, () => F.resolved);
+      return U.assertRejected(actual, 'rejected');
+    });
+
+    it('assumes rejected state', () => {
+      const actual = chain(F.resolved, () => F.rejected);
+      return U.assertRejected(actual, 'rejected');
+    });
+
+    it('does not chain after being cancelled', done => {
+      chain(F.resolvedSlow, U.failRes).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cancelled', done => {
+      chain(F.rejectedSlow, U.failRes).fork(U.failRej, U.failRes)();
+      chain(F.resolved, () => F.rejectedSlow).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureChain', () => {
+      const m = chain(Future.of(1), x => Future.of(x));
+      const s = 'Future.of(1).chain(x => Future.of(x))';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.chain()', () => {
 
@@ -24,14 +75,11 @@ describe('Future.chain()', () => {
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  it('returns an instance of FutureChain', () => {
-    const actual = Future.chain(U.B(Future.of)(U.add(1)), Future.of(1));
-    expect(actual).to.be.an.instanceof(Future.classes.FutureChain);
-  });
+  testInstance((m, f) => Future.chain(f, m));
 
 });
 
-describe('#chain()', () => {
+describe('Future#chain()', () => {
 
   const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
@@ -50,60 +98,6 @@ describe('#chain()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureChain', () => {
-    expect(F.resolved.chain(_ => F.resolved)).to.be.an.instanceof(FutureChain);
-  });
-
-});
-
-describe('FutureChain', () => {
-
-  it('extends Future', () => {
-    expect(new FutureChain).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    it('calls the given function with the inner of the Future', () => {
-      F.resolved.chain(x => (expect(x).to.equal('resolved'), Future.of(null))).fork(U.noop, U.noop);
-    });
-
-    it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = F.resolved.chain(() => F.resolvedSlow);
-      return U.assertResolved(actual, 'resolvedSlow');
-    });
-
-    it('maintains rejected state', () => {
-      const actual = F.rejected.chain(() => F.resolved);
-      return U.assertRejected(actual, 'rejected');
-    });
-
-    it('assumes rejected state', () => {
-      const actual = F.resolved.chain(() => F.rejected);
-      return U.assertRejected(actual, 'rejected');
-    });
-
-    it('does not chain after being cancelled', done => {
-      F.resolvedSlow.chain(U.failRes).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-    it('does not reject after being cancelled', done => {
-      F.rejectedSlow.chain(U.failRes).fork(U.failRej, U.failRes)();
-      F.resolved.chain(() => F.rejectedSlow).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureChain', () => {
-      const m = Future.of(1).chain(x => Future.of(x));
-      const s = 'Future.of(1).chain(x => Future.of(x))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
+  testInstance((m, f) => m.chain(f));
 
 });

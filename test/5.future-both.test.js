@@ -2,9 +2,81 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureBoth = Future.classes.FutureBoth;
 const U = require('./util');
 const F = require('./futures');
+
+const testInstance = both => {
+
+  describe('#fork()', () => {
+
+    describe('(res, res)', () => {
+
+      it('resolves with both if left resolves first', () => {
+        return U.assertResolved(both(F.resolved, F.resolvedSlow), ['resolved', 'resolvedSlow']);
+      });
+
+      it('resolves with both if left resolves last', () => {
+        return U.assertResolved(both(F.resolvedSlow, F.resolved), ['resolvedSlow', 'resolved']);
+      });
+
+    });
+
+    describe('(rej, rej)', () => {
+
+      it('rejects with right if right rejects first', () => {
+        return U.assertRejected(both(F.rejectedSlow, F.rejected), 'rejected');
+      });
+
+      it('rejects with left if right rejects last', () => {
+        return U.assertRejected(both(F.rejected, F.rejectedSlow), 'rejected');
+      });
+
+    });
+
+    describe('(rej, res)', () => {
+
+      it('rejects with left if right resolves first', () => {
+        return U.assertRejected(both(F.rejectedSlow, F.resolved), 'rejectedSlow');
+      });
+
+      it('rejects with left if right resolves last', () => {
+        return U.assertRejected(both(F.rejected, F.resolvedSlow), 'rejected');
+      });
+
+    });
+
+    describe('(res, rej)', () => {
+
+      it('rejects with right if left resolves first', () => {
+        return U.assertRejected(both(F.resolved, F.rejectedSlow), 'rejectedSlow');
+      });
+
+      it('rejects with right if left resolves last', () => {
+        return U.assertRejected(both(F.resolvedSlow, F.rejected), 'rejected');
+      });
+
+    });
+
+    it('creates a cancel function which cancels both Futures', done => {
+      let cancelled = false;
+      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
+      const cancel = both(m, m).fork(U.noop, U.noop);
+      cancel();
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureBoth', () => {
+      const m = both(Future.of(1), Future.of(2));
+      const s = 'Future.of(1).both(Future.of(2))';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.both()', () => {
 
@@ -24,9 +96,7 @@ describe('Future.both()', () => {
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  it('returns an instance of FutureBoth', () => {
-    expect(Future.both(F.resolved, F.resolved)).to.be.an.instanceof(FutureBoth);
-  });
+  testInstance((a, b) => Future.both(a, b));
 
 });
 
@@ -43,85 +113,6 @@ describe('Future#both()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureBoth', () => {
-    expect(F.resolved.both(F.resolved)).to.be.an.instanceof(FutureBoth);
-  });
-
-});
-
-describe('FutureBoth', () => {
-
-  it('extends Future', () => {
-    expect(new FutureBoth).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    describe('(res, res)', () => {
-
-      it('resolves with both if left resolves first', () => {
-        return U.assertResolved(F.resolved.both(F.resolvedSlow), ['resolved', 'resolvedSlow']);
-      });
-
-      it('resolves with both if left resolves last', () => {
-        return U.assertResolved(F.resolvedSlow.both(F.resolved), ['resolvedSlow', 'resolved']);
-      });
-
-    });
-
-    describe('(rej, rej)', () => {
-
-      it('rejects with right if right rejects first', () => {
-        return U.assertRejected(F.rejectedSlow.both(F.rejected), 'rejected');
-      });
-
-      it('rejects with left if right rejects last', () => {
-        return U.assertRejected(F.rejected.both(F.rejectedSlow), 'rejected');
-      });
-
-    });
-
-    describe('(rej, res)', () => {
-
-      it('rejects with left if right resolves first', () => {
-        return U.assertRejected(F.rejectedSlow.both(F.resolved), 'rejectedSlow');
-      });
-
-      it('rejects with left if right resolves last', () => {
-        return U.assertRejected(F.rejected.both(F.resolvedSlow), 'rejected');
-      });
-
-    });
-
-    describe('(res, rej)', () => {
-
-      it('rejects with right if left resolves first', () => {
-        return U.assertRejected(F.resolved.both(F.rejectedSlow), 'rejectedSlow');
-      });
-
-      it('rejects with right if left resolves last', () => {
-        return U.assertRejected(F.resolvedSlow.both(F.rejected), 'rejected');
-      });
-
-    });
-
-    it('creates a cancel function which cancels both Futures', done => {
-      let cancelled = false;
-      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
-      const cancel = m.both(m).fork(U.noop, U.noop);
-      cancel();
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureBoth', () => {
-      const m = Future.of(1).both(Future.of(2));
-      const s = 'Future.of(1).both(Future.of(2))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
+  testInstance((a, b) => a.both(b));
 
 });

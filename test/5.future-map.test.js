@@ -2,9 +2,45 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureMap = Future.classes.FutureMap;
 const U = require('./util');
 const F = require('./futures');
+
+const testInstance = map => {
+
+  describe('#fork()', () => {
+
+    it('applies the given function to its inner', () => {
+      const actual = map(Future.of(1), U.add(1));
+      return U.assertResolved(actual, 2);
+    });
+
+    it('does not map rejected state', () => {
+      const actual = map(F.rejected, _ => 'mapped');
+      return U.assertRejected(actual, 'rejected');
+    });
+
+    it('does not resolve after being cancelled', done => {
+      map(F.resolvedSlow, U.failRes).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cancelled', done => {
+      map(F.rejectedSlow, U.failRes).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureMap', () => {
+      const m = map(F.resolved, U.noop);
+      expect(m.toString()).to.equal('Future.of("resolved").map(() => {})');
+    });
+
+  });
+
+};
 
 describe('Future.map()', () => {
 
@@ -24,10 +60,7 @@ describe('Future.map()', () => {
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  it('returns a FutureMap', () => {
-    const actual = Future.map(U.add(1), F.mock);
-    expect(actual).to.be.an.instanceof(FutureMap);
-  });
+  testInstance((m, f) => Future.map(f, m));
 
 });
 
@@ -44,49 +77,6 @@ describe('Future#map()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureMap', () => {
-    expect(F.resolved.map(U.add('!'))).to.be.an.instanceof(FutureMap);
-  });
-
-});
-
-describe('FutureMap', () => {
-
-  it('extends Future', () => {
-    expect(new FutureMap).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    it('applies the given function to its inner', () => {
-      const actual = Future.of(1).map(U.add(1));
-      return U.assertResolved(actual, 2);
-    });
-
-    it('does not map rejected state', () => {
-      const actual = F.rejected.map(_ => 'mapped');
-      return U.assertRejected(actual, 'rejected');
-    });
-
-    it('does not resolve after being cancelled', done => {
-      F.resolvedSlow.map(U.failRes).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-    it('does not reject after being cancelled', done => {
-      F.rejectedSlow.map(U.failRes).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureMap', () => {
-      const m = new FutureMap(F.resolved, U.noop);
-      expect(m.toString()).to.equal('Future.of("resolved").map(() => {})');
-    });
-
-  });
+  testInstance((m, f) => m.map(f));
 
 });
