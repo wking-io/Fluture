@@ -348,6 +348,7 @@
   Future.bimap = function bimap(lmapper, rmapper, m){
     if(!isFunction(lmapper)) error$invalidArgument('Future.bimap', 0, 'be a Function', lmapper);
     if(arguments.length === 1) return unaryPartial(bimap$lmapper, lmapper);
+    if(arguments.length === 2) return bimap$lmapper(lmapper, rmapper);
     return bimap$lmapper(lmapper, rmapper, m);
   };
 
