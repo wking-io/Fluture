@@ -1,6 +1,6 @@
 {
   "name": "fluture",
-  "version": "4.3.3",
+  "version": "4.3.4",
   "description": "FantasyLand compliant (monadic) alternative to Promises",
   "main": "fluture.js",
   "files": [
