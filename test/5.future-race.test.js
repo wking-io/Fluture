@@ -27,6 +27,12 @@ const testInstance = race => {
       return U.assertResolved(race(m1, m2), 1);
     });
 
+    it('cancels the slower computation', done => {
+      const m1 = Future((rej, res) => void setTimeout(res, 5, 1));
+      const m2 = Future(() => () => done());
+      race(m1, m2).fork(U.noop, U.noop);
+    });
+
     it('creates a cancel function which cancels both Futures', done => {
       let cancelled = false;
       const m = Future(() => () => (cancelled ? done() : (cancelled = true)));

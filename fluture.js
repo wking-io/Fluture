@@ -12,19 +12,21 @@
   /*istanbul ignore next*/
   if(module && typeof module.exports !== 'undefined'){
     module.exports = f(
+      require('concurrify'),
       require('inspect-f'),
       require('sanctuary-type-classes'),
       require('sanctuary-type-identifiers')
     );
   }else{
     global.Fluture = f(
+      global.concurrify,
       global.inspectf,
       global.sanctuaryTypeClasses,
       global.sanctuaryTypeIdentifiers
     );
   }
 
-}(/*istanbul ignore next*/(global || window || this), function(inspectf, Z, type){
+}(/*istanbul ignore next*/(global || window || this), function(concurrify, inspectf, Z, type){
 
   'use strict';
 
@@ -1342,6 +1344,45 @@
 
   //----------
 
+  function FutureParallelAp(mval, mfunc){
+    this._mval = mval;
+    this._mfunc = mfunc;
+  }
+
+  FutureParallelAp.prototype = Object.create(Future.prototype);
+
+  FutureParallelAp.prototype._f = function FutureParallelAp$fork(rej, res){
+    let func, val, okval = false, okfunc = false, rejected = false, c1, c2;
+    function FutureParallelAp$rej(x){
+      if(!rejected){
+        rejected = true;
+        rej(x);
+      }
+    }
+    c1 = this._mval._f(FutureParallelAp$rej, function FutureParallelAp$fork$resVal(x){
+      c1 = noop;
+      if(!okval) return void (okfunc = true, val = x);
+      check$ap$f(func);
+      res(func(x));
+    });
+    c2 = this._mfunc._f(FutureParallelAp$rej, function FutureParallelAp$fork$resFunc(f){
+      c2 = noop;
+      if(!okfunc) return void (okval = true, func = f);
+      check$ap$f(f);
+      res(f(val));
+    });
+    return function FutureParallelAp$fork$cancel(){
+      c1();
+      c2();
+    };
+  };
+
+  FutureParallelAp.prototype.toString = function FutureParallelAp$toString(){
+    return `new FutureParallelAp(${this._mval.toString()}, ${this._mfunc.toString()})`;
+  };
+
+  //----------
+
   function FutureSwap(parent){
     this._parent = parent;
   }
@@ -1565,6 +1606,22 @@
     return `${this._left.toString()}.finally(${this._right.toString()})`;
   };
 
+  //----------
+
+  function FutureNever(){}
+
+  FutureNever.prototype = Object.create(Future.prototype);
+
+  FutureNever.prototype._f = function FutureNever$fork(){
+    return noop;
+  };
+
+  FutureNever.prototype.toString = function FutureNever$toString(){
+    return 'Future.never';
+  };
+
+  Future.never = new FutureNever;
+
   Future.classes = {
     SafeFuture,
     ChainRec,
@@ -1585,6 +1642,7 @@
     FutureMapRej,
     FutureBimap,
     FutureAp,
+    FutureParallelAp,
     FutureSwap,
     FutureRace,
     FutureAnd,
@@ -1592,7 +1650,26 @@
     FutureBoth,
     FutureFold,
     FutureHook,
-    FutureFinally
+    FutureFinally,
+    FutureNever
+  };
+
+  //////////////
+  // Parallel //
+  //////////////
+
+  const ParallelFuture = concurrify(Future, Future.never, Future.race, function(mval, mfunc){
+    return new FutureParallelAp(mval, mfunc);
+  });
+
+  function isParallel(x){
+    return x instanceof ParallelFuture || type(x) === ParallelFuture['@@type'];
+  }
+
+  Future.Par = ParallelFuture;
+  Future.seq = function seq(par){
+    if(!isParallel(par)) invalidArgument('Future.seq', 0, 'to be a Par', par);
+    return par.sequential;
   };
 
   return Future;

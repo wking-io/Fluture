@@ -354,6 +354,21 @@ describe('Future', () => {
 
   });
 
+  describe('.seq()', () => {
+
+    it('throws when not given a Parallel', () => {
+      const f = () => Future.seq(1);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('returns the Future contained in the Parallel', () => {
+      const par = Future.Par(F.mock);
+      const seq = Future.seq(par);
+      expect(seq).to.equal(F.mock);
+    });
+
+  });
+
   describe('.extractLeft()', () => {
 
     it('throws when not given a Future', () => {
