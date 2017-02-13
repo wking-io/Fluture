@@ -8,6 +8,7 @@ const AssertionError = require('assert').AssertionError;
 exports.STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
 exports.noop = () => {};
 exports.add = a => b => a + b;
+exports.sub = a => b => a - b;
 exports.bang = s => `${s}!`;
 exports.B = f => g => x => f(g(x));
 exports.error = new Error('Intentional error for unit testing');

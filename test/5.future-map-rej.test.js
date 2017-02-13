@@ -2,9 +2,46 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureMapRej = Future.classes.FutureMapRej;
 const U = require('./util');
 const F = require('./futures');
+
+const testInstance = mapRej => {
+
+  describe('#fork()', () => {
+
+    it('applies the given function to its rejection reason', () => {
+      const actual = mapRej(F.rejected, U.bang);
+      return U.assertRejected(actual, 'rejected!');
+    });
+
+    it('does not map resolved state', () => {
+      const actual = mapRej(F.resolved, _ => 'mapped');
+      return U.assertResolved(actual, 'resolved');
+    });
+
+    it('does not resolve after being cancelled', done => {
+      mapRej(F.resolvedSlow, U.failRej).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+    it('does not reject after being cancelled', done => {
+      mapRej(F.rejectedSlow, U.failRej).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureMapRej', () => {
+      const m = mapRej(F.resolved, x => x);
+      const s = 'Future.of("resolved").mapRej(x => x)';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.mapRej()', () => {
 
@@ -24,9 +61,7 @@ describe('Future.mapRej()', () => {
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  it('returns an instance of FutureMapRej', () => {
-    expect(Future.mapRej(U.bang, F.resolved)).to.be.an.instanceof(FutureMapRej);
-  });
+  testInstance((m, f) => Future.mapRej(f, m));
 
 });
 
@@ -43,50 +78,6 @@ describe('Future#mapRej()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureMapRej', () => {
-    expect(F.resolved.mapRej(U.bang)).to.be.an.instanceof(FutureMapRej);
-  });
-
-});
-
-describe('FutureMapRej', () => {
-
-  it('extends Future', () => {
-    expect(new FutureMapRej).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    it('applies the given function to its rejection reason', () => {
-      const actual = F.rejected.mapRej(U.bang);
-      return U.assertRejected(actual, 'rejected!');
-    });
-
-    it('does not map resolved state', () => {
-      const actual = F.resolved.mapRej(_ => 'mapped');
-      return U.assertResolved(actual, 'resolved');
-    });
-
-    it('does not resolve after being cancelled', done => {
-      F.resolvedSlow.mapRej(U.failRej).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-    it('does not reject after being cancelled', done => {
-      F.rejectedSlow.mapRej(U.failRej).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureMapRej', () => {
-      const m = F.resolved.mapRej(x => x);
-      const s = 'Future.of("resolved").mapRej(x => x)';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
+  testInstance((m, f) => m.mapRej(f));
 
 });

@@ -2,9 +2,35 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureBimap = Future.classes.FutureBimap;
 const U = require('./util');
-const F = require('./futures');
+
+const testInstance = bimap => {
+
+  describe('#fork()', () => {
+
+    it('applies the first function to the value in the rejection branch', () => {
+      const actual = bimap(Future.reject(1), U.add(1), U.failRes);
+      return U.assertRejected(actual, 2);
+    });
+
+    it('applies the second function to the value in the resolution branch', () => {
+      const actual = bimap(Future.of(1), U.failRej, U.add(1));
+      return U.assertResolved(actual, 2);
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureBimap', () => {
+      const m = bimap(Future.of(1), x => x, y => y);
+      const s = 'Future.of(1).bimap(x => x, y => y)';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.bimap()', () => {
 
@@ -31,10 +57,7 @@ describe('Future.bimap()', () => {
     expect(f).to.throw(TypeError, /Future.*third/);
   });
 
-  it('returns a FutureBimap', () => {
-    const actual = Future.bimap(U.add(1), U.add(1), Future.of(1));
-    expect(actual).to.be.an.instanceof(Future.classes.FutureBimap);
-  });
+  testInstance((m, f, g) => Future.bimap(f, g, m));
 
 });
 
@@ -57,40 +80,6 @@ describe('Future#bimap()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureBimap', () => {
-    expect(F.resolved.bimap(U.bang, U.bang)).to.be.an.instanceof(FutureBimap);
-  });
-
-});
-
-describe('FutureBimap', () => {
-
-  it('extends Future', () => {
-    expect(new FutureBimap).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    it('applies the first function to the value in the rejection branch', () => {
-      const actual = Future.reject(1).bimap(U.add(1), U.failRes);
-      return U.assertRejected(actual, 2);
-    });
-
-    it('applies the second function to the value in the resolution branch', () => {
-      const actual = Future.of(1).bimap(U.failRej, U.add(1));
-      return U.assertResolved(actual, 2);
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureBimap', () => {
-      const m = Future.of(1).bimap(x => x, y => y);
-      const s = 'Future.of(1).bimap(x => x, y => y)';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
+  testInstance((m, f, g) => m.bimap(f, g));
 
 });

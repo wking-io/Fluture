@@ -2,9 +2,81 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureOr = Future.classes.FutureOr;
 const U = require('./util');
 const F = require('./futures');
+
+const testInstance = or => {
+
+  describe('#fork()', () => {
+
+    describe('(res, res)', () => {
+
+      it('resolves with left if left resolves first', () => {
+        return U.assertResolved(or(F.resolved, F.resolvedSlow), 'resolved');
+      });
+
+      it('resolves with left if left resolves last', () => {
+        return U.assertResolved(or(F.resolvedSlow, F.resolved), 'resolvedSlow');
+      });
+
+    });
+
+    describe('(rej, rej)', () => {
+
+      it('rejects with right if right rejects first', () => {
+        return U.assertRejected(or(F.rejectedSlow, F.rejected), 'rejected');
+      });
+
+      it('rejects with right if right rejects last', () => {
+        return U.assertRejected(or(F.rejected, F.rejectedSlow), 'rejectedSlow');
+      });
+
+    });
+
+    describe('(rej, res)', () => {
+
+      it('resolves with right if right resolves first', () => {
+        return U.assertResolved(or(F.rejectedSlow, F.resolved), 'resolved');
+      });
+
+      it('resolves with right if right resolves last', () => {
+        return U.assertResolved(or(F.rejected, F.resolvedSlow), 'resolvedSlow');
+      });
+
+    });
+
+    describe('(res, rej)', () => {
+
+      it('resolves with left if left resolves first', () => {
+        return U.assertResolved(or(F.resolved, F.rejectedSlow), 'resolved');
+      });
+
+      it('resolves with left if left resolves last', () => {
+        return U.assertResolved(or(F.resolvedSlow, F.rejected), 'resolvedSlow');
+      });
+
+    });
+
+    it('creates a cancel function which cancels both Futures', done => {
+      let cancelled = false;
+      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
+      const cancel = or(m, m).fork(U.noop, U.noop);
+      cancel();
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureOr', () => {
+      const m = or(Future.of(1), Future.of(2));
+      const s = 'Future.of(1).or(Future.of(2))';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.or()', () => {
 
@@ -14,13 +86,27 @@ describe('Future.or()', () => {
     expect(Future.or(Future.of(1))).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.or(Future.of(1))(1);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Future as first argument', () => {
+    const f = () => Future.or(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
   });
 
-  it('returns an instance of FutureOr', () => {
-    expect(Future.or(F.resolved, F.resolved)).to.be.an.instanceof(FutureOr);
+  it('throws when not given a Future as second argument', () => {
+    const f = () => Future.or(Future.of(1), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
+  });
+
+  testInstance((a, b) => Future.or(b, a));
+
+  it('allows for the implementation of `any` in terms of reduce', () => {
+    const C = f => (b, a) => f(a, b);
+    const any = ms => ms.reduce(C(Future.or), Future.reject('empty list'));
+    return Promise.all([
+      U.assertRejected(any([]), 'empty list'),
+      U.assertRejected(any([Future.reject(1)]), 1),
+      U.assertResolved(any([Future.reject(1), Future.of(2)]), 2),
+      U.assertResolved(any([Future.reject(1), Future.after(20, 2), Future.of(3)]), 2)
+    ]);
   });
 
 });
@@ -38,96 +124,6 @@ describe('Future#or()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureOr', () => {
-    expect(F.resolved.or(F.resolved)).to.be.an.instanceof(FutureOr);
-  });
-
-});
-
-describe('FutureOr', () => {
-
-  it('extends Future', () => {
-    expect(new FutureOr).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    describe('(res, res)', () => {
-
-      it('resolves with left if left resolves first', () => {
-        return U.assertResolved(F.resolved.or(F.resolvedSlow), 'resolved');
-      });
-
-      it('resolves with left if left resolves last', () => {
-        return U.assertResolved(F.resolvedSlow.or(F.resolved), 'resolvedSlow');
-      });
-
-    });
-
-    describe('(rej, rej)', () => {
-
-      it('rejects with right if right rejects first', () => {
-        return U.assertRejected(F.rejectedSlow.or(F.rejected), 'rejected');
-      });
-
-      it('rejects with right if right rejects last', () => {
-        return U.assertRejected(F.rejected.or(F.rejectedSlow), 'rejectedSlow');
-      });
-
-    });
-
-    describe('(rej, res)', () => {
-
-      it('resolves with right if right resolves first', () => {
-        return U.assertResolved(F.rejectedSlow.or(F.resolved), 'resolved');
-      });
-
-      it('resolves with right if right resolves last', () => {
-        return U.assertResolved(F.rejected.or(F.resolvedSlow), 'resolvedSlow');
-      });
-
-    });
-
-    describe('(res, rej)', () => {
-
-      it('resolves with left if left resolves first', () => {
-        return U.assertResolved(F.resolved.or(F.rejectedSlow), 'resolved');
-      });
-
-      it('resolves with left if left resolves last', () => {
-        return U.assertResolved(F.resolvedSlow.or(F.rejected), 'resolvedSlow');
-      });
-
-    });
-
-    it('creates a cancel function which cancels both Futures', done => {
-      let cancelled = false;
-      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
-      const cancel = m.or(m).fork(U.noop, U.noop);
-      cancel();
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureOr', () => {
-      const m = Future.of(1).or(Future.of(2));
-      const s = 'Future.of(1).or(Future.of(2))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
-  it('allows for the implementation of `any` in terms of reduce', () => {
-    const C = f => (b, a) => f(a, b);
-    const any = ms => ms.reduce(C(Future.or), Future.reject('empty list'));
-    return Promise.all([
-      U.assertRejected(any([]), 'empty list'),
-      U.assertRejected(any([Future.reject(1)]), 1),
-      U.assertResolved(any([Future.reject(1), Future.of(2)]), 2),
-      U.assertResolved(any([Future.reject(1), Future.after(20, 2), Future.of(3)]), 2)
-    ]);
-  });
+  testInstance((a, b) => a.or(b));
 
 });

@@ -2,9 +2,33 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureFold = Future.classes.FutureFold;
 const U = require('./util');
-const F = require('./futures');
+
+const testInstance = fold => {
+
+  describe('#fork()', () => {
+
+    it('resolves with the transformed rejection value', () => {
+      return U.assertResolved(fold(Future.reject(1), U.add(1), U.sub(1)), 2);
+    });
+
+    it('resolves with the transformed resolution value', () => {
+      return U.assertResolved(fold(Future.of(1), U.sub(1), U.add(1)), 2);
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureFold', () => {
+      const m = fold(Future.of(1), x => x, y => y);
+      const s = 'Future.of(1).fold(x => x, y => y)';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.fold()', () => {
 
@@ -12,17 +36,26 @@ describe('Future.fold()', () => {
     expect(Future.fold).to.be.a('function');
     expect(Future.fold.length).to.equal(3);
     expect(Future.fold(U.noop)).to.be.a('function');
+    expect(Future.fold(U.noop)(U.noop)).to.be.a('function');
     expect(Future.fold(U.noop, U.noop)).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.fold(U.noop)(U.noop)(1);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Function as first argument', () => {
+    const f = () => Future.fold(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
   });
 
-  it('returns an instance of FutureFold', () => {
-    expect(Future.fold(U.noop, U.noop, F.resolved)).to.be.an.instanceof(FutureFold);
+  it('throws when not given a Function as second argument', () => {
+    const f = () => Future.fold(U.add(1), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
   });
+
+  it('throws when not given a Future as third argument', () => {
+    const f = () => Future.fold(U.add(1), U.add(1), 1);
+    expect(f).to.throw(TypeError, /Future.*third/);
+  });
+
+  testInstance((m, f, g) => Future.fold(f, g, m));
 
 });
 
@@ -47,38 +80,6 @@ describe('Future#fold()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureFold', () => {
-    expect(F.resolved.fold(U.noop, U.noop)).to.be.an.instanceof(FutureFold);
-  });
-
-});
-
-describe('FutureFold', () => {
-
-  it('extends Future', () => {
-    expect(new FutureFold).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    it('resolves with the transformed rejection value', () => {
-      return U.assertResolved(Future.reject(1).fold(U.add(1), U.add(1)), 2);
-    });
-
-    it('resolves with the transformed resolution value', () => {
-      return U.assertResolved(Future.of(1).fold(U.add(1), U.add(1)), 2);
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureFold', () => {
-      const m = Future.of(1).fold(x => x, y => y);
-      const s = 'Future.of(1).fold(x => x, y => y)';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
+  testInstance((m, f, g) => m.fold(f, g));
 
 });

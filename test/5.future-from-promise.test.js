@@ -36,6 +36,7 @@ describe('Future.fromPromise2()', () => {
     expect(Future.fromPromise2.length).to.equal(3);
     expect(Future.fromPromise2((a, b) => b)).to.be.a('function');
     expect(Future.fromPromise2((a, b) => b)(1)).to.be.a('function');
+    expect(Future.fromPromise2((a, b) => b, 1)).to.be.a('function');
   });
 
   it('throws TypeError when not given a binary function', () => {

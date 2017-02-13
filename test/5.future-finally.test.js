@@ -2,9 +2,61 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureFinally = Future.classes.FutureFinally;
 const U = require('./util');
 const F = require('./futures');
+
+const testInstance = fin => {
+
+  describe('#fork()', () => {
+
+    it('runs the second Future when the first resolves', done => {
+      fin(Future.of(1), Future.of(null).map(done)).fork(U.noop, U.noop);
+    });
+
+    it('runs the second Future when the first rejects', done => {
+      fin(Future.reject(1), Future.of(null).map(done)).fork(U.noop, U.noop);
+    });
+
+    it('resolves with the resolution value of the first', () => {
+      const actual = fin(Future.of(1), Future.of(2));
+      return U.assertResolved(actual, 1);
+    });
+
+    it('rejects with the rejection reason of the first if the second resolves', () => {
+      const actual = fin(Future.reject(1), Future.of(2));
+      return U.assertRejected(actual, 1);
+    });
+
+    it('always rejects with the rejection reason of the second', () => {
+      const actualResolved = fin(Future.of(1), Future.reject(2));
+      const actualRejected = fin(Future.reject(1), Future.reject(2));
+      return Promise.all([
+        U.assertRejected(actualResolved, 2),
+        U.assertRejected(actualRejected, 2)
+      ]);
+    });
+
+    it('does nothing after being cancelled', done => {
+      fin(F.resolvedSlow, F.resolved).fork(U.failRej, U.failRes)();
+      fin(F.resolved, F.resolvedSlow).fork(U.failRej, U.failRes)();
+      fin(F.rejectedSlow, F.rejected).fork(U.failRej, U.failRes)();
+      fin(F.rejected, F.rejectedSlow).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureFinally', () => {
+      const m = fin(Future.of(1), Future.of(2));
+      const s = 'Future.of(1).finally(Future.of(2))';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.finally()', () => {
 
@@ -14,14 +66,17 @@ describe('Future.finally()', () => {
     expect(Future.finally(Future.of(1))).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.finally(Future.of(1))(1);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Future as first argument', () => {
+    const f = () => Future.finally(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
   });
 
-  it('returns an instance of FutureFinally', () => {
-    expect(Future.finally(F.resolved, F.resolved)).to.be.an.instanceof(FutureFinally);
+  it('throws when not given a Future as second argument', () => {
+    const f = () => Future.finally(Future.of(1), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
   });
+
+  testInstance((a, b) => Future.finally(b, a));
 
 });
 
@@ -38,65 +93,6 @@ describe('Future#finally()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureFinally', () => {
-    expect(F.resolved.finally(F.resolved)).to.be.an.instanceof(FutureFinally);
-  });
-
-});
-
-describe('FutureFinally', () => {
-
-  it('extends Future', () => {
-    expect(new FutureFinally).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    it('runs the second Future when the first resolves', done => {
-      Future.of(1).finally(Future.of(null).map(done)).fork(U.noop, U.noop);
-    });
-
-    it('runs the second Future when the first rejects', done => {
-      Future.reject(1).finally(Future.of(null).map(done)).fork(U.noop, U.noop);
-    });
-
-    it('resolves with the resolution value of the first', () => {
-      const actual = Future.of(1).finally(Future.of(2));
-      return U.assertResolved(actual, 1);
-    });
-
-    it('rejects with the rejection reason of the first if the second resolves', () => {
-      const actual = Future.reject(1).finally(Future.of(2));
-      return U.assertRejected(actual, 1);
-    });
-
-    it('always rejects with the rejection reason of the second', () => {
-      const actualResolved = Future.of(1).finally(Future.reject(2));
-      const actualRejected = Future.reject(1).finally(Future.reject(2));
-      return Promise.all([
-        U.assertRejected(actualResolved, 2),
-        U.assertRejected(actualRejected, 2)
-      ]);
-    });
-
-    it('does nothing after being cancelled', done => {
-      F.resolvedSlow.finally(F.resolved).fork(U.failRej, U.failRes)();
-      F.resolved.finally(F.resolvedSlow).fork(U.failRej, U.failRes)();
-      F.rejectedSlow.finally(F.rejected).fork(U.failRej, U.failRes)();
-      F.rejected.finally(F.rejectedSlow).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureFinally', () => {
-      const m = Future.of(1).finally(Future.of(2));
-      const s = 'Future.of(1).finally(Future.of(2))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
+  testInstance((a, b) => a.finally(b));
 
 });

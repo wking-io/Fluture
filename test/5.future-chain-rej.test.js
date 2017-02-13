@@ -2,9 +2,54 @@
 
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
-const FutureChainRej = Future.classes.FutureChainRej;
 const U = require('./util');
 const F = require('./futures');
+
+const testInstance = chainRej => {
+
+  describe('#fork()', () => {
+
+    it('calls the given function with the inner of the Future', done => {
+      chainRej(F.rejected, x => {
+        expect(x).to.equal('rejected');
+        done();
+        return Future.of(null);
+      }).fork(U.noop, U.noop);
+    });
+
+    it('returns a Future with an inner equal to the returned Future', () => {
+      const actual = chainRej(F.rejected, () => F.resolved);
+      return U.assertResolved(actual, 'resolved');
+    });
+
+    it('maintains resolved state', () => {
+      const actual = chainRej(F.resolved, () => F.resolvedSlow);
+      return U.assertResolved(actual, 'resolved');
+    });
+
+    it('assumes rejected state', () => {
+      const actual = chainRej(F.rejected, () => F.rejectedSlow);
+      return U.assertRejected(actual, 'rejectedSlow');
+    });
+
+    it('does not chain after being cancelled', done => {
+      chainRej(F.rejectedSlow, U.failRej).fork(U.failRej, U.failRes)();
+      setTimeout(done, 25);
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the FutureChainRej', () => {
+      const m = chainRej(Future.of(1), x => Future.of(x));
+      const s = 'Future.of(1).chainRej(x => Future.of(x))';
+      expect(m.toString()).to.equal(s);
+    });
+
+  });
+
+};
 
 describe('Future.chainRej()', () => {
 
@@ -14,14 +59,17 @@ describe('Future.chainRej()', () => {
     expect(Future.chainRej(U.noop)).to.be.a('function');
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Future.chainRej(U.noop)(1);
-    expect(f).to.throw(TypeError, /Future/);
+  it('throws when not given a Function as first argument', () => {
+    const f = () => Future.chainRej(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
   });
 
-  it('returns an instance of FutureChainRej', () => {
-    expect(Future.chainRej(U.bang, F.resolved)).to.be.an.instanceof(FutureChainRej);
+  it('throws when not given a Future as second argument', () => {
+    const f = () => Future.chainRej(U.B(Future.of)(U.add(1)), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
   });
+
+  testInstance((m, f) => Future.chainRej(f, m));
 
 });
 
@@ -44,57 +92,6 @@ describe('Future#chainRej()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureChainRej', () => {
-    expect(F.resolved.chainRej(U.bang)).to.be.an.instanceof(FutureChainRej);
-  });
-
-});
-
-describe('FutureChainRej', () => {
-
-  it('extends Future', () => {
-    expect(new FutureChainRej).to.be.an.instanceof(Future);
-  });
-
-  describe('#fork()', () => {
-
-    it('calls the given function with the inner of the Future', () => {
-      F.rejected.chainRej(x => {
-        expect(x).to.equal('rejected');
-        return Future.of(null);
-      }).fork(U.noop, U.noop);
-    });
-
-    it('returns a Future with an inner equal to the returned Future', () => {
-      const actual = F.rejected.chainRej(() => F.resolved);
-      return U.assertResolved(actual, 'resolved');
-    });
-
-    it('maintains resolved state', () => {
-      const actual = F.resolved.chainRej(() => F.resolvedSlow);
-      return U.assertResolved(actual, 'resolved');
-    });
-
-    it('assumes rejected state', () => {
-      const actual = F.rejected.chainRej(() => F.rejectedSlow);
-      return U.assertRejected(actual, 'rejectedSlow');
-    });
-
-    it('does not chain after being cancelled', done => {
-      F.rejectedSlow.chainRej(U.failRej).fork(U.failRej, U.failRes)();
-      setTimeout(done, 25);
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureChainRej', () => {
-      const m = Future.of(1).chainRej(x => Future.of(x));
-      const s = 'Future.of(1).chainRej(x => Future.of(x))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
+  testInstance((m, f) => m.chainRej(f));
 
 });
