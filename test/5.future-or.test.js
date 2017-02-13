@@ -4,8 +4,13 @@ const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const U = require('./util');
 const F = require('./futures');
+const type = require('sanctuary-type-identifiers');
 
 const testInstance = or => {
+
+  it('is considered a member of fluture/Fluture', () => {
+    expect(type(or(F.resolved, F.resolvedSlow))).to.equal('fluture/Future');
+  });
 
   describe('#fork()', () => {
 

@@ -3,8 +3,13 @@
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const U = require('./util');
+const type = require('sanctuary-type-identifiers');
 
 const testInstance = bimap => {
+
+  it('is considered a member of fluture/Fluture', () => {
+    expect(type(bimap(Future.reject(1), U.add(1), U.failRes))).to.equal('fluture/Future');
+  });
 
   describe('#fork()', () => {
 

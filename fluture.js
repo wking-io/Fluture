@@ -11,12 +11,20 @@
 
   /*istanbul ignore next*/
   if(module && typeof module.exports !== 'undefined'){
-    module.exports = f(require('inspect-f'), require('sanctuary-type-classes'));
+    module.exports = f(
+      require('inspect-f'),
+      require('sanctuary-type-classes'),
+      require('sanctuary-type-identifiers')
+    );
   }else{
-    global.Fluture = f(global.inspectf, global.sanctuaryTypeClasses);
+    global.Fluture = f(
+      global.inspectf,
+      global.sanctuaryTypeClasses,
+      global.sanctuaryTypeIdentifiers
+    );
   }
 
-}(/*istanbul ignore next*/(global || window || this), function(inspectf, Z){
+}(/*istanbul ignore next*/(global || window || this), function(inspectf, Z, type){
 
   'use strict';
 
@@ -45,7 +53,7 @@
   }
 
   function isFuture(m){
-    return m instanceof Future || Boolean(m) && m['@@type'] === TYPEOF_FUTURE;
+    return m instanceof Future || type(m) === TYPEOF_FUTURE;
   }
 
   function isThenable(m){
@@ -148,7 +156,7 @@
     return new ChainRec(f, init);
   }
 
-  Future.prototype['@@type'] = TYPEOF_FUTURE;
+  Future['@@type'] = TYPEOF_FUTURE;
   Future.prototype._f = null;
   Future.prototype.extractLeft = function Future$extractLeft(){ return [] };
   Future.prototype.extractRight = function Future$extractRight(){ return [] };

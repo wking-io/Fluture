@@ -4,6 +4,7 @@ const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const FutureRejectAfter = Future.classes.FutureRejectAfter;
 const U = require('./util');
+const type = require('sanctuary-type-identifiers');
 
 describe('Future.rejectAfter()', () => {
 
@@ -31,6 +32,10 @@ describe('FutureRejectAfter', () => {
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
+  });
+
+  it('is considered a member of fluture/Fluture', () => {
+    expect(type(m)).to.equal('fluture/Future');
   });
 
   describe('#fork()', () => {

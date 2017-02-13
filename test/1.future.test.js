@@ -4,13 +4,12 @@ const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const U = require('./util');
 const F = require('./futures');
-const S = require('sanctuary');
+const type = require('sanctuary-type-identifiers');
 
 describe('Future', () => {
 
-  it('instances are considered members of Future through @@type', () => {
-    expect(S.type(F.mock)).to.equal('fluture/Future');
-    expect(S.is(Future, F.mock)).to.equal(true);
+  it('instances are considered members of fluture/Future by sanctuary-type-identifiers', () => {
+    expect(type(F.mock)).to.equal('fluture/Future');
   });
 
   describe('.util', () => {

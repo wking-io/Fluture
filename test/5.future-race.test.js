@@ -3,8 +3,15 @@
 const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const U = require('./util');
+const type = require('sanctuary-type-identifiers');
 
 const testInstance = race => {
+
+  it('is considered a member of fluture/Fluture', () => {
+    const m1 = Future((rej, res) => void setTimeout(res, 15, 1));
+    const m2 = Future(rej => void setTimeout(rej, 5, U.error));
+    expect(type(race(m1, m2))).to.equal('fluture/Future');
+  });
 
   describe('#fork()', () => {
 

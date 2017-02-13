@@ -4,8 +4,13 @@ const expect = require('chai').expect;
 const Future = require('../fluture.js');
 const U = require('./util');
 const F = require('./futures');
+const type = require('sanctuary-type-identifiers');
 
 const testInstance = ap => {
+
+  it('is considered a member of fluture/Fluture', () => {
+    expect(type(ap(Future.of(1), Future.of(U.add(1))))).to.equal('fluture/Future');
+  });
 
   describe('#fork()', () => {
 
