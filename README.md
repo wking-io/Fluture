@@ -13,13 +13,12 @@ Much like Promises, Futures represent the value arising from the success or
 failure of an asynchronous operation (I/O). Though unlike Promises, Futures are
 *lazy* and adhere to [the *monadic* interface](#interoperability).
 
-Fluture boasts the following features:
+Some of the features provided by Fluture include:
 
 * [Cancellation](#future).
 * [Resource management utilities](#resource-management).
 * Great integration with functional libraries such as [Sanctuary][S].
 * A pleasant debugging experience through informative error messages.
-* Considerable performance benefits over Promises and the likes.
 
 For more information:
 
@@ -895,10 +894,7 @@ readFile('README.md', 'utf8')
 ## Benchmarks
 
 Simply run `node ./bench/<file>` to see how a specific method compares to
-implementations in `data.task`, `ramda-fantasy.Future` and `Promise`*.
-
-\* Promise is not included in all benchmarks because it tends to make the
-  process run out of memory.
+implementations in `data.task` and `ramda-fantasy.Future`.
 
 ## Butterfly
 
