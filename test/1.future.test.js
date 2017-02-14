@@ -35,7 +35,6 @@ describe('Future', () => {
 
       const ps = [
         Promise.resolve(1),
-        Promise.reject(1),
         new Promise(U.noop),
         {then: U.noop},
         {then: a => a},
