@@ -666,6 +666,11 @@ if the first rejects.
 //An asynchronous version of:
 //const result = isResolved() && getValue();
 const result = isResolved().and(getValue());
+
+//Asynchronous "all", where the resulting Future will be the leftmost to reject:
+const all = ms => ms.reduce(Future.and, Future.of(true));
+all([Future.after(20, 1), Future.of(2)]).value(console.log);
+//> 2
 ```
 
 #### or
@@ -686,13 +691,10 @@ if the second has side-effects, they will run even if the first resolves.
 //const result = planA() || planB();
 const result = planA().or(planB());
 
-const program = S.pipe([
-  reject,
-  or(of('second chance')),
-  value(console.log)
-]);
-program('first chance')
-> "second chance"
+//Asynchronous "any", where the resulting Future will be the leftmost to resolve:
+const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
+any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
+//> 2
 ```
 
 In the example, assume both plans return Futures. Both plans are executed in

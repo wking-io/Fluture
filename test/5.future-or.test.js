@@ -101,11 +101,10 @@ describe('Future.or()', () => {
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((a, b) => Future.or(b, a));
+  testInstance((a, b) => Future.or(a, b));
 
   it('allows for the implementation of `any` in terms of reduce', () => {
-    const C = f => (b, a) => f(a, b);
-    const any = ms => ms.reduce(C(Future.or), Future.reject('empty list'));
+    const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
     return Promise.all([
       U.assertRejected(any([]), 'empty list'),
       U.assertRejected(any([Future.reject(1)]), 1),

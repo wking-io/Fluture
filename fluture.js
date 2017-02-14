@@ -513,15 +513,15 @@
     return race$right(right, left);
   };
 
-  function or$right(right, left){
-    if(!isFuture(left)) invalidArgument('Future.or', 1, 'be a Future', left);
+  function or$left(left, right){
+    if(!isFuture(right)) invalidArgument('Future.or', 1, 'be a Future', right);
     return new FutureOr(left, right);
   }
 
-  Future.or = function or(right, left){
-    if(!isFuture(right)) invalidArgument('Future.or', 0, 'be a Future', right);
-    if(arguments.length === 1) return unaryPartial(or$right, right);
-    return or$right(right, left);
+  Future.or = function or(left, right){
+    if(!isFuture(left)) invalidArgument('Future.or', 0, 'be a Future', left);
+    if(arguments.length === 1) return unaryPartial(or$left, left);
+    return or$left(left, right);
   };
 
   function finally$right(right, left){
