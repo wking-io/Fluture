@@ -30,11 +30,6 @@
 
   'use strict';
 
-  /*istanbul ignore next*/
-  function deprecate(message){
-    (console.warn || console.log || noop).call(console, message); //eslint-disable-line
-  }
-
   ///////////////////
   // Type checking //
   ///////////////////
@@ -48,11 +43,6 @@
     ap: 'fantasy-land/ap',
     of: 'fantasy-land/of'
   };
-
-  function isForkable(m){
-    deprecate('Future.isForkable() is deprecated');
-    return Boolean(m) && typeof m.fork === 'function' && m.fork.length >= 2;
-  }
 
   function isFuture(m){
     return m instanceof Future || type(m) === TYPEOF_FUTURE;
@@ -384,16 +374,6 @@
     return rejectAfter$time(time, reason);
   };
 
-  Future.cast = function Future$cast(m){
-    deprecate('Future.cast() is deprecated. Please use Future((l, r) => {m.fork(l, r)})');
-    return new SafeFuture((l, r) => void m.fork(l, r));
-  };
-
-  Future.fromForkable = function Future$fromForkable(m){
-    deprecate('Future.fromForkable() is deprecated. Please use Future((l, r) => {m.fork(l, r)})');
-    return new SafeFuture((l, r) => void m.fork(l, r));
-  };
-
   Future.try = function Future$try(f){
     if(!isFunction(f)) invalidArgument('Future.try', 0, 'be a function', f);
     return new FutureTry(f);
@@ -629,7 +609,6 @@
   Future.util = {
     Next,
     Done,
-    isForkable,
     isFuture,
     isThenable,
     isFunction,

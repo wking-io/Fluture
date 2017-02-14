@@ -16,21 +16,6 @@ describe('Future', () => {
 
     const util = Future.util;
 
-    describe('.isForkable()', () => {
-
-      const ms = [{fork: (a, b) => ({a, b})}, {fork: (a, b, c) => ({a, b, c})}];
-      const xs = [NaN, 1, true, undefined, null, [], {}, {fork: true}, {fork: () => {}}];
-
-      it('returns true when given a Forkable', () => {
-        ms.forEach(m => expect(util.isForkable(m)).to.equal(true));
-      });
-
-      it('returns false when not given a Forkable', () => {
-        xs.forEach(x => expect(util.isForkable(x)).to.equal(false));
-      });
-
-    });
-
     describe('.isFuture()', () => {
 
       const ms = [F.mock];
