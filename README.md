@@ -55,6 +55,7 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
   1. [Creating Futures](#creating-futures)
     * [Future](#future)
     * [of](#of)
+    * [never](#never)
     * [reject](#reject)
     * [after](#after)
     * [rejectAfter](#rejectafter)
@@ -86,6 +87,7 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
     * [or](#or)
     * [both](#both)
     * [parallel](#parallel)
+    * [ConcurrentFuture](#concurrentfuture)
   1. [Utility functions](#utility-functions)
     * [isFuture](#isfuture)
     * [cache](#cache)
@@ -171,6 +173,12 @@ eventualThing.fork(
 );
 //> "Hello world!"
 ```
+
+#### never
+##### `.never :: Future a a`
+
+A Future that never settles. Can be useful as an initial value when reducing
+with [`race`](#race), for example.
 
 #### reject
 ##### `.reject :: a -> Future a _`
@@ -630,7 +638,7 @@ Future.after(100, 'hello')
 .fork(console.error, console.log)
 //> "bye"
 
-const first = futures => futures.reduce(race);
+const first = futures => futures.reduce(Future.race, Future.never);
 first([
   Future.after(100, 'hello'),
   Future.after(50, 'bye'),
@@ -744,6 +752,43 @@ const stabalizedFutures = instableFutures.map(Future.fold(S.Left, S.Right))
 
 Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
+```
+
+#### ConcurrentFuture
+##### `.Par :: Future a b -> ConcurrentFuture a b`
+##### `.seq :: ConcurrentFuture a b -> Future a b`
+
+ConcurrentFuture (or `Par` for short) is the result of applying
+[`concurrify`][concurrify] to `Future`. It provides a mechanism for constructing
+a [FantasyLand `Alternative`][FL:alternative] from a member of `Future`. This
+allows Futures to benefit from the Alternative Interface, which includes
+parallel `ap`, `zero` and `alt`.
+
+The idea is that you can switch back and forth between `Future` and
+`ConcurrentFuture`, using `Par` and `seq`, to get sequential or concurrent
+behaviour respectively. It's useful if you want a purely algebraic alternative
+to [`parallel`](#parallel) and [`race`](#race).
+
+```js
+const {of, ap, zero, alt, sequence} = require('sanctuary');
+const {Future, Par, seq} = require('fluture');
+
+//Some dummy values
+const x = 1;
+const f = a => a + 1;
+
+//The following two are equal ways to construct a ConcurrentFuture
+const parx = of(Par, x);
+const parf = Par(of(Future, f));
+
+//We can make use of parallel apply
+seq(ap(parx, parf)).value(console.log) //> 2
+
+//Or concurrent sequencing
+seq(sequence(Par, [parx, parf])).value(console.log) //> [x, f]
+
+//Or racing with alternative
+seq(alt(zero(Par), parx)).value(console.log) //> 1
 ```
 
 ### Utility functions
@@ -917,6 +962,7 @@ Credits for the logo go to [Erik Fuente][8].
 [FL1]:                  https://github.com/fantasyland/fantasy-land/tree/v1.0.1
 [FL2]:                  https://github.com/fantasyland/fantasy-land/tree/v2.2.0
 [FL3]:                  https://github.com/fantasyland/fantasy-land
+[FL:alternative]:       https://github.com/fantasyland/fantasy-land#alternative
 [FL:functor]:           https://github.com/fantasyland/fantasy-land#functor
 [FL:chain]:             https://github.com/fantasyland/fantasy-land#chain
 [FL:apply]:             https://github.com/fantasyland/fantasy-land#apply
@@ -936,6 +982,8 @@ Credits for the logo go to [Erik Fuente][8].
 
 [$]:                    https://github.com/sanctuary-js/sanctuary-def
 [$:BinaryType]:         https://github.com/sanctuary-js/sanctuary-def#BinaryType
+
+[concurrify]:           https://github.com/fluture-js/concurrify
 
 [1]:                    https://github.com/futurize/futurize
 [2]:                    https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
