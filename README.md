@@ -549,6 +549,10 @@ program('Hello')
 //> "Hello"
 ```
 
+As with [`hook`](#hook); when the Future is cancelled before the *finally
+computation* is running, the *finally computation* is executed and immediately
+cancelled.
+
 ### Consuming Futures
 
 #### fork

@@ -49,6 +49,11 @@ const testInstance = fin => {
       setTimeout(done, 25);
     });
 
+    it('immediately runs and cancels the disposal Future when cancelled early', done => {
+      const cancel = fin(F.resolvedSlow, Future(() => () => done())).fork(U.failRej, U.failRes);
+      setTimeout(cancel, 10);
+    });
+
   });
 
   describe('#toString()', () => {

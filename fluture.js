@@ -1563,9 +1563,9 @@
 
   //----------
 
-  function FutureFinally(left, right){
-    this._left = left;
-    this._right = right;
+  function FutureFinally(computation, cleanup){
+    this._computation = computation;
+    this._cleanup = cleanup;
   }
 
   FutureFinally.prototype = Object.create(Future.prototype);
@@ -1573,16 +1573,21 @@
   FutureFinally.prototype._f = function FutureFinally$fork(rej, res){
     const _this = this;
     let cancel;
-    const r = _this._left._f(function FutureFinally$fork$rej(e){
-      cancel = _this._right._f(rej, function FutureFinally$fork$rej$res(){ rej(e) });
+    const cancelComputation = _this._computation._f(function FutureFinally$fork$rej(e){
+      cancel = _this._cleanup._f(rej, function FutureFinally$fork$rej$res(){ rej(e) });
     }, function FutureFinally$fork$res(x){
-      cancel = _this._right._f(rej, function FutureFinally$fork$res$res(){ res(x) });
+      cancel = _this._cleanup._f(rej, function FutureFinally$fork$res$res(){ res(x) });
     });
-    return cancel || (cancel = r, function FutureFinally$fork$cancel(){ cancel() });
+    if(cancel) return cancel;
+    cancel = function FutureFinally$fork$cancelBoth(){
+      cancelComputation();
+      _this._cleanup._f(noop, noop)();
+    };
+    return function FutureFinally$fork$cancel(){ cancel() };
   };
 
   FutureFinally.prototype.toString = function FutureFinally$toString(){
-    return `${this._left.toString()}.finally(${this._right.toString()})`;
+    return `${this._computation.toString()}.finally(${this._cleanup.toString()})`;
   };
 
   //----------
