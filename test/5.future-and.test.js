@@ -101,8 +101,20 @@ describe('Future.and()', () => {
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  //TODO: Argument order.
   testInstance((a, b) => Future.and(a, b));
+
+  it('allows for the implementation of `all` in terms of reduce', () => {
+    const all = ms => ms.reduce(Future.and, Future.of(true));
+    return Promise.all([
+      U.assertResolved(all([]), true),
+      U.assertRejected(all([F.rejected, F.resolved]), 'rejected'),
+      U.assertRejected(all([F.resolved, F.rejected]), 'rejected'),
+      U.assertResolved(all([F.resolvedSlow, F.resolved]), 'resolved'),
+      U.assertResolved(all([F.resolved, F.resolvedSlow]), 'resolvedSlow'),
+      U.assertRejected(all([F.rejected, F.rejectedSlow]), 'rejected'),
+      U.assertRejected(all([F.rejectedSlow, F.rejected]), 'rejectedSlow')
+    ]);
+  });
 
 });
 
