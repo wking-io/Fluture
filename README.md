@@ -102,12 +102,13 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][FL]
 [<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][6]
 
-Fluture implements [FantasyLand 1][FL1], [FantasyLand 2][FL2],
-[FantasyLand 3][FL3] and [Static Land][6] compatible `Functor`, `Bifunctor`,
-`Apply`, `Applicative`, `Chain`, `ChainRec` and `Monad`.
-
-FantasyLand 0.x is *mostly* supported. Everything but `Apply` (`ap`) is, this
-means that dispatchers to FantasyLand 0.x `ap` will not work.
+* `Future` implements [Fantasy Land 1][FL1], [Fantasy Land 2][FL2],
+  [Fantasy Land 3][FL3], and [Static Land][6] -compatible `Bifunctor`, `Monad`
+  and `ChainRec` (`of`, `ap`, `map`, `bimap`, `chain`, `chainRec`). Fantasy Land
+  0.x is *mostly* supported. Everything but `Apply` (`ap`) is, this means that
+  dispatchers to Fantasy Land 0.x `ap` (like the one in Ramda) will not work.
+* `Future.Par` implements [Fantasy Land 3][FL3] `Alternative` (`of`, `zero`, `map`, `ap`, `alt`).
+* The Future representative contains a `@@type` property for [Sanctuary Type Identifiers][STI].
 
 ## Documentation
 
@@ -296,7 +297,7 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 #### chainRec
 ##### `.chainRec :: ((b -> Next, c -> Done, b) -> Future a Iteration) -> b -> Future a c`
 
-Stack- and memory-safe asynchronous "recursion" based on [FantasyLand ChainRec][FL:chainrec].
+Stack- and memory-safe asynchronous "recursion" based on [Fantasy Land ChainRec][FL:chainrec].
 
 Calls the given function with the initial value (as third argument), and expects
 a Future of an [Iteration](#type-signatures). If the Iteration is incomplete
@@ -766,7 +767,7 @@ Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 
 ConcurrentFuture (or `Par` for short) is the result of applying
 [`concurrify`][concurrify] to `Future`. It provides a mechanism for constructing
-a [FantasyLand `Alternative`][FL:alternative] from a member of `Future`. This
+a [Fantasy Land `Alternative`][FL:alternative] from a member of `Future`. This
 allows Futures to benefit from the Alternative Interface, which includes
 parallel `ap`, `zero` and `alt`.
 
@@ -980,6 +981,8 @@ Credits for the logo go to [Erik Fuente][8].
 [S:Either]:             https://sanctuary.js.org/#either-type
 [S:is]:                 https://sanctuary.js.org/#is
 [S:create]:             https://sanctuary.js.org/#create
+
+[STI]:                  https://github.com/sanctuary-js/sanctuary-type-identifiers
 
 [Z:Functor]:            https://github.com/sanctuary-js/sanctuary-type-classes#Functor
 [Z:Bifunctor]:          https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
