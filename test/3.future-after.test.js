@@ -1,10 +1,8 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const FutureAfter = Future.classes.FutureAfter;
-const U = require('./util');
-const type = require('sanctuary-type-identifiers');
+import {expect} from 'chai';
+import Future from '..';
+import {After} from '../src/after';
+import U from './util';
+import type from 'sanctuary-type-identifiers';
 
 describe('Future.after()', () => {
 
@@ -20,15 +18,15 @@ describe('Future.after()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureAfter', () => {
-    expect(Future.after(20, 1)).to.be.an.instanceof(FutureAfter);
+  it('returns an instance of After', () => {
+    expect(Future.after(20, 1)).to.be.an.instanceof(After);
   });
 
 });
 
-describe('FutureAfter', () => {
+describe('After', () => {
 
-  const m = new FutureAfter(20, 1);
+  const m = new After(20, 1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
@@ -61,7 +59,7 @@ describe('FutureAfter', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the FutureAfter', () => {
+    it('returns the code to create the After', () => {
       expect(m.toString()).to.equal('Future.after(20, 1)');
     });
 

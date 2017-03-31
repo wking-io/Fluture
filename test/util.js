@@ -1,9 +1,7 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const Z = require('sanctuary-type-classes');
-const AssertionError = require('assert').AssertionError;
+import {expect} from 'chai';
+import Future from '..';
+import Z from 'sanctuary-type-classes';
+import {AssertionError} from 'assert';
 
 exports.STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
 exports.noop = () => {};

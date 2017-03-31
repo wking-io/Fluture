@@ -1,11 +1,9 @@
-'use strict';
-
-const expect = require('chai').expect;
-const FL = require('fantasy-land');
-const Future = require('../fluture.js');
-const FutureOf = Future.classes.FutureOf;
-const U = require('./util');
-const type = require('sanctuary-type-identifiers');
+import {expect} from 'chai';
+import FL from 'fantasy-land';
+import Future from '..';
+import {Resolved} from '../src/core';
+import U from './util';
+import type from 'sanctuary-type-identifiers';
 
 describe('Future.of()', () => {
 
@@ -13,15 +11,15 @@ describe('Future.of()', () => {
     expect(Future.of).to.equal(Future[FL.of]);
   });
 
-  it('returns an instance of FutureOf', () => {
-    expect(Future.of(1)).to.be.an.instanceof(FutureOf);
+  it('returns an instance of Resolved', () => {
+    expect(Future.of(1)).to.be.an.instanceof(Resolved);
   });
 
 });
 
-describe('FutureOf', () => {
+describe('Resolved', () => {
 
-  const m = new FutureOf(1);
+  const m = new Resolved(1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
@@ -49,7 +47,7 @@ describe('FutureOf', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the FutureOf', () => {
+    it('returns the code to create the Resolved', () => {
       expect(m.toString()).to.equal('Future.of(1)');
     });
 

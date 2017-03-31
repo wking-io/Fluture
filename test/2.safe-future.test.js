@@ -1,10 +1,8 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const SafeFuture = Future.classes.SafeFuture;
-const U = require('./util');
-const type = require('sanctuary-type-identifiers');
+import {expect} from 'chai';
+import Future from '..';
+import {Computation} from '../src/core';
+import U from './util';
+import type from 'sanctuary-type-identifiers';
 
 describe('Future()', () => {
 
@@ -19,26 +17,26 @@ describe('Future()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns a SafeFuture', () => {
+  it('returns a Computation', () => {
     const actual = Future(U.noop);
-    expect(actual).to.be.an.instanceof(SafeFuture);
+    expect(actual).to.be.an.instanceof(Computation);
   });
 
   it('can be called with "new", for those feeling particularly OO', () => {
     const actual = new Future(U.noop);
-    expect(actual).to.be.an.instanceof(SafeFuture);
+    expect(actual).to.be.an.instanceof(Computation);
   });
 
 });
 
-describe('SafeFuture', () => {
+describe('Computation', () => {
 
   it('extends Future', () => {
-    expect(new SafeFuture).to.be.an.instanceof(Future);
+    expect(new Computation).to.be.an.instanceof(Future);
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(new SafeFuture)).to.equal('fluture/Future');
+    expect(type(new Computation)).to.equal('fluture/Future');
   });
 
   describe('#fork()', () => {
@@ -58,7 +56,7 @@ describe('SafeFuture', () => {
     });
 
     it('ensures no continuations are called after the first resolve', done => {
-      const actual = new SafeFuture((rej, res) => {
+      const actual = new Computation((rej, res) => {
         res(1);
         res(2);
         rej(3);
@@ -67,7 +65,7 @@ describe('SafeFuture', () => {
     });
 
     it('ensures no continuations are called after the first reject', done => {
-      const actual = new SafeFuture((rej, res) => {
+      const actual = new Computation((rej, res) => {
         rej(1);
         rej(2);
         res(3);
@@ -76,7 +74,7 @@ describe('SafeFuture', () => {
     });
 
     it('prevents chains from running twice', done => {
-      const m = new SafeFuture((rej, res) => {
+      const m = new Computation((rej, res) => {
         res(1);
         res(1);
       });
@@ -88,7 +86,7 @@ describe('SafeFuture', () => {
     });
 
     it('stops continuations from being called after cancellation', done => {
-      new SafeFuture((rej, res) => {
+      new Computation((rej, res) => {
         setTimeout(res, 20, 1);
         setTimeout(rej, 20, 1);
       })
@@ -97,7 +95,7 @@ describe('SafeFuture', () => {
     });
 
     it('stops cancellation from being called after continuations', () => {
-      const m = new SafeFuture((rej, res) => {
+      const m = new Computation((rej, res) => {
         res(1);
         return () => { throw U.error };
       });
@@ -109,8 +107,8 @@ describe('SafeFuture', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the SafeFuture', () => {
-      const m = new SafeFuture((rej, res) => res());
+    it('returns the code to create the Computation', () => {
+      const m = new Computation((rej, res) => res());
       const s = 'Future((rej, res) => res())';
       expect(m.toString()).to.equal(s);
     });

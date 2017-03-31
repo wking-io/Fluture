@@ -1,9 +1,7 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const U = require('./util');
-const type = require('sanctuary-type-identifiers');
+import {expect} from 'chai';
+import Future from '..';
+import U from './util';
+import type from 'sanctuary-type-identifiers';
 
 const testInstance = race => {
 
@@ -38,16 +36,6 @@ const testInstance = race => {
       const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
       const cancel = race(m, m).fork(U.noop, U.noop);
       cancel();
-    });
-
-  });
-
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureRace', () => {
-      const m = race(Future.of(1), Future.of(2));
-      const s = 'Future.of(1).race(Future.of(2))';
-      expect(m.toString()).to.equal(s);
     });
 
   });

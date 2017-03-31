@@ -1,9 +1,7 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const U = require('./util');
-const type = require('sanctuary-type-identifiers');
+import {expect} from 'chai';
+import Future from '..';
+import U from './util';
+import type from 'sanctuary-type-identifiers';
 
 const testInstance = bimap => {
 

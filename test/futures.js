@@ -1,7 +1,5 @@
-'use strict';
-
-const U = require('./util');
-const Future = require('../fluture.js');
+import U from './util';
+import Future from '..';
 
 exports.mock = Object.create(Future.prototype);
 exports.mock._f = U.noop;

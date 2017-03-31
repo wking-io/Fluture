@@ -1,10 +1,8 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const FutureRejectAfter = Future.classes.FutureRejectAfter;
-const U = require('./util');
-const type = require('sanctuary-type-identifiers');
+import {expect} from 'chai';
+import Future from '..';
+import {RejectAfter} from '../src/reject-after';
+import U from './util';
+import type from 'sanctuary-type-identifiers';
 
 describe('Future.rejectAfter()', () => {
 
@@ -20,15 +18,15 @@ describe('Future.rejectAfter()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureRejectAfter', () => {
-    expect(Future.rejectAfter(20, 1)).to.be.an.instanceof(FutureRejectAfter);
+  it('returns an instance of RejectAfter', () => {
+    expect(Future.rejectAfter(20, 1)).to.be.an.instanceof(RejectAfter);
   });
 
 });
 
-describe('FutureRejectAfter', () => {
+describe('RejectAfter', () => {
 
-  const m = new FutureRejectAfter(20, 1);
+  const m = new RejectAfter(20, 1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
@@ -61,7 +59,7 @@ describe('FutureRejectAfter', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the FutureRejectAfter', () => {
+    it('returns the code to create the RejectAfter', () => {
       expect(m.toString()).to.equal('Future.rejectAfter(20, 1)');
     });
 

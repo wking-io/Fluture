@@ -1,22 +1,20 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const FutureReject = Future.classes.FutureReject;
-const U = require('./util');
-const type = require('sanctuary-type-identifiers');
+import {expect} from 'chai';
+import Future from '..';
+import {Rejected} from '../src/core';
+import U from './util';
+import type from 'sanctuary-type-identifiers';
 
 describe('Future.reject()', () => {
 
-  it('returns an instance of FutureReject', () => {
-    expect(Future.reject(1)).to.be.an.instanceof(FutureReject);
+  it('returns an instance of Rejected', () => {
+    expect(Future.reject(1)).to.be.an.instanceof(Rejected);
   });
 
 });
 
-describe('FutureReject', () => {
+describe('Rejected', () => {
 
-  const m = new FutureReject(1);
+  const m = new Rejected(1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
@@ -44,7 +42,7 @@ describe('FutureReject', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the FutureReject', () => {
+    it('returns the code to create the Rejected', () => {
       expect(m.toString()).to.equal('Future.reject(1)');
     });
 

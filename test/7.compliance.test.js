@@ -1,10 +1,8 @@
-'use strict';
-
-const expect = require('chai').expect;
-const FL = require('fantasy-land');
-const Future = require('../fluture.js');
-const U = require('./util');
-const jsc = require('jsverify');
+import {expect} from 'chai';
+import FL from 'fantasy-land';
+import Future from '..';
+import U from './util';
+import jsc from 'jsverify';
 
 describe('Compliance', function(){
 
@@ -100,9 +98,7 @@ describe('Compliance', function(){
         const d = of;
         const n = B(of)(v => v + 1);
         const a = Future[FL.chainRec]((l, r, v) => p(v) ? d(v)[FL.map](r) : n(v)[FL.map](l), 0);
-        const b = (function step(v){ return p(v) ? d(v) : n(v)[FL.chain](step) }(0));
         expect(_ => a.fork(U.noop, U.noop)).to.not.throw();
-        expect(_ => b.fork(U.noop, U.noop)).to.throw(/call stack/);
       });
 
     });
@@ -192,9 +188,7 @@ describe('Compliance', function(){
         const d = of;
         const n = B(of)(v => v + 1);
         const a = F.chainRec((l, r, v) => p(v) ? F.map(r, d(v)) : F.map(l, n(v)), 0);
-        const b = (function step(v){ return p(v) ? d(v) : F.chain(step, n(v)) }(0));
         expect(_ => a.fork(U.noop, U.noop)).to.not.throw();
-        expect(_ => b.fork(U.noop, U.noop)).to.throw(/call stack/);
       });
 
     });
