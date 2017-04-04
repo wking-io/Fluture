@@ -4,14 +4,14 @@ import {
   reject,
   of,
   never,
-  isNever,
-  chainRec
+  isNever
 } from './core';
 
 import * as dispatchers from './dispatchers/index';
 
 import {after} from './after';
 import {both} from './both';
+import {chainRec} from './chain-rec';
 import {first} from './race';
 import {go} from './go';
 import {parallel} from './parallel';

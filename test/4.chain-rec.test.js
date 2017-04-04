@@ -1,9 +1,10 @@
 import {expect} from 'chai';
-import {Future, chainRec, of, after} from '../index.es.js';
+import {Future, chainRec, of, after, reject} from '../index.es.js';
+import {isIteration} from '../src/internal/iteration';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe.skip('chainRec()', () => {
+describe('chainRec()', () => {
 
   it('is a curried binary function', () => {
     expect(chainRec).to.be.a('function');
@@ -23,7 +24,7 @@ describe.skip('chainRec()', () => {
 
 });
 
-describe.skip('ChainRec', () => {
+describe('ChainRec', () => {
 
   it('extends Future', () => {
     expect(chainRec(U.noop, 1)).to.be.an.instanceof(Future);
@@ -42,7 +43,7 @@ describe.skip('ChainRec', () => {
     });
 
     it('throws TypeError when the given function does not always return a Future', () => {
-      const recur = (a, b, i) => i <= 6 ? of(Future.util.Next(i + 1)) : 'hello';
+      const recur = (next, done, i) => i <= 6 ? of(next(i + 1)) : 'hello';
       const f = _ => chainRec(recur, 1).fork(U.noop, U.noop);
       expect(f).to.throw(TypeError, /Future.*6/);
     });
@@ -67,15 +68,15 @@ describe.skip('ChainRec', () => {
     });
 
     it('calls the function with Next, Done and the initial value', () => {
-      chainRec((f, g, x) => {
-        expect(f).to.be.a('function');
-        expect(f.length).to.equal(1);
-        expect(f(x)).to.deep.equal(Future.util.Next(x));
-        expect(g).to.be.a('function');
-        expect(g.length).to.equal(1);
-        expect(g(x)).to.deep.equal(Future.util.Done(x));
+      chainRec((next, done, x) => {
+        expect(next).to.be.a('function');
+        expect(next.length).to.equal(1);
+        expect(next(x)).to.satisfy(isIteration);
+        expect(done).to.be.a('function');
+        expect(done.length).to.equal(1);
+        expect(done(x)).to.satisfy(isIteration);
         expect(x).to.equal(42);
-        return of(g(x));
+        return of(done(x));
       }, 42).fork(U.noop, U.noop);
     });
 
@@ -121,8 +122,9 @@ describe.skip('ChainRec', () => {
   describe('#toString()', () => {
 
     it('returns the code to create the ChainRec', () => {
-      const m = chainRec((next, done, x) => next(x), 1);
-      const s = 'chainRec((next, done, x) => next(x), 1)';
+      const f = (next, done, x) => next(x);
+      const m = chainRec(f, 1);
+      const s = `Future.chainRec(${f.toString()}, 1)`;
       expect(m.toString()).to.equal(s);
     });
 

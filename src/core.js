@@ -2,11 +2,11 @@
 
 import Denque from 'denque';
 
-import {show, showf, noop, moop, partial1} from './internal/fn';
+import {show, showf, noop, moop} from './internal/fn';
 import {isFunction} from './internal/is';
 import {error, typeError, invalidArgument} from './internal/throw';
-import {Next, Done} from './iteration';
-import FL from './internal/fl';
+import {Undetermined, Synchronous, Asynchronous} from './internal/timing';
+import {FL} from './internal/const';
 import type from 'sanctuary-type-identifiers';
 
 const TYPEOF_FUTURE = 'fluture/Future@2';
@@ -437,10 +437,6 @@ export class OrActionState extends OrAction{
   resolved(x){ this.cancel(); return new Resolved(x) }
 }
 
-const Undetermined = 0;
-const Synchronous = 1;
-const Asynchronous = 2;
-
 export function Sequence(spawn, actions = []){
   this._spawn = spawn;
   this._actions = actions;
@@ -575,19 +571,6 @@ Sequence.prototype.toString = function Sequence$toString(){
   return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
 };
 
-function chainRec$step(step, init){
-  return (function recur(x){
-    return step(Next, Done, x).chain(o => o.done ? new Resolved(o.value) : recur(o.value));
-  }(init));
-}
-
-export function chainRec(step, init){
-  if(!isFunction(step)) invalidArgument('Future.chainRec', 0, 'be a Function', step);
-  if(arguments.length === 1) return partial1(chainRec$step, step);
-  return chainRec$step(step, init);
-}
-
 Future['@@type'] = TYPEOF_FUTURE;
-Future[FL.chainRec] = chainRec;
 Future[FL.of] = of;
 Future[FL.zero] = () => never;

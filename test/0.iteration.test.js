@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {Next, Done, isIteration} from '../src/iteration';
+import {Next, Done, isIteration} from '../src/internal/iteration';
 
 describe('Iteration', () => {
 

@@ -1,6 +1,5 @@
 import {show} from './fn';
-
-const ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
+import {ordinal} from './const';
 
 export const error = message => {
   throw new Error(message);

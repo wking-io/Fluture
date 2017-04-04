@@ -1,6 +1,6 @@
 import {Core, Resolved, isFuture} from './core';
 import {isFunction, isIterator} from './internal/is';
-import {isIteration} from './iteration';
+import {isIteration} from './internal/iteration';
 import {show, showf} from './internal/fn';
 import {invalidArgument, typeError} from './internal/throw';
 
