@@ -7,7 +7,7 @@ import {Next, Done} from './iteration';
 import FL from './internal/fl';
 import type from 'sanctuary-type-identifiers';
 
-const TYPEOF_FUTURE = 'fluture/Future';
+const TYPEOF_FUTURE = 'fluture/Future@2';
 
 const throwRejection = x => {
   throw new Error(`Rejected with ${show(x)}`);

@@ -1,5 +1,27 @@
-import {Core, Resolved} from './core';
-import {showf} from './internal/fn';
+import {Core, Resolved, isFuture} from './core';
+import {isFunction, isIterator} from './internal/is';
+import {isIteration} from './iteration';
+import {show, showf} from './internal/fn';
+import {invalidArgument} from './internal/throw';
+
+const check$iterator = g => {
+  if(!isIterator(g)) invalidArgument(
+    'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
+  );
+};
+
+const check$iteration = o => {
+  if(!isIteration(o)) throw new TypeError(
+    'Future.do was given an invalid generator:'
+    + ' Its iterator did not return a valid iteration from iterator.next()'
+    + `\n  Actual: ${show(o)}`
+  );
+  if(!o.done && !isFuture(o.value)) throw new TypeError(
+    'A non-Future was produced by iterator.next() in Future.do.'
+    + ' If you\'re using a generator, make sure you always `yield` a Future'
+    + `\n  Actual: ${o.value}`
+  );
+};
 
 export class Go extends Core{
 
@@ -10,10 +32,10 @@ export class Go extends Core{
 
   _fork(rej, res){
     const iterator = this._generator();
-    // check$do$g(iterator);
+    check$iterator(iterator);
     (function recur(x){
       const iteration = iterator.next(x);
-      // check$do$next(iteration);
+      check$iteration(iteration);
       return iteration.done ? new Resolved(iteration.value) : iteration.value.chain(recur);
     }(undefined))._fork(rej, res);
   }
@@ -24,4 +46,7 @@ export class Go extends Core{
 
 }
 
-export const go = generator => new Go(generator);
+export const go = generator => {
+  if(!isFunction(generator)) invalidArgument('Future.do', 0, 'be a Function', generator);
+  return new Go(generator);
+};

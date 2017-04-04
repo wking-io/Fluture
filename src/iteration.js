@@ -1,4 +1,4 @@
-import {isObject, isFunction} from './internal/is';
+import {isObject, isBoolean} from './internal/is';
 
 export class Iteration{
   constructor(done, value){
@@ -9,4 +9,4 @@ export class Iteration{
 
 export const Next = x => new Iteration(false, x);
 export const Done = x => new Iteration(true, x);
-export const isIteration = x => x instanceof Iteration || isObject(x) && isFunction(x.next);
+export const isIteration = x => x instanceof Iteration || isObject(x) && isBoolean(x.done);

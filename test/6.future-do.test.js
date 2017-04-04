@@ -12,7 +12,7 @@ describe('Future.do()', () => {
 
 });
 
-describe('FutureDo', () => {
+describe('Go', () => {
 
   describe('#fork()', () => {
 
@@ -62,7 +62,7 @@ describe('FutureDo', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the FutureDo', () => {
+    it('returns the code to create the Go', () => {
       const m = Future.do(function*(){});
       const s = 'Future.do(function* () {})';
       expect(m.toString()).to.equal(s);
