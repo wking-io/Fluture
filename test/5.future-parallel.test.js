@@ -38,7 +38,7 @@ describe('Parallel', () => {
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(new Parallel(1, []))).to.equal('fluture/Future');
+    expect(type(new Parallel(1, []))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

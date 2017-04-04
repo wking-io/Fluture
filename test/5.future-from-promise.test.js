@@ -84,7 +84,7 @@ describe.skip('FutureFromPromise', () => {
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(new FutureFromPromise)).to.equal('fluture/Future');
+    expect(type(new FutureFromPromise)).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

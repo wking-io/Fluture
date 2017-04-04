@@ -7,7 +7,7 @@ import type from 'sanctuary-type-identifiers';
 describe('Future', () => {
 
   it('instances are considered members of fluture/Future by sanctuary-type-identifiers', () => {
-    expect(type(F.mock)).to.equal('fluture/Future');
+    expect(type(F.mock)).to.equal(Future['@@type']);
   });
 
   describe('.util', () => {

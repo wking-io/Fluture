@@ -7,7 +7,7 @@ import type from 'sanctuary-type-identifiers';
 const testInstance = chainRej => {
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(chainRej(F.rejected, () => F.resolved))).to.equal('fluture/Future');
+    expect(type(chainRej(F.rejected, () => F.resolved))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

@@ -25,7 +25,7 @@ describe.skip('FutureTry', () => {
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(new FutureTry)).to.equal('fluture/Future');
+    expect(type(new FutureTry)).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

@@ -7,7 +7,7 @@ import type from 'sanctuary-type-identifiers';
 const testInstance = and => {
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(and(F.resolved, F.resolvedSlow))).to.equal('fluture/Future');
+    expect(type(and(F.resolved, F.resolvedSlow))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

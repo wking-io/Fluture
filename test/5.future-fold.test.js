@@ -6,7 +6,7 @@ import type from 'sanctuary-type-identifiers';
 const testInstance = fold => {
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(fold(Future.reject(1), U.add(1), U.sub(1)))).to.equal('fluture/Future');
+    expect(type(fold(Future.reject(1), U.add(1), U.sub(1)))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

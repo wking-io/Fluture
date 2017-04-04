@@ -6,7 +6,7 @@ import type from 'sanctuary-type-identifiers';
 const testInstance = bimap => {
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(bimap(Future.reject(1), U.add(1), U.failRes))).to.equal('fluture/Future');
+    expect(type(bimap(Future.reject(1), U.add(1), U.failRes))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

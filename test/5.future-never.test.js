@@ -10,7 +10,7 @@ describe('FutureNever', () => {
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(Future.never)).to.equal('fluture/Future');
+    expect(type(Future.never)).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

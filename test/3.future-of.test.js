@@ -26,7 +26,7 @@ describe('Resolved', () => {
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(m)).to.equal('fluture/Future');
+    expect(type(m)).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {

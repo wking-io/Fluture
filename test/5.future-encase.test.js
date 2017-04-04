@@ -83,7 +83,7 @@ describe.skip('FutureEncase', () => {
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(new FutureEncase)).to.equal('fluture/Future');
+    expect(type(new FutureEncase)).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {
