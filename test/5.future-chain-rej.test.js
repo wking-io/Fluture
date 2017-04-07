@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, chainRej, of} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -16,7 +16,7 @@ const testInstance = chainRej => {
       chainRej(F.rejected, x => {
         expect(x).to.equal('rejected');
         done();
-        return Future.of(null);
+        return of(null);
       }).fork(U.noop, U.noop);
     });
 
@@ -44,25 +44,25 @@ const testInstance = chainRej => {
 
 };
 
-describe.skip('Future.chainRej()', () => {
+describe.skip('chainRej()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.chainRej).to.be.a('function');
-    expect(Future.chainRej.length).to.equal(2);
-    expect(Future.chainRej(U.noop)).to.be.a('function');
+    expect(chainRej).to.be.a('function');
+    expect(chainRej.length).to.equal(2);
+    expect(chainRej(U.noop)).to.be.a('function');
   });
 
   it('throws when not given a Function as first argument', () => {
-    const f = () => Future.chainRej(1);
+    const f = () => chainRej(1);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Future as second argument', () => {
-    const f = () => Future.chainRej(U.B(Future.of)(U.add(1)), 1);
+    const f = () => chainRej(U.B(Future.of)(U.add(1)), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((m, f) => Future.chainRej(f, m));
+  testInstance((m, f) => chainRej(f, m));
 
 });
 

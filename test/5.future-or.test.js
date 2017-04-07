@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, or, of, reject, after} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -71,33 +71,33 @@ const testInstance = or => {
 
 };
 
-describe('Future.or()', () => {
+describe('or()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.or).to.be.a('function');
-    expect(Future.or.length).to.equal(2);
-    expect(Future.or(Future.of(1))).to.be.a('function');
+    expect(or).to.be.a('function');
+    expect(or.length).to.equal(2);
+    expect(or(of(1))).to.be.a('function');
   });
 
   it('throws when not given a Future as first argument', () => {
-    const f = () => Future.or(1);
+    const f = () => or(1);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Future as second argument', () => {
-    const f = () => Future.or(Future.of(1), 1);
+    const f = () => or(of(1), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((a, b) => Future.or(a, b));
+  testInstance((a, b) => or(a, b));
 
   it('allows for the implementation of `any` in terms of reduce', () => {
-    const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
+    const any = ms => ms.reduce(or, reject('empty list'));
     return Promise.all([
       U.assertRejected(any([]), 'empty list'),
-      U.assertRejected(any([Future.reject(1)]), 1),
-      U.assertResolved(any([Future.reject(1), Future.of(2)]), 2),
-      U.assertResolved(any([Future.reject(1), Future.after(20, 2), Future.of(3)]), 2)
+      U.assertRejected(any([reject(1)]), 1),
+      U.assertResolved(any([reject(1), of(2)]), 2),
+      U.assertResolved(any([reject(1), after(20, 2), of(3)]), 2)
     ]);
   });
 

@@ -1,23 +1,23 @@
 import {expect} from 'chai';
-import Future from '..';
-const CachedFuture = null;
+import {Future, cache, of, reject, after} from '../index.es.js';
+import {Cached} from '../src/core';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
 const testInstance = cache => {
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(cache(Future.of(1)))).to.equal(Future['@@type']);
+    expect(type(cache(of(1)))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {
 
     it('resolves with the resolution value of the given Future', () => {
-      U.assertResolved(cache(Future.of(1)), 1);
+      U.assertResolved(cache(of(1)), 1);
     });
 
     it('rejects with the rejection reason of the given Future', () => {
-      U.assertRejected(cache(Future.reject(U.error)), U.error);
+      U.assertRejected(cache(reject(U.error)), U.error);
     });
 
     it('only forks its given Future once', () => {
@@ -28,7 +28,7 @@ const testInstance = cache => {
     });
 
     it('resolves all forks once a delayed resolution happens', () => {
-      const m = cache(Future.after(20, 1));
+      const m = cache(after(20, 1));
       const a = U.assertResolved(m, 1);
       const b = U.assertResolved(m, 1);
       const c = U.assertResolved(m, 1);
@@ -44,7 +44,7 @@ const testInstance = cache => {
     });
 
     it('rejects all new forks after a rejection happened', () => {
-      const m = cache(Future.reject('err'));
+      const m = cache(reject('err'));
       m.fork(U.noop, U.noop);
       return U.assertRejected(m, 'err');
     });
@@ -93,7 +93,7 @@ const testInstance = cache => {
       const m = cache(Future(U.noop));
       m.reject(1);
       m.resolve(2);
-      expect(m._state).to.equal(CachedFuture.Rejected);
+      expect(m._state).to.equal(Cached.Rejected);
     });
 
   });
@@ -104,7 +104,7 @@ const testInstance = cache => {
       const m = cache(Future(U.noop));
       m.resolve(1);
       m.reject(2);
-      expect(m._state).to.equal(CachedFuture.Resolved);
+      expect(m._state).to.equal(Cached.Resolved);
     });
 
   });
@@ -123,7 +123,7 @@ const testInstance = cache => {
   describe('#_drainQueue()', () => {
 
     it('is idempotent', () => {
-      const m = cache(Future.of(1));
+      const m = cache(of(1));
       m._drainQueue();
       m._drainQueue();
       m.fork(U.noop, U.noop);
@@ -136,7 +136,7 @@ const testInstance = cache => {
   describe('#run()', () => {
 
     it('is idempotent', () => {
-      const m = cache(Future.of(1));
+      const m = cache(of(1));
       m.run();
       m.run();
     });
@@ -146,7 +146,7 @@ const testInstance = cache => {
   describe('#reset()', () => {
 
     it('is idempotent', () => {
-      const m = cache(Future.of(1));
+      const m = cache(of(1));
       m.reset();
       m.fork(U.noop, U.noop);
       m.reset();
@@ -157,9 +157,9 @@ const testInstance = cache => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the CachedFuture', () => {
-      const m = cache(Future.of(1));
-      const s = 'Future.of(1).cache()';
+    it('returns the code to create the Cached', () => {
+      const m = cache(of(1));
+      const s = 'of(1).cache()';
       expect(m.toString()).to.equal(s);
     });
 
@@ -168,11 +168,11 @@ const testInstance = cache => {
   describe('#extractLeft()', () => {
 
     it('returns empty array for cold CachedFutures', () => {
-      expect(cache(Future.reject(1)).extractLeft()).to.deep.equal([]);
+      expect(cache(reject(1)).extractLeft()).to.deep.equal([]);
     });
 
     it('returns array with reason for rejected CachedFutures', () => {
-      const m = cache(Future.reject(1));
+      const m = cache(reject(1));
       m.run();
       expect(m.extractLeft()).to.deep.equal([1]);
     });
@@ -182,11 +182,11 @@ const testInstance = cache => {
   describe('#extractRight()', () => {
 
     it('returns empty array for cold CachedFutures', () => {
-      expect(cache(Future.of(1)).extractRight()).to.deep.equal([]);
+      expect(cache(of(1)).extractRight()).to.deep.equal([]);
     });
 
     it('returns array with value for resolved CachedFutures', () => {
-      const m = cache(Future.of(1));
+      const m = cache(of(1));
       m.run();
       expect(m.extractRight()).to.deep.equal([1]);
     });
@@ -195,14 +195,14 @@ const testInstance = cache => {
 
 };
 
-describe.skip('Future.cache()', () => {
+describe.skip('cache()', () => {
 
   it('throws when not given a Future', () => {
-    const f = () => Future.cache(1);
+    const f = () => cache(1);
     expect(f).to.throw(TypeError, /Future/);
   });
 
-  testInstance(Future.cache);
+  testInstance(cache);
 
 });
 

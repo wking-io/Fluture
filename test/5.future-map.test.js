@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, map, of} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -7,13 +7,13 @@ import type from 'sanctuary-type-identifiers';
 const testInstance = map => {
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(map(Future.of(1), U.add(1)))).to.equal(Future['@@type']);
+    expect(type(map(of(1), U.add(1)))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {
 
     it('applies the given function to its inner', () => {
-      const actual = map(Future.of(1), U.add(1));
+      const actual = map(of(1), U.add(1));
       return U.assertResolved(actual, 2);
     });
 
@@ -36,25 +36,25 @@ const testInstance = map => {
 
 };
 
-describe('Future.map()', () => {
+describe('map()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.map).to.be.a('function');
-    expect(Future.map.length).to.equal(2);
-    expect(Future.map(U.noop)).to.be.a('function');
+    expect(map).to.be.a('function');
+    expect(map.length).to.equal(2);
+    expect(map(U.noop)).to.be.a('function');
   });
 
   it('throws when not given a Function as first argument', () => {
-    const f = () => Future.map(1);
+    const f = () => map(1);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Future as second argument', () => {
-    const f = () => Future.map(U.add(1), 1);
+    const f = () => map(U.add(1), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((m, f) => Future.map(f, m));
+  testInstance((m, f) => map(f, m));
 
 });
 

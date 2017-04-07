@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, mapRej} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -36,25 +36,25 @@ const testInstance = mapRej => {
 
 };
 
-describe('Future.mapRej()', () => {
+describe('mapRej()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.mapRej).to.be.a('function');
-    expect(Future.mapRej.length).to.equal(2);
-    expect(Future.mapRej(U.noop)).to.be.a('function');
+    expect(mapRej).to.be.a('function');
+    expect(mapRej.length).to.equal(2);
+    expect(mapRej(U.noop)).to.be.a('function');
   });
 
   it('throws when not given a Function as first argument', () => {
-    const f = () => Future.mapRej(1, F.resolved);
+    const f = () => mapRej(1, F.resolved);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Future as second argument', () => {
-    const f = () => Future.mapRej(U.add(1), 1);
+    const f = () => mapRej(U.add(1), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((m, f) => Future.mapRej(f, m));
+  testInstance((m, f) => mapRej(f, m));
 
 });
 

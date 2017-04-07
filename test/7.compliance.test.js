@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import FL from 'fantasy-land';
-import Future from '..';
+import {Future, reject, ap, map, bimap, chain, chainRec} from '../index.es.js';
 import U from './util';
 import jsc from 'jsverify';
 
@@ -12,7 +12,7 @@ describe('Compliance', function(){
   const test = (name, f) => jsc.property(name, 'number | nat', o => f(o.value));
   const eq = U.assertEqual;
   const of = Future[FL.of];
-  const undetermined = x => Math.random() > 0.5 ? of(x) : Future.reject(x);
+  const undetermined = x => Math.random() > 0.5 ? of(x) : reject(x);
 
   const I = x => x;
   const T = x => f => f(x);
@@ -119,56 +119,54 @@ describe('Compliance', function(){
 
   describe('to Static-Land:', () => {
 
-    const F = Future;
-
     describe('Functor', () => {
       test('identity', x => eq(
-        F.map(I, of(x)),
+        map(I, of(x)),
         of(x)
       ));
       test('composition', x => eq(
-        F.map(B(sub3)(mul3), of(x)),
-        F.map(sub3, F.map(mul3, of(x)))
+        map(B(sub3)(mul3), of(x)),
+        map(sub3, map(mul3, of(x)))
       ));
     });
 
     describe('Bifunctor', () => {
       test('identity', x => eq(
-        F.bimap(I, I, of(x)),
+        bimap(I, I, of(x)),
         of(x)
       ));
       test('composition', x => eq(
-        F.bimap(B(sub3)(mul3), B(sub3)(mul3), of(x)),
-        F.bimap(sub3, sub3, F.bimap(mul3, mul3, of(x)))
+        bimap(B(sub3)(mul3), B(sub3)(mul3), of(x)),
+        bimap(sub3, sub3, bimap(mul3, mul3, of(x)))
       ));
     });
 
     describe('Apply', () => {
       test('composition', x => eq(
-        F.ap(F.ap(F.map(B, of(sub3)), of(mul3)), of(x)),
-        F.ap(of(sub3), F.ap(of(mul3), of(x)))
+        ap(ap(map(B, of(sub3)), of(mul3)), of(x)),
+        ap(of(sub3), ap(of(mul3), of(x)))
       ));
     });
 
     describe('Applicative', () => {
       test('identity', x => eq(
-        F.ap(of(I), of(x)),
+        ap(of(I), of(x)),
         of(x)
       ));
       test('homomorphism', x => eq(
-        F.ap(of(sub3), of(x)),
+        ap(of(sub3), of(x)),
         of(sub3(x))
       ));
       test('interchange', x => eq(
-        F.ap(of(sub3), of(x)),
-        F.ap(of(T(x)), of(sub3))
+        ap(of(sub3), of(x)),
+        ap(of(T(x)), of(sub3))
       ));
     });
 
     describe('Chain', () => {
       test('associativity', x => eq(
-        F.chain(B(of)(sub3), F.chain(B(of)(mul3), of(x))),
-        F.chain(y => F.chain(B(of)(sub3), B(of)(mul3)(y)), of(x))
+        chain(B(of)(sub3), chain(B(of)(mul3), of(x))),
+        chain(y => chain(B(of)(sub3), B(of)(mul3)(y)), of(x))
       ));
     });
 
@@ -178,8 +176,8 @@ describe('Compliance', function(){
         const p = v => v < 1;
         const d = of;
         const n = B(of)(v => v - 1);
-        const a = F.chainRec((l, r, v) => p(v) ? F.map(r, d(v)) : F.map(l, n(v)), x);
-        const b = (function step(v){ return p(v) ? d(v) : F.chain(step, n(v)) }(x));
+        const a = chainRec((l, r, v) => p(v) ? map(r, d(v)) : map(l, n(v)), x);
+        const b = (function step(v){ return p(v) ? d(v) : chain(step, n(v)) }(x));
         return eq(a, b);
       });
 
@@ -187,7 +185,7 @@ describe('Compliance', function(){
         const p = v => v > (U.STACKSIZE + 1);
         const d = of;
         const n = B(of)(v => v + 1);
-        const a = F.chainRec((l, r, v) => p(v) ? F.map(r, d(v)) : F.map(l, n(v)), 0);
+        const a = chainRec((l, r, v) => p(v) ? map(r, d(v)) : map(l, n(v)), 0);
         expect(_ => a.fork(U.noop, U.noop)).to.not.throw();
       });
 
@@ -195,11 +193,11 @@ describe('Compliance', function(){
 
     describe('Monad', () => {
       test('left identity', x => eq(
-        F.chain(B(of)(sub3), of(x)),
+        chain(B(of)(sub3), of(x)),
         B(of)(sub3)(x)
       ));
       test('right identity', x => eq(
-        F.chain(of, of(x)),
+        chain(of, of(x)),
         of(x)
       ));
     });

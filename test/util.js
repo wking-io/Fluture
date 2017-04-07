@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import Future from '../index.es.js';
 import Z from 'sanctuary-type-classes';
 import {AssertionError} from 'assert';
 

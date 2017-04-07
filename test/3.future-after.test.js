@@ -1,31 +1,31 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, after} from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe('Future.after()', () => {
+describe('after()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.after).to.be.a('function');
-    expect(Future.after.length).to.equal(2);
-    expect(Future.after(20)).to.be.a('function');
+    expect(after).to.be.a('function');
+    expect(after.length).to.equal(2);
+    expect(after(20)).to.be.a('function');
   });
 
   it('throws TypeError when not given a number as first argument', () => {
     const xs = [{}, [], 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => Future.after(x));
+    const fs = xs.map(x => () => after(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
   it('returns an instance of Future', () => {
-    expect(Future.after(20, 1)).to.be.an.instanceof(Future);
+    expect(after(20, 1)).to.be.an.instanceof(Future);
   });
 
 });
 
 describe('After', () => {
 
-  const m = Future.after(20, 1);
+  const m = after(20, 1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
@@ -42,7 +42,7 @@ describe('After', () => {
     });
 
     it('clears its internal timeout when cancelled', done => {
-      Future.after(20, 1).fork(U.failRej, U.failRes)();
+      after(20, 1).fork(U.failRej, U.failRes)();
       setTimeout(done, 25);
     });
 

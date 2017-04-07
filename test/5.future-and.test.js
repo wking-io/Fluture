@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, and, of} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -71,28 +71,28 @@ const testInstance = and => {
 
 };
 
-describe.skip('Future.and()', () => {
+describe.skip('and()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.and).to.be.a('function');
-    expect(Future.and.length).to.equal(2);
-    expect(Future.and(F.resolved)).to.be.a('function');
+    expect(and).to.be.a('function');
+    expect(and.length).to.equal(2);
+    expect(and(F.resolved)).to.be.a('function');
   });
 
   it('throws when not given a Future as first argument', () => {
-    const f = () => Future.and(1);
+    const f = () => and(1);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Future as second argument', () => {
-    const f = () => Future.and(Future.of(1), 1);
+    const f = () => and(of(1), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((a, b) => Future.and(a, b));
+  testInstance((a, b) => and(a, b));
 
   it('allows for the implementation of `all` in terms of reduce', () => {
-    const all = ms => ms.reduce(Future.and, Future.of(true));
+    const all = ms => ms.reduce(and, of(true));
     return Promise.all([
       U.assertResolved(all([]), true),
       U.assertRejected(all([F.rejected, F.resolved]), 'rejected'),

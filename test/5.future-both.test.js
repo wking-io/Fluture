@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, both, of} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -71,25 +71,25 @@ const testInstance = both => {
 
 };
 
-describe('Future.both()', () => {
+describe('both()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.both).to.be.a('function');
-    expect(Future.both.length).to.equal(2);
-    expect(Future.both(Future.of(1))).to.be.a('function');
+    expect(both).to.be.a('function');
+    expect(both.length).to.equal(2);
+    expect(both(of(1))).to.be.a('function');
   });
 
   it('throws when not given a Future as first argument', () => {
-    const f = () => Future.both(1);
+    const f = () => both(1);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Future as second argument', () => {
-    const f = () => Future.both(Future.of(1), 1);
+    const f = () => both(of(1), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((a, b) => Future.both(a, b));
+  testInstance((a, b) => both(a, b));
 
 });
 

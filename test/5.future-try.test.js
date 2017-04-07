@@ -1,19 +1,18 @@
 import {expect} from 'chai';
-import Future from '..';
-const FutureTry = null;
+import {Future, attempt} from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe.skip('Future.try()', () => {
+describe.skip('attempt()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => Future.try(x));
+    const fs = xs.map(x => () => attempt(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of FutureTry', () => {
-    expect(Future.try(x => x)).to.be.an.instanceof(FutureTry);
+  it('returns an instance of Future', () => {
+    expect(attempt(x => x)).to.be.an.instanceof(Future);
   });
 
 });
@@ -21,22 +20,22 @@ describe.skip('Future.try()', () => {
 describe.skip('FutureTry', () => {
 
   it('extends Future', () => {
-    expect(new FutureTry).to.be.an.instanceof(Future);
+    expect(attempt).to.be.an.instanceof(Future);
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(new FutureTry)).to.equal(Future['@@type']);
+    expect(type(attempt)).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {
 
     it('resolves with the return value of the function', () => {
-      const actual = new FutureTry(() => 1);
+      const actual = attempt(() => 1);
       return U.assertResolved(actual, 1);
     });
 
     it('rejects with the exception thrown by the function', () => {
-      const actual = new FutureTry(() => { throw U.error });
+      const actual = attempt(() => { throw U.error });
       return U.assertRejected(actual, U.error);
     });
 
@@ -45,8 +44,8 @@ describe.skip('FutureTry', () => {
   describe('#toString()', () => {
 
     it('returns the code to create the FutureTry', () => {
-      const m = new FutureTry(x => x);
-      expect(m.toString()).to.equal('Future.try(x => x)');
+      const m = attempt(x => x);
+      expect(m.toString()).to.equal('attempt(x => x)');
     });
 
   });

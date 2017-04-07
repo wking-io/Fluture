@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import Future from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 

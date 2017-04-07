@@ -1,31 +1,31 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, rejectAfter} from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe('Future.rejectAfter()', () => {
+describe('rejectAfter()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.rejectAfter).to.be.a('function');
-    expect(Future.rejectAfter.length).to.equal(2);
-    expect(Future.rejectAfter(20)).to.be.a('function');
+    expect(rejectAfter).to.be.a('function');
+    expect(rejectAfter.length).to.equal(2);
+    expect(rejectAfter(20)).to.be.a('function');
   });
 
   it('throws TypeError when not given a number as first argument', () => {
     const xs = [{}, [], 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => Future.rejectAfter(x));
+    const fs = xs.map(x => () => rejectAfter(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
   it('returns an instance of Future', () => {
-    expect(Future.rejectAfter(20, 1)).to.be.an.instanceof(Future);
+    expect(rejectAfter(20, 1)).to.be.an.instanceof(Future);
   });
 
 });
 
 describe('RejectAfter', () => {
 
-  const m = Future.rejectAfter(20, 1);
+  const m = rejectAfter(20, 1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
@@ -42,7 +42,7 @@ describe('RejectAfter', () => {
     });
 
     it('clears its internal timeout when cancelled', done => {
-      Future.rejectAfter(20, 1).fork(U.failRej, U.failRes)();
+      rejectAfter(20, 1).fork(U.failRej, U.failRes)();
       setTimeout(done, 25);
     });
 

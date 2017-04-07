@@ -2,7 +2,7 @@
 
 import Denque from 'denque';
 
-import {show, showf, noop, moop} from './internal/fn';
+import {show, showf, noop, moop, partial1} from './internal/fn';
 import {isFunction} from './internal/is';
 import {error, typeError, invalidArgument} from './internal/throw';
 import {Next, Done} from './iteration';
@@ -535,9 +535,17 @@ Sequence.prototype.toString = function Sequence$toString(){
   return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
 };
 
-export const chainRec = (step, init) => (function recur(x){
-  return step(Next, Done, x).chain(o => o.done ? new Resolved(o.value) : recur(o.value));
-}(init));
+function chainRec$step(step, init){
+  return (function recur(x){
+    return step(Next, Done, x).chain(o => o.done ? new Resolved(o.value) : recur(o.value));
+  }(init));
+}
+
+export function chainRec(step, init){
+  if(!isFunction(step)) invalidArgument('Future.chainRec', 0, 'be a Function', step);
+  if(arguments.length === 1) return partial1(chainRec$step, step);
+  return chainRec$step(step, init);
+}
 
 Future['@@type'] = TYPEOF_FUTURE;
 Future[FL.chainRec] = chainRec;

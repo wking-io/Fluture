@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, race, of} from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
@@ -42,25 +42,25 @@ const testInstance = race => {
 
 };
 
-describe('Future.race()', () => {
+describe('race()', () => {
 
   it('is a curried binary function', () => {
-    expect(Future.race).to.be.a('function');
-    expect(Future.race.length).to.equal(2);
-    expect(Future.race(Future.of(1))).to.be.a('function');
+    expect(race).to.be.a('function');
+    expect(race.length).to.equal(2);
+    expect(race(of(1))).to.be.a('function');
   });
 
   it('throws when not given a Future as first argument', () => {
-    const f = () => Future.race(1);
+    const f = () => race(1);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Future as second argument', () => {
-    const f = () => Future.race(Future.of(1), 1);
+    const f = () => race(of(1), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
-  testInstance((a, b) => Future.race(b, a));
+  testInstance((a, b) => race(b, a));
 
 });
 

@@ -1,8 +1,18 @@
 import {expect} from 'chai';
-import Future from '..';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
+import {
+  Future,
+  isFuture,
+  fork,
+  value,
+  promise,
+  seq,
+  Par,
+  extractLeft,
+  extractRight
+} from '../index.es.js';
 
 describe('Future', () => {
 
@@ -16,11 +26,11 @@ describe('Future', () => {
     const xs = [NaN, 1, true, undefined, null, [], {}, {fork: (a, b) => ({a, b})}];
 
     it('returns true when given a Future', () => {
-      ms.forEach(m => expect(Future.isFuture(m)).to.equal(true));
+      ms.forEach(m => expect(isFuture(m)).to.equal(true));
     });
 
     it('returns false when not given a Future', () => {
-      xs.forEach(x => expect(Future.isFuture(x)).to.equal(false));
+      xs.forEach(x => expect(isFuture(x)).to.equal(false));
     });
 
   });
@@ -28,24 +38,24 @@ describe('Future', () => {
   describe('.fork()', () => {
 
     it('is a curried ternary function', () => {
-      expect(Future.fork).to.be.a('function');
-      expect(Future.fork.length).to.equal(3);
-      expect(Future.fork(U.noop)).to.be.a('function');
-      expect(Future.fork(U.noop, U.noop)).to.be.a('function');
+      expect(fork).to.be.a('function');
+      expect(fork.length).to.equal(3);
+      expect(fork(U.noop)).to.be.a('function');
+      expect(fork(U.noop, U.noop)).to.be.a('function');
     });
 
     it('throws when not given a Function as first argument', () => {
-      const f = () => Future.fork(1);
+      const f = () => fork(1);
       expect(f).to.throw(TypeError, /Future.*first/);
     });
 
     it('throws when not given a Function as second argument', () => {
-      const f = () => Future.fork(U.add(1), 1);
+      const f = () => fork(U.add(1), 1);
       expect(f).to.throw(TypeError, /Future.*second/);
     });
 
     it('throws when not given a Future as third argument', () => {
-      const f = () => Future.fork(U.add(1), U.add(1), 1);
+      const f = () => fork(U.add(1), U.add(1), 1);
       expect(f).to.throw(TypeError, /Future.*third/);
     });
 
@@ -58,7 +68,7 @@ describe('Future', () => {
         expect(y).to.equal(b);
         done();
       };
-      Future.fork(a, b, mock);
+      fork(a, b, mock);
     });
 
   });
@@ -66,18 +76,18 @@ describe('Future', () => {
   describe('.value()', () => {
 
     it('is a curried binary function', () => {
-      expect(Future.value).to.be.a('function');
-      expect(Future.value.length).to.equal(2);
-      expect(Future.value(U.noop)).to.be.a('function');
+      expect(value).to.be.a('function');
+      expect(value.length).to.equal(2);
+      expect(value(U.noop)).to.be.a('function');
     });
 
     it('throws when not given a Function as first argument', () => {
-      const f = () => Future.value(1);
+      const f = () => value(1);
       expect(f).to.throw(TypeError, /Future.*first/);
     });
 
     it('throws when not given a Future as second argument', () => {
-      const f = () => Future.value(U.add(1), 1);
+      const f = () => value(U.add(1), 1);
       expect(f).to.throw(TypeError, /Future.*second/);
     });
 
@@ -88,7 +98,7 @@ describe('Future', () => {
         expect(x).to.equal(a);
         done();
       };
-      Future.value(a, mock);
+      value(a, mock);
     });
 
   });
@@ -96,14 +106,14 @@ describe('Future', () => {
   describe('.promise()', () => {
 
     it('throws when not given a Future', () => {
-      const f = () => Future.promise(1);
+      const f = () => promise(1);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('dispatches to #promise', done => {
       const mock = Object.create(F.mock);
       mock.promise = done;
-      Future.promise(mock);
+      promise(mock);
     });
 
   });
@@ -111,13 +121,13 @@ describe('Future', () => {
   describe.skip('.seq()', () => {
 
     it('throws when not given a Parallel', () => {
-      const f = () => Future.seq(1);
+      const f = () => seq(1);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('returns the Future contained in the Parallel', () => {
-      const par = Future.Par(F.mock);
-      const seq = Future.seq(par);
+      const par = Par(F.mock);
+      const seq = seq(par);
       expect(seq).to.equal(F.mock);
     });
 
@@ -126,14 +136,14 @@ describe('Future', () => {
   describe('.extractLeft()', () => {
 
     it('throws when not given a Future', () => {
-      const f = () => Future.extractLeft(1);
+      const f = () => extractLeft(1);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('dispatches to #extractLeft', done => {
       const mock = Object.create(F.mock);
       mock.extractLeft = done;
-      Future.extractLeft(mock);
+      extractLeft(mock);
     });
 
   });
@@ -141,14 +151,14 @@ describe('Future', () => {
   describe('.extractRight()', () => {
 
     it('throws when not given a Future', () => {
-      const f = () => Future.extractRight(1);
+      const f = () => extractRight(1);
       expect(f).to.throw(TypeError, /Future/);
     });
 
     it('dispatches to #extractRight', done => {
       const mock = Object.create(F.mock);
       mock.extractRight = done;
-      Future.extractRight(mock);
+      extractRight(mock);
     });
 
   });

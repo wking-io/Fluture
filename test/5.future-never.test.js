@@ -1,22 +1,22 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, never} from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
 describe('Never', () => {
 
   it('extends Future', () => {
-    expect(Future.never).to.be.an.instanceof(Future);
+    expect(never).to.be.an.instanceof(Future);
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(Future.never)).to.equal(Future['@@type']);
+    expect(type(never)).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {
 
     it('does nothing and returns a noop cancel function', () => {
-      const m = Future.never;
+      const m = never;
       const cancel = m.fork(U.noop, U.noop);
       cancel();
     });
@@ -26,7 +26,7 @@ describe('Never', () => {
   describe('#toString()', () => {
 
     it('returns the code to create the Never', () => {
-      const m = Future.never;
+      const m = never;
       expect(m.toString()).to.equal('Future.never');
     });
 

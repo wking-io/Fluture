@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import Future from '..';
+import {Future, hook, of, reject} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -7,7 +7,7 @@ import type from 'sanctuary-type-identifiers';
 const testInstance = hook => {
 
   it('is considered a member of fluture/Fluture', () => {
-    const m = hook(Future.of(1), () => Future.of(2), () => Future.of(3));
+    const m = hook(of(1), () => of(2), () => of(3));
     expect(type(m)).to.equal(Future['@@type']);
   });
 
@@ -42,13 +42,13 @@ const testInstance = hook => {
     it('runs the first even if the second rejects', done => {
       hook(m,
         _ => Future(_ => done()),
-        _ => Future.reject(2)
+        _ => reject(2)
       ).fork(U.noop, U.noop);
     });
 
     it('rejects with the rejection reason of the first', () => {
-      const rejected = hook(m, _ => Future.reject(1), _ => Future.reject(2));
-      const resolved = hook(m, _ => Future.reject(1), _ => Future.of(2));
+      const rejected = hook(m, _ => reject(1), _ => reject(2));
+      const resolved = hook(m, _ => reject(1), _ => of(2));
       return Promise.all([
         U.assertRejected(rejected, 1),
         U.assertRejected(resolved, 1)
@@ -56,8 +56,8 @@ const testInstance = hook => {
     });
 
     it('assumes the state of the second if the first resolves', () => {
-      const rejected = hook(m, _ => Future.of(1), _ => Future.reject(2));
-      const resolved = hook(m, _ => Future.of(1), _ => Future.of(2));
+      const rejected = hook(m, _ => of(1), _ => reject(2));
+      const resolved = hook(m, _ => of(1), _ => of(2));
       return Promise.all([
         U.assertRejected(rejected, 2),
         U.assertResolved(resolved, 2)
@@ -65,13 +65,13 @@ const testInstance = hook => {
     });
 
     it('does not hook after being cancelled', done => {
-      hook(F.resolvedSlow, _ => Future.of('clean'), U.failRes).fork(U.failRej, U.failRes)();
+      hook(F.resolvedSlow, _ => of('clean'), U.failRes).fork(U.failRej, U.failRes)();
       setTimeout(done, 25);
     });
 
     it('does not reject after being cancelled', done => {
-      hook(F.rejectedSlow, _ => Future.of('clean'), U.failRes).fork(U.failRej, U.failRes)();
-      hook(F.resolved, _ => Future.of('clean'), () => F.rejectedSlow).fork(U.failRej, U.failRes)();
+      hook(F.rejectedSlow, _ => of('clean'), U.failRes).fork(U.failRej, U.failRes)();
+      hook(F.resolved, _ => of('clean'), () => F.rejectedSlow).fork(U.failRej, U.failRes)();
       setTimeout(done, 25);
     });
 
@@ -86,32 +86,32 @@ const testInstance = hook => {
 
 };
 
-describe.skip('Future.hook()', () => {
+describe.skip('hook()', () => {
 
   it('is a curried ternary function', () => {
-    expect(Future.hook).to.be.a('function');
-    expect(Future.hook.length).to.equal(3);
-    expect(Future.hook(Future.of(1))).to.be.a('function');
-    expect(Future.hook(Future.of(1))(U.noop)).to.be.a('function');
-    expect(Future.hook(Future.of(1), U.noop)).to.be.a('function');
+    expect(hook).to.be.a('function');
+    expect(hook.length).to.equal(3);
+    expect(hook(of(1))).to.be.a('function');
+    expect(hook(of(1))(U.noop)).to.be.a('function');
+    expect(hook(of(1), U.noop)).to.be.a('function');
   });
 
   it('throws when not given a Future as first argument', () => {
-    const f = () => Future.hook(1);
+    const f = () => hook(1);
     expect(f).to.throw(TypeError, /Future.*first/);
   });
 
   it('throws when not given a Function as second argument', () => {
-    const f = () => Future.hook(Future.of(1), 1);
+    const f = () => hook(of(1), 1);
     expect(f).to.throw(TypeError, /Future.*second/);
   });
 
   it('throws when not given a Function as third argument', () => {
-    const f = () => Future.hook(Future.of(1), U.add(1), 1);
+    const f = () => hook(of(1), U.add(1), 1);
     expect(f).to.throw(TypeError, /Future.*third/);
   });
 
-  testInstance((m, f, g) => Future.hook(m, f, g));
+  testInstance((m, f, g) => hook(m, f, g));
 
 });
 

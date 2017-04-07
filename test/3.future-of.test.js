@@ -1,24 +1,24 @@
 import {expect} from 'chai';
 import FL from 'fantasy-land';
-import Future from '..';
+import {Future, of} from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe('Future.of()', () => {
+describe('of()', () => {
 
   it('is also available as fantasy-land function', () => {
-    expect(Future.of).to.equal(Future[FL.of]);
+    expect(of).to.equal(Future[FL.of]);
   });
 
   it('returns an instance of Future', () => {
-    expect(Future.of(1)).to.be.an.instanceof(Future);
+    expect(of(1)).to.be.an.instanceof(Future);
   });
 
 });
 
 describe('Resolved', () => {
 
-  const m = Future.of(1);
+  const m = of(1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);
