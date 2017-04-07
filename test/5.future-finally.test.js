@@ -54,16 +54,6 @@ const testInstance = fin => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureFinally', () => {
-      const m = fin(Future.of(1), Future.of(2));
-      const s = 'Future.of(1).finally(Future.of(2))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe.skip('Future.finally()', () => {
@@ -89,12 +79,6 @@ describe.skip('Future.finally()', () => {
 });
 
 describe.skip('Future#finally()', () => {
-
-  it('throw TypeError when not given a Future', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-    const fs = xs.map(x => () => Future.of(1).finally(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((a, b) => a.finally(b));
 

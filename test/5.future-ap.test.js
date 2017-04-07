@@ -59,16 +59,6 @@ const testInstance = ap => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureAp', () => {
-      const m = ap(Future.of(1), Future.of(x => x));
-      const s = 'Future.of(1).ap(Future.of(x => x))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe('Future.ap()', () => {
@@ -94,18 +84,6 @@ describe('Future.ap()', () => {
 });
 
 describe('Future#ap()', () => {
-
-  it('throws TypeError when not given Future', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-    const fs = xs.map(x => () => Future.of(U.noop).ap(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
-
-  it('throws TypeError when not not called with Future<Function>', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => Future.of(1).ap(Future.of(x)).fork(U.noop, U.noop));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((a, b) => a.ap(b));
 

@@ -23,16 +23,6 @@ const testInstance = swap => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureSwap', () => {
-      const m = swap(Future.of(1));
-      const s = 'Future.of(1).swap()';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe.skip('Future.swap()', () => {

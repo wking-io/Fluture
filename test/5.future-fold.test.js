@@ -21,16 +21,6 @@ const testInstance = fold => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureFold', () => {
-      const m = fold(Future.of(1), x => x, y => y);
-      const s = 'Future.of(1).fold(x => x, y => y)';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe.skip('Future.fold()', () => {
@@ -63,20 +53,6 @@ describe.skip('Future.fold()', () => {
 });
 
 describe.skip('Future#fold()', () => {
-
-  it('throws TypeError when first argument is not a function', () => {
-    const m = Future.of(1);
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => m.fold(x, U.noop));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
-
-  it('throws TypeError when second argument is not a function', () => {
-    const m = Future.of(1);
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => m.fold(U.noop, x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((m, f, g) => m.fold(f, g));
 

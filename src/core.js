@@ -3,7 +3,7 @@
 import Denque from 'denque';
 
 import {show, showf, noop, moop} from './internal/fn';
-import {error, invalidArgument} from './internal/throw';
+import {error} from './internal/throw';
 import {Next, Done} from './iteration';
 import FL from './internal/fl';
 import type from 'sanctuary-type-identifiers';
@@ -329,12 +329,9 @@ export class MapRejAction extends Action{
   }
 }
 
-
-const check$race = m => isFuture(m) ? m : invalidArgument('Futrue.race', 0, 'to be a Future', m);
-
 export class RaceAction extends Action{
   constructor(other){
-    this.other = check$race(other);
+    this.other = other;
   }
   run(early){
     return new RaceActionState(early, this.other);

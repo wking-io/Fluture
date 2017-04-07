@@ -69,16 +69,6 @@ const testInstance = both => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureBoth', () => {
-      const m = both(Future.of(1), Future.of(2));
-      const s = 'Future.of(1).both(Future.of(2))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe('Future.both()', () => {
@@ -104,12 +94,6 @@ describe('Future.both()', () => {
 });
 
 describe('Future#both()', () => {
-
-  it('throws TypeError when not given a Future', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-    const fs = xs.map(x => () => Future.of(1).both(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((a, b) => a.both(b));
 

@@ -34,16 +34,6 @@ const testInstance = mapRej => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureMapRej', () => {
-      const m = mapRej(F.resolved, x => x);
-      const s = 'Future.of("resolved").mapRej(x => x)';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe('Future.mapRej()', () => {
@@ -69,12 +59,6 @@ describe('Future.mapRej()', () => {
 });
 
 describe('Future#mapRej()', () => {
-
-  it('throws TypeError when not given a function', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => Future.of(1).mapRej(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((m, f) => m.mapRej(f));
 

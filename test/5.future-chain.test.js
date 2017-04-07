@@ -48,16 +48,6 @@ const testInstance = chain => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureChain', () => {
-      const m = chain(Future.of(1), x => Future.of(x));
-      const s = 'Future.of(1).chain(x => Future.of(x))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe('Future.chain()', () => {
@@ -83,18 +73,6 @@ describe('Future.chain()', () => {
 });
 
 describe('Future#chain()', () => {
-
-  const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-
-  it('throws TypeError when not given a function', () => {
-    const fs = xs.map(x => () => F.resolved.chain(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
-
-  it('throws TypeError when the given function does not return Future', () => {
-    const fs = xs.map(x => () => F.resolved.chain(() => x).fork(U.noop, U.noop));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((m, f) => m.chain(f));
 

@@ -84,16 +84,6 @@ const testInstance = hook => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureHook', () => {
-      const m = hook(Future.of(1), () => Future.of(2), () => Future.of(3));
-      const s = 'Future.of(1).hook(() => Future.of(2), () => Future.of(3))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe.skip('Future.hook()', () => {
@@ -126,18 +116,6 @@ describe.skip('Future.hook()', () => {
 });
 
 describe.skip('Future#hook()', () => {
-
-  const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-
-  it('throws when first argument is not a function', () => {
-    const fs = xs.map(x => () => F.resolved.hook(x, U.noop));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
-
-  it('throws when second argument is not a function', () => {
-    const fs = xs.map(x => () => F.resolved.hook(U.noop, x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((m, f, g) => m.hook(f, g));
 

@@ -3,7 +3,7 @@ import Future from '..';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe('FutureNever', () => {
+describe('Never', () => {
 
   it('extends Future', () => {
     expect(Future.never).to.be.an.instanceof(Future);
@@ -25,7 +25,7 @@ describe('FutureNever', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the FutureNever', () => {
+    it('returns the code to create the Never', () => {
       const m = Future.never;
       expect(m.toString()).to.equal('Future.never');
     });

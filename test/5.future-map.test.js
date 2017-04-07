@@ -34,15 +34,6 @@ const testInstance = map => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureMap', () => {
-      const m = map(F.resolved, U.noop);
-      expect(m.toString()).to.equal('Future.of("resolved").map(() => {})');
-    });
-
-  });
-
 };
 
 describe('Future.map()', () => {
@@ -68,12 +59,6 @@ describe('Future.map()', () => {
 });
 
 describe('Future#map()', () => {
-
-  it('throws TypeError when not given a function', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => F.resolved.map(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((m, f) => m.map(f));
 

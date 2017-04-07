@@ -69,16 +69,6 @@ const testInstance = or => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureOr', () => {
-      const m = or(Future.of(1), Future.of(2));
-      const s = 'Future.of(1).or(Future.of(2))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe('Future.or()', () => {
@@ -114,12 +104,6 @@ describe('Future.or()', () => {
 });
 
 describe('Future#or()', () => {
-
-  it('throws TypeError when not given a Future', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-    const fs = xs.map(x => () => Future.of(1).or(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((a, b) => a.or(b));
 

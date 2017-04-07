@@ -69,16 +69,6 @@ const testInstance = and => {
 
   });
 
-  describe('#toString()', () => {
-
-    it('returns the code to create the FutureAnd', () => {
-      const m = and(Future.of(1), Future.of(2));
-      const s = 'Future.of(1).and(Future.of(2))';
-      expect(m.toString()).to.equal(s);
-    });
-
-  });
-
 };
 
 describe.skip('Future.and()', () => {
@@ -117,12 +107,6 @@ describe.skip('Future.and()', () => {
 });
 
 describe.skip('Future#and()', () => {
-
-  it('throw TypeError when not given a Future', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-    const fs = xs.map(x => () => Future.of(1).and(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
 
   testInstance((a, b) => a.and(b));
 

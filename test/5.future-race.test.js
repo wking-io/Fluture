@@ -66,12 +66,6 @@ describe('Future.race()', () => {
 
 describe('Future#race()', () => {
 
-  it('throws TypeError when not given a Future', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
-    const fs = xs.map(x => () => Future.of(1).map(U.I).race(x));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-  });
-
   testInstance((a, b) => a.race(b));
 
 });
