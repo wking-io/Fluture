@@ -43,7 +43,7 @@ Go.prototype.toString = function Go$toString(){
   return `Future.do(${showf(this._generator)})`;
 };
 
-export const go = generator => {
+export function go(generator){
   if(!isFunction(generator)) invalidArgument('Future.do', 0, 'be a Function', generator);
   return new Go(generator);
-};
+}

@@ -1,5 +1,6 @@
-import {Core, isRejected, isNever} from './core';
-import {noop} from './internal/fn';
+import {Core, isRejected, isNever, isFuture} from './core';
+import {noop, partial1} from './internal/fn';
+import {invalidArgument} from './internal/throw';
 
 export function Both(left, right){
   this._left = left;
@@ -32,6 +33,15 @@ Both.prototype.toString = function Both$toString(){
   return `${this._left.toString()}.both(${this._right.toString()})`;
 };
 
-export const both = (left, right) => isNever(left) || isRejected(left) ? left
-                                   : isNever(right) || isRejected(right) ? right
-                                   : new Both(left, right);
+function both$left(left, right){
+  if(!isFuture(right)) invalidArgument('Future.both', 1, 'be a Future', right);
+  return isNever(left) || isRejected(left) ? left
+       : isNever(right) || isRejected(right) ? right
+       : new Both(left, right);
+}
+
+export function both(left, right){
+  if(!isFuture(left)) invalidArgument('Future.both', 0, 'be a Future', left);
+  if(arguments.length === 1) return partial1(both$left, left);
+  return both$left(left, right);
+}

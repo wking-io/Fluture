@@ -1,6 +1,7 @@
 import {Core, isRejected, Resolved, isFuture} from './core';
-import {typeError} from './internal/throw';
-import {show, mapArray} from './internal/fn';
+import {invalidArgument, typeError} from './internal/throw';
+import {show, mapArray, partial1} from './internal/fn';
+import {isUnsigned, isArray} from './internal/is';
 
 const check$parallel = (m, i) => isFuture(m) ? m : typeError(
   'Future.parallel expects its second argument to be an array of Futures.'
@@ -51,11 +52,18 @@ Parallel.prototype.toString = function Parallel$toString(){
 const arrof = x => [x];
 const emptyArray = new Resolved([]);
 
-export const parallel = (max, xs) => {
+function parallel$max(max, xs){
+  if(!isArray(xs)) invalidArgument('Future.parallel', 1, 'be an array', xs);
   const futures = mapArray(xs, check$parallel);
   return futures.length === 0
   ? emptyArray
   : futures.length === 1
   ? futures[0].map(arrof)
   : futures.find(isRejected) || new Parallel(max, futures);
-};
+}
+
+export function parallel(max, xs){
+  if(!isUnsigned(max)) invalidArgument('Future.parallel', 0, 'be a positive integer', max);
+  if(arguments.length === 1) return partial1(parallel$max, max);
+  return parallel$max(max, xs);
+}

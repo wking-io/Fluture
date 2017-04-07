@@ -1,16 +1,6 @@
 import {
   Future,
   isFuture,
-  ap,
-  map,
-  bimap,
-  chain,
-  mapRej,
-  race,
-  or,
-  fork,
-  value,
-  promise,
   reject,
   isRejected,
   of,
@@ -19,6 +9,8 @@ import {
   isNever,
   chainRec
 } from './core';
+
+import * as dispatchers from './dispatchers/index';
 
 import {after} from './after';
 import {both} from './both';
@@ -32,19 +24,9 @@ import {error} from './internal/throw';
 if(typeof Object.create !== 'function') error('Please polyfill Object.create to use Fluture');
 if(typeof Object.assign !== 'function') error('Please polyfill Object.assign to use Fluture');
 
-export default Object.assign(Future, {
+export default Object.assign(Future, dispatchers, {
   Future,
   isFuture,
-  ap,
-  map,
-  bimap,
-  chain,
-  mapRej,
-  race,
-  or,
-  fork,
-  value,
-  promise,
   reject,
   isRejected,
   of,

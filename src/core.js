@@ -3,7 +3,7 @@
 import Denque from 'denque';
 
 import {show, showf, noop, moop} from './internal/fn';
-import {error} from './internal/throw';
+import {error, invalidArgument} from './internal/throw';
 import {Next, Done} from './iteration';
 import FL from './internal/fl';
 import type from 'sanctuary-type-identifiers';
@@ -48,6 +48,14 @@ Future.prototype.promise = function Future$promise(){
   return new Promise((res, rej) => this._fork(rej, res));
 };
 
+Future.prototype.extractLeft = function Future$extractLeft(){
+  return [];
+};
+
+Future.prototype.extractRight = function Future$extractRight(){
+  return [];
+};
+
 export function Core(){}
 
 Core.prototype = Object.create(Future.prototype);
@@ -83,18 +91,6 @@ Core.prototype.both = function Core$both(other){
 Core.prototype.or = function Core$or(other){
   return new Sequence(this, [new OrAction(other)]);
 };
-
-export const ap = (mx, mf) => mf.ap(mx);
-export const map = (f, m) => m.map(f);
-export const bimap = (f, g, m) => m.map(f, g);
-export const chain = (f, m) => m.chain(f);
-export const mapRej = (f, m) => m.mapRej(f);
-export const race = (l, r) => l.race(r);
-export const or = (l, r) => l.or(r);
-
-export const fork = (rej, res, m) => m._fork(rej, res);
-export const value = (res, m) => m.value(res);
-export const promise = m => m.promise();
 
 export function Computation(computation){
   this._computation = computation;
@@ -146,6 +142,10 @@ Rejected.prototype._fork = function Rejected$_fork(rej){
   return noop;
 };
 
+Rejected.prototype.extractLeft = function Rejected$extractLeft(){
+  return [this._value];
+};
+
 Rejected.prototype.toString = function Rejected$toString(){
   return `Future.reject(${show(this._value)})`;
 };
@@ -170,6 +170,10 @@ Resolved.prototype.both = function Resolved$both(other){
 Resolved.prototype._fork = function _fork(rej, res){
   res(this._value);
   return noop;
+};
+
+Resolved.prototype.extractRight = function Resolved$extractRight(){
+  return [this._value];
 };
 
 Resolved.prototype.toString = function Resolved$toString(){
@@ -227,6 +231,14 @@ function Eager(future){
 
 Eager.prototype = Object.create(Future.prototype);
 
+Eager.prototype.extractLeft = function Eager$extractLeft(){
+  return this.rejected ? [this.value] : [];
+};
+
+Eager.prototype.extractLeft = function Eager$extractLeft(){
+  return this.resolved ? [this.value] : [];
+};
+
 Eager.prototype._fork = function Eager$_fork(rej, res){
   if(this.rejected) rej(this.value);
   else if(this.resolved) res(this.value);
@@ -255,7 +267,6 @@ export class Action{
 
 export class ApAction extends Action{
   constructor(other){
-    super();
     this.other = other;
   }
   resolved(x){
@@ -268,7 +279,6 @@ export class ApAction extends Action{
 
 export class MapAction extends Action{
   constructor(mapper){
-    super();
     this.mapper = mapper;
   }
   resolved(x){
@@ -281,7 +291,6 @@ export class MapAction extends Action{
 
 export class BimapAction extends Action{
   constructor(lmapper, rmapper){
-    super();
     this.lmapper = lmapper;
     this.rmapper = rmapper;
   }
@@ -298,7 +307,6 @@ export class BimapAction extends Action{
 
 export class ChainAction extends Action{
   constructor(mapper){
-    super();
     this.mapper = mapper;
   }
   resolved(x){
@@ -311,7 +319,6 @@ export class ChainAction extends Action{
 
 export class MapRejAction extends Action{
   constructor(mapper){
-    super();
     this.mapper = mapper;
   }
   rejected(x){
@@ -322,10 +329,12 @@ export class MapRejAction extends Action{
   }
 }
 
+
+const check$race = m => isFuture(m) ? m : invalidArgument('Futrue.race', 0, 'to be a Future', m);
+
 export class RaceAction extends Action{
   constructor(other){
-    super();
-    this.other = other;
+    this.other = check$race(other);
   }
   run(early){
     return new RaceActionState(early, this.other);
@@ -337,7 +346,7 @@ export class RaceAction extends Action{
 
 export class RaceActionState extends RaceAction{
   constructor(early, other){
-    super(other);
+    this.other = other;
     this.cancel = other._fork(
       x => early(new Rejected(x)),
       x => early(new Resolved(x))
@@ -355,7 +364,6 @@ export class RaceActionState extends RaceAction{
 
 export class BothAction extends Action{
   constructor(other){
-    super();
     this.other = other;
   }
   run(early){
@@ -371,14 +379,13 @@ export class BothAction extends Action{
 
 export class BothActionState extends BothAction{
   constructor(early, other){
-    super(new Eager(other));
+    this.other = new Eager(other);
     this.cancel = this.other.cancel;
   }
 }
 
 export class OrAction extends Action{
   constructor(other){
-    super();
     this.other = other;
   }
   run(early){
@@ -394,7 +401,7 @@ export class OrAction extends Action{
 
 export class OrActionState extends OrAction{
   constructor(early, other){
-    super(new Eager(other));
+    this.other = new Eager(other);
     this.cancel = this.other.cancel;
   }
   resolved(x){
