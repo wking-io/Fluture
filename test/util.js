@@ -8,6 +8,7 @@ exports.noop = () => {};
 exports.add = a => b => a + b;
 exports.sub = a => b => a - b;
 exports.bang = s => `${s}!`;
+exports.I = x => x;
 exports.B = f => g => x => f(g(x));
 exports.error = new Error('Intentional error for unit testing');
 
