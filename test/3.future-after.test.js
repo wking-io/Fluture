@@ -1,6 +1,5 @@
 import {expect} from 'chai';
 import Future from '..';
-import {After} from '../src/after';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
@@ -18,15 +17,15 @@ describe('Future.after()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of After', () => {
-    expect(Future.after(20, 1)).to.be.an.instanceof(After);
+  it('returns an instance of Future', () => {
+    expect(Future.after(20, 1)).to.be.an.instanceof(Future);
   });
 
 });
 
 describe('After', () => {
 
-  const m = new After(20, 1);
+  const m = Future.after(20, 1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);

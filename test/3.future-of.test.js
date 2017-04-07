@@ -1,7 +1,6 @@
 import {expect} from 'chai';
 import FL from 'fantasy-land';
 import Future from '..';
-import {Resolved} from '../src/core';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
@@ -11,15 +10,15 @@ describe('Future.of()', () => {
     expect(Future.of).to.equal(Future[FL.of]);
   });
 
-  it('returns an instance of Resolved', () => {
-    expect(Future.of(1)).to.be.an.instanceof(Resolved);
+  it('returns an instance of Future', () => {
+    expect(Future.of(1)).to.be.an.instanceof(Future);
   });
 
 });
 
 describe('Resolved', () => {
 
-  const m = new Resolved(1);
+  const m = Future.of(1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);

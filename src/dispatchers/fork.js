@@ -5,7 +5,7 @@ import {invalidArgument} from '../internal/throw';
 
 function fork$f$g(f, g, m){
   if(!isFuture(m)) invalidArgument('Future.fork', 2, 'be a Future', m);
-  return m._f(f, g);
+  return m._fork(f, g);
 }
 
 function fork$f(f, g, m){

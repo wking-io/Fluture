@@ -10,245 +10,17 @@ describe('Future', () => {
     expect(type(F.mock)).to.equal(Future['@@type']);
   });
 
-  describe('.util', () => {
+  describe('.isFuture()', () => {
 
-    const util = Future.util;
+    const ms = [F.mock];
+    const xs = [NaN, 1, true, undefined, null, [], {}, {fork: (a, b) => ({a, b})}];
 
-    describe('.isFuture()', () => {
-
-      const ms = [F.mock];
-      const xs = [NaN, 1, true, undefined, null, [], {}, {fork: (a, b) => ({a, b})}];
-
-      it('returns true when given a Future', () => {
-        ms.forEach(m => expect(util.isFuture(m)).to.equal(true));
-      });
-
-      it('returns false when not given a Future', () => {
-        xs.forEach(x => expect(util.isFuture(x)).to.equal(false));
-      });
-
+    it('returns true when given a Future', () => {
+      ms.forEach(m => expect(Future.isFuture(m)).to.equal(true));
     });
 
-    describe('.isThenable()', () => {
-
-      const ps = [
-        Promise.resolve(1),
-        new Promise(U.noop),
-        {then: U.noop},
-        {then: a => a},
-        {then: (a, b) => b}
-      ];
-
-      const values = [NaN, 1, true, undefined, null, [], {}];
-      const xs = values.concat([U.noop]).concat(values.map(x => ({then: x})));
-
-      it('returns true when given a Thenable', () => {
-        ps.forEach(p => expect(util.isThenable(p)).to.equal(true));
-      });
-
-      it('returns false when not given a Thenable', () => {
-        xs.forEach(x => expect(util.isThenable(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.isFunction()', () => {
-
-      const fs = [() => {}, function(){}, Future];
-      const xs = [NaN, 1, true, undefined, null, [], {}];
-
-      it('returns true when given a Function', () => {
-        fs.forEach(f => expect(util.isFunction(f)).to.equal(true));
-      });
-
-      it('returns false when not given a Function', () => {
-        xs.forEach(x => expect(util.isFunction(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.isBinary()', () => {
-
-      const fs = [(a, b) => b, (a, b, c) => c];
-      const xs = [U.noop, a => a];
-
-      it('returns true when given a binary Function', () => {
-        fs.forEach(f => expect(util.isBinary(f)).to.equal(true));
-      });
-
-      it('returns false when not given a binary Function', () => {
-        xs.forEach(x => expect(util.isBinary(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.isTernary()', () => {
-
-      const fs = [(a, b, c) => c, (a, b, c, d) => d];
-      const xs = [U.noop, a => a, (a, b) => b];
-
-      it('returns true when given a ternary Function', () => {
-        fs.forEach(f => expect(util.isTernary(f)).to.equal(true));
-      });
-
-      it('returns false when not given a ternary Function', () => {
-        xs.forEach(x => expect(util.isTernary(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.isPositiveInteger()', () => {
-
-      const is = [1, 2, 99999999999999999999, Infinity];
-      const xs = [NaN, 0, -0, -1, -99999999999999999, -Infinity, '1', [], {}];
-
-      it('returns true when given a PositiveInteger', () => {
-        is.forEach(i => expect(util.isPositiveInteger(i)).to.equal(true));
-      });
-
-      it('returns false when not given a PositiveInteger', () => {
-        xs.forEach(x => expect(util.isPositiveInteger(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.isObject()', () => {
-
-      function O(){}
-      const os = [{}, {foo: 1}, Object.create(null), new O, []];
-      const xs = [1, true, NaN, null, undefined, ''];
-
-      it('returns true when given an Object', () => {
-        os.forEach(i => expect(util.isObject(i)).to.equal(true));
-      });
-
-      it('returns false when not given an Object', () => {
-        xs.forEach(x => expect(util.isObject(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.isIterator()', () => {
-
-      const is = [{next: () => {}}, {next: x => x}, (function*(){}())];
-      const xs = [1, true, NaN, null, undefined, '', {}, {next: 1}];
-
-      it('returns true when given an Iterator', () => {
-        is.forEach(i => expect(util.isIterator(i)).to.equal(true));
-      });
-
-      it('returns false when not given an Iterator', () => {
-        xs.forEach(x => expect(util.isIterator(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.isIteration()', () => {
-
-      const is = [{done: true}, {value: 2, done: false}, (function*(){}()).next()];
-      const xs = [null, '', {}, {value: 1, done: 1}];
-
-      it('returns true when given an Iteration', () => {
-        is.forEach(i => expect(util.isIteration(i)).to.equal(true));
-      });
-
-      it('returns false when not given an Iteration', () => {
-        xs.forEach(x => expect(util.isIteration(x)).to.equal(false));
-      });
-
-    });
-
-    describe('.padf()', () => {
-
-      it('left-pads string representations of functions', () => {
-        const f = () => {
-          return 42;
-        };
-        const input = f.toString();
-        const inputLines = input.split('\n');
-        const actualLines = util.padf('--', input).split('\n');
-        expect(actualLines[0]).to.equal(inputLines[0]);
-        expect(actualLines[1]).to.equal('--' + inputLines[1]);
-        expect(actualLines[2]).to.equal('--' + inputLines[2]);
-      });
-
-    });
-
-    describe('.fid()', () => {
-
-      it('returns the name of a function', () => {
-        function foo(){}
-        expect(util.fid(foo)).to.equal('foo');
-      });
-
-      it('returns <anonymous> for unnamed functions', () => {
-        expect(util.fid(() => {})).to.equal('<anonymous>');
-      });
-
-    });
-
-    describe('.unaryPartial()', () => {
-
-      it('can partially apply binary functions', () => {
-        function binary(a, b){ return a + b }
-        expect(util.unaryPartial(binary, 1)(1)).to.equal(2);
-      });
-
-      it('can partially apply ternary functions', () => {
-        function ternary(a, b, c){ return a + b + c }
-        expect(util.unaryPartial(ternary, 1)(1, 1)).to.equal(3);
-      });
-
-      it('can partially apply quaternary functions', () => {
-        function quaternary(a, b, c, d){ return a + b + c + d }
-        expect(util.unaryPartial(quaternary, 1)(1, 1, 1)).to.equal(4);
-      });
-
-    });
-
-    describe('.binaryPartial()', () => {
-
-      it('can partially apply ternary functions', () => {
-        function ternary(a, b, c){ return a + b + c }
-        expect(util.binaryPartial(ternary, 1, 1)(1)).to.equal(3);
-      });
-
-      it('can partially apply quaternary functions', () => {
-        function quaternary(a, b, c, d){ return a + b + c + d }
-        expect(util.binaryPartial(quaternary, 1, 1)(1, 1)).to.equal(4);
-      });
-
-    });
-
-    describe('.ternaryPartial()', () => {
-
-      it('can partially apply quaternary functions', () => {
-        function quaternary(a, b, c, d){ return a + b + c + d }
-        expect(util.ternaryPartial(quaternary, 1, 1, 1)(1)).to.equal(4);
-      });
-
-    });
-
-    describe('.Next()', () => {
-
-      it('returns an uncomplete Iteration of the given value', () => {
-        const actual = util.Next(42);
-        expect(util.isIteration(actual)).to.equal(true);
-        expect(actual.done).to.equal(false);
-        expect(actual.value).to.equal(42);
-      });
-
-    });
-
-    describe('.Done()', () => {
-
-      it('returns a complete Iteration of the given value', () => {
-        const actual = util.Done(42);
-        expect(util.isIteration(actual)).to.equal(true);
-        expect(actual.done).to.equal(true);
-        expect(actual.value).to.equal(42);
-      });
-
+    it('returns false when not given a Future', () => {
+      xs.forEach(x => expect(Future.isFuture(x)).to.equal(false));
     });
 
   });
@@ -277,11 +49,11 @@ describe('Future', () => {
       expect(f).to.throw(TypeError, /Future.*third/);
     });
 
-    it('dispatches to #_f()', done => {
+    it('dispatches to #_fork()', done => {
       const a = () => {};
       const b = () => {};
       const mock = Object.create(F.mock);
-      mock._f = (x, y) => {
+      mock._fork = (x, y) => {
         expect(x).to.equal(a);
         expect(y).to.equal(b);
         done();
@@ -336,7 +108,7 @@ describe('Future', () => {
 
   });
 
-  describe('.seq()', () => {
+  describe.skip('.seq()', () => {
 
     it('throws when not given a Parallel', () => {
       const f = () => Future.seq(1);
@@ -383,28 +155,16 @@ describe('Future', () => {
 
   describe('#fork()', () => {
 
-    it('throws TypeError when first argument is not a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => F.mock.fork(x, U.noop));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
-    it('throws TypeError when second argument is not a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => F.mock.fork(U.noop, x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
-    });
-
     it('does not throw when both arguments are functions', () => {
       const f = () => F.mock.fork(U.noop, U.noop);
       expect(f).to.not.throw(TypeError);
     });
 
-    it('dispatches to #_f()', done => {
+    it('dispatches to #_fork()', done => {
       const mock = Object.create(Future.prototype);
       const a = () => {};
       const b = () => {};
-      mock._f = (x, y) => {
+      mock._fork = (x, y) => {
         expect(x).to.equal(a);
         expect(y).to.equal(b);
         done();
@@ -416,15 +176,10 @@ describe('Future', () => {
 
   describe('#value()', () => {
 
-    it('throws when invoked out of context', () => {
-      const f = () => F.mock.value.call(null, U.noop);
-      expect(f).to.throw(TypeError, /Future/);
-    });
-
-    it('dispatches to #_f(), using the input as resolution callback', done => {
+    it('dispatches to #_fork(), using the input as resolution callback', done => {
       const mock = Object.create(Future.prototype);
       const res = () => {};
-      mock._f = (l, r) => {
+      mock._fork = (l, r) => {
         expect(r).to.equal(res);
         done();
       };
@@ -433,14 +188,14 @@ describe('Future', () => {
 
     it('throws when _f calls the rejection callback', () => {
       const mock = Object.create(Future.prototype);
-      mock._f = l => {l(1)};
+      mock._fork = l => {l(1)};
       expect(() => mock.value(U.noop)).to.throw(Error);
     });
 
-    it('returns the return value of #_f()', () => {
+    it('returns the return value of #_fork()', () => {
       const mock = Object.create(Future.prototype);
       const sentinel = {};
-      mock._f = () => sentinel;
+      mock._fork = () => sentinel;
       expect(mock.value(U.noop)).to.equal(sentinel);
     });
 
@@ -455,7 +210,7 @@ describe('Future', () => {
 
     it('resolves if the Future resolves', done => {
       const mock = Object.create(Future.prototype);
-      mock._f = (l, r) => r(1);
+      mock._fork = (l, r) => r(1);
       mock.promise().then(
         x => (expect(x).to.equal(1), done()),
         done
@@ -464,7 +219,7 @@ describe('Future', () => {
 
     it('rejects if the Future rejects', done => {
       const mock = Object.create(Future.prototype);
-      mock._f = l => l(1);
+      mock._fork = l => l(1);
       mock.promise().then(
         () => done(new Error('It resolved')),
         x => (expect(x).to.equal(1), done())

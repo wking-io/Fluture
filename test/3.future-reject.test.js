@@ -1,20 +1,19 @@
 import {expect} from 'chai';
 import Future from '..';
-import {Rejected} from '../src/core';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
 describe('Future.reject()', () => {
 
-  it('returns an instance of Rejected', () => {
-    expect(Future.reject(1)).to.be.an.instanceof(Rejected);
+  it('returns an instance of Future', () => {
+    expect(Future.reject(1)).to.be.an.instanceof(Future);
   });
 
 });
 
 describe('Rejected', () => {
 
-  const m = new Rejected(1);
+  const m = Future.reject(1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);

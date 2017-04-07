@@ -2,7 +2,7 @@ import U from './util';
 import Future from '..';
 
 exports.mock = Object.create(Future.prototype);
-exports.mock._f = U.noop;
+exports.mock._fork = U.noop;
 exports.mock.toString = () => '(util.mock)';
 exports.resolved = Future.of('resolved');
 exports.rejected = Future.reject('rejected');

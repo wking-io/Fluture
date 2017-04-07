@@ -15,9 +15,9 @@ RejectAfter.prototype._fork = function RejectAfter$_fork(rej){
   return () => { clearTimeout(id) };
 };
 
-RejectAfter.prototype.extractLeft = Future.prototype.extractLeft;
+RejectAfter.prototype.extractRight = Future.prototype.extractRight;
 
-RejectAfter.prototype.extractRight = function After$extractRight(){
+RejectAfter.prototype.extractLeft = function After$extractLeft(){
   return [this._value];
 };
 

@@ -1,6 +1,5 @@
 import {expect} from 'chai';
 import Future from '..';
-import {Computation} from '../src/core';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
@@ -17,14 +16,14 @@ describe('Future()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns a Computation', () => {
+  it('returns a Future', () => {
     const actual = Future(U.noop);
-    expect(actual).to.be.an.instanceof(Computation);
+    expect(actual).to.be.an.instanceof(Future);
   });
 
   it('can be called with "new", for those feeling particularly OO', () => {
     const actual = new Future(U.noop);
-    expect(actual).to.be.an.instanceof(Computation);
+    expect(actual).to.be.an.instanceof(Future);
   });
 
 });
@@ -32,11 +31,11 @@ describe('Future()', () => {
 describe('Computation', () => {
 
   it('extends Future', () => {
-    expect(new Computation).to.be.an.instanceof(Future);
+    expect(Future(U.noop)).to.be.an.instanceof(Future);
   });
 
   it('is considered a member of fluture/Fluture', () => {
-    expect(type(new Computation)).to.equal(Future['@@type']);
+    expect(type(Future(U.noop))).to.equal(Future['@@type']);
   });
 
   describe('#fork()', () => {
@@ -56,7 +55,7 @@ describe('Computation', () => {
     });
 
     it('ensures no continuations are called after the first resolve', done => {
-      const actual = new Computation((rej, res) => {
+      const actual = Future((rej, res) => {
         res(1);
         res(2);
         rej(3);
@@ -65,7 +64,7 @@ describe('Computation', () => {
     });
 
     it('ensures no continuations are called after the first reject', done => {
-      const actual = new Computation((rej, res) => {
+      const actual = Future((rej, res) => {
         rej(1);
         rej(2);
         res(3);
@@ -74,7 +73,7 @@ describe('Computation', () => {
     });
 
     it('prevents chains from running twice', done => {
-      const m = new Computation((rej, res) => {
+      const m = Future((rej, res) => {
         res(1);
         res(1);
       });
@@ -86,7 +85,7 @@ describe('Computation', () => {
     });
 
     it('stops continuations from being called after cancellation', done => {
-      new Computation((rej, res) => {
+      Future((rej, res) => {
         setTimeout(res, 20, 1);
         setTimeout(rej, 20, 1);
       })
@@ -95,7 +94,7 @@ describe('Computation', () => {
     });
 
     it('stops cancellation from being called after continuations', () => {
-      const m = new Computation((rej, res) => {
+      const m = Future((rej, res) => {
         res(1);
         return () => { throw U.error };
       });
@@ -107,10 +106,9 @@ describe('Computation', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the Computation', () => {
-      const m = new Computation((rej, res) => res());
-      const s = 'Future((rej, res) => res())';
-      expect(m.toString()).to.equal(s);
+    it('returns a customized representation', () => {
+      const m = Future(function(rej, res){ res() });
+      expect(m.toString()).to.contain('Future');
     });
 
   });

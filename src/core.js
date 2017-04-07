@@ -3,7 +3,8 @@
 import Denque from 'denque';
 
 import {show, showf, noop, moop} from './internal/fn';
-import {error} from './internal/throw';
+import {isFunction} from './internal/is';
+import {error, typeError, invalidArgument} from './internal/throw';
 import {Next, Done} from './iteration';
 import FL from './internal/fl';
 import type from 'sanctuary-type-identifiers';
@@ -13,6 +14,7 @@ const TYPEOF_FUTURE = 'fluture/Future@2';
 const throwRejection = x => error(`Rejected with ${show(x)}`);
 
 export function Future(computation){
+  if(!isFunction(computation)) invalidArgument('Future', 0, 'be a Function', computation);
   return new Computation(computation);
 }
 
@@ -92,6 +94,13 @@ Core.prototype.or = function Core$or(other){
   return new Sequence(this, [new OrAction(other)]);
 };
 
+function check$fork(f, c){
+  if(!(f === undefined || (isFunction(f) && f.length === 0))) typeError(
+    'Future expected its computation to return a nullary function or void'
+    + `\n  Actual: ${show(f)}\n  From calling: ${showf(c)}`
+  );
+}
+
 export function Computation(computation){
   this._computation = computation;
 }
@@ -111,6 +120,7 @@ Computation.prototype._fork = function Computation$_fork(rej, res){
       res(x);
     }
   });
+  check$fork(f, this._computation);
   return function Computation$cancel(){
     open && f && f();
     open = false;
@@ -229,7 +239,7 @@ function Eager(future){
   });
 }
 
-Eager.prototype = Object.create(Future.prototype);
+Eager.prototype = Object.create(Core.prototype);
 
 Eager.prototype.extractLeft = function Eager$extractLeft(){
   return this.rejected ? [this.value] : [];
@@ -377,7 +387,7 @@ export class BothAction extends Action{
 export class BothActionState extends BothAction{
   constructor(early, other){
     this.other = new Eager(other);
-    this.cancel = this.other.cancel;
+    this.cancel = this.other.fork(x => early(new Rejected(x)), noop);
   }
 }
 

@@ -1,6 +1,5 @@
 import {expect} from 'chai';
 import Future from '..';
-import {RejectAfter} from '../src/reject-after';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
@@ -18,15 +17,15 @@ describe('Future.rejectAfter()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  it('returns an instance of RejectAfter', () => {
-    expect(Future.rejectAfter(20, 1)).to.be.an.instanceof(RejectAfter);
+  it('returns an instance of Future', () => {
+    expect(Future.rejectAfter(20, 1)).to.be.an.instanceof(Future);
   });
 
 });
 
 describe('RejectAfter', () => {
 
-  const m = new RejectAfter(20, 1);
+  const m = Future.rejectAfter(20, 1);
 
   it('extends Future', () => {
     expect(m).to.be.an.instanceof(Future);

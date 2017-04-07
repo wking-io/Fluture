@@ -22,7 +22,7 @@
     "test:mem": "node scripts/test-mem",
     "test:all": "npm run lint && npm run lint:readme && npm run test:unit",
     "test:unit": "mocha --require buba/register --ui bdd --reporter list --check-leaks --full-trace",
-    "test:coverage": "npm run clean && nyc --check-coverage --statements 100 --branches 100 --lines 100 --functions 100 mocha --ui bdd --reporter dot --check-leaks --bail test/**.test.js"
+    "test:coverage": "npm run clean && nyc --check-coverage --statements 100 --branches 100 --lines 100 --functions 100 mocha --require buba/register --ui bdd --reporter dot --check-leaks --bail test/**.test.js"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
   "homepage": "https://github.com/fluture-js/Fluture",
