@@ -70,11 +70,6 @@ describe('Future.mapRej()', () => {
 
 describe('Future#mapRej()', () => {
 
-  it('throws when invoked out of context', () => {
-    const f = () => Future.of(1).mapRej.call(null, U.noop);
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
     const fs = xs.map(x => () => Future.of(1).mapRej(x));

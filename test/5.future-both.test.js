@@ -105,11 +105,6 @@ describe('Future.both()', () => {
 
 describe('Future#both()', () => {
 
-  it('throws when invoked out of context', () => {
-    const f = () => Future.of(1).both.call(null, Future.of(1));
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   it('throws TypeError when not given a Future', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
     const fs = xs.map(x => () => Future.of(1).both(x));

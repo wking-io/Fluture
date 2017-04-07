@@ -208,11 +208,6 @@ describe.skip('Future.cache()', () => {
 
 describe.skip('Future#cache()', () => {
 
-  it('throws when invoked out of context', () => {
-    const f = () => Future.of(1).cache.call(null);
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   testInstance(m => m.cache());
 
 });

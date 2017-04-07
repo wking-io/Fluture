@@ -48,11 +48,6 @@ describe.skip('Future.swap()', () => {
 
 describe.skip('Future#swap()', () => {
 
-  it('throws when invoked out of context', () => {
-    const f = () => Future.of(1).swap.call(null);
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   testInstance(m => m.swap());
 
 });

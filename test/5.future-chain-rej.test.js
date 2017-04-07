@@ -80,11 +80,6 @@ describe.skip('Future#chainRej()', () => {
 
   const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
-  it('throws when invoked out of context', () => {
-    const f = () => F.rejected.chainRej.call(null, U.noop);
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   it('throws TypeError when not given a function', () => {
     const fs = xs.map(x => () => F.rejected.chainRej(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));

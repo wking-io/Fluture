@@ -129,11 +129,6 @@ describe.skip('Future#hook()', () => {
 
   const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
 
-  it('throws when invoked out of context', () => {
-    const f = () => Future.of(1).hook.call(null, U.noop);
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   it('throws when first argument is not a function', () => {
     const fs = xs.map(x => () => F.resolved.hook(x, U.noop));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));

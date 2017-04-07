@@ -118,11 +118,6 @@ describe.skip('Future.and()', () => {
 
 describe.skip('Future#and()', () => {
 
-  it('throws when invoked out of context', () => {
-    const f = () => Future.of(1).and.call(null, Future.of(1));
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   it('throw TypeError when not given a Future', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
     const fs = xs.map(x => () => Future.of(1).and(x));

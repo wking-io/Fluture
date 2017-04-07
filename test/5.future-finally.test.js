@@ -90,11 +90,6 @@ describe.skip('Future.finally()', () => {
 
 describe.skip('Future#finally()', () => {
 
-  it('throws TypeError when invoked out of context', () => {
-    const f = () => Future.of(1).finally.call(null, Future.of(1));
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
   it('throw TypeError when not given a Future', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
     const fs = xs.map(x => () => Future.of(1).finally(x));
