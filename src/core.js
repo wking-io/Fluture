@@ -2,91 +2,87 @@
 
 import Denque from 'denque';
 
-import {show, showf, noop} from './internal/fn';
+import {show, showf, noop, moop} from './internal/fn';
+import {error} from './internal/throw';
 import {Next, Done} from './iteration';
 import FL from './internal/fl';
 import type from 'sanctuary-type-identifiers';
 
 const TYPEOF_FUTURE = 'fluture/Future@2';
 
-const throwRejection = x => {
-  throw new Error(`Rejected with ${show(x)}`);
+const throwRejection = x => error(`Rejected with ${show(x)}`);
+
+export function Future(computation){
+  return new Computation(computation);
+}
+
+export function isFuture(x){
+  return x instanceof Future || type(x) === TYPEOF_FUTURE;
+}
+
+Future.prototype[FL.ap] = function Future$FL$ap(other){
+  return this.ap(other);
 };
 
-export const Future = computation => new Computation(computation);
-Future['@@type'] = TYPEOF_FUTURE;
+Future.prototype[FL.map] = function Future$FL$map(mapper){
+  return this.map(mapper);
+};
 
-export const isFuture = x => x instanceof Future || type(x) === TYPEOF_FUTURE;
+Future.prototype[FL.bimap] = function Future$FL$bimap(lmapper, rmapper){
+  return this.bimap(lmapper, rmapper);
+};
 
-//Core
-//Represents any object that can be forked, serves to expose the _fork method
-//in several ways to the user. It also provides a Fantasy Land function mapping.
-//This is the base class for all types of Future.
-export class Core extends Future{
+Future.prototype[FL.chain] = function Future$FL$chain(mapper){
+  return this.chain(mapper);
+};
 
-  constructor(){} //eslint-disable-line
+Future.prototype.fork = function Future$fork(rej, res){
+  return this._fork(rej, res);
+};
 
-  [FL.ap](other){
-    return new Sequence(this).ap(other);
-  }
+Future.prototype.value = function Future$value(res){
+  return this._fork(throwRejection, res);
+};
 
-  [FL.map](mapper){
-    return new Sequence(this).map(mapper);
-  }
+Future.prototype.promise = function Future$promise(){
+  return new Promise((res, rej) => this._fork(rej, res));
+};
 
-  [FL.bimap](lmapper, rmapper){
-    return new Sequence(this).bimap(lmapper, rmapper);
-  }
+export function Core(){}
 
-  [FL.chain](mapper){
-    return new Sequence(this).chain(mapper);
-  }
+Core.prototype = Object.create(Future.prototype);
 
-  ap(other){
-    return new Sequence(this).ap(other);
-  }
+Core.prototype.ap = function Core$ap(other){
+  return new Sequence(this, [new ApAction(other)]);
+};
 
-  map(mapper){
-    return new Sequence(this).map(mapper);
-  }
+Core.prototype.map = function Core$map(mapper){
+  return new Sequence(this, [new MapAction(mapper)]);
+};
 
-  bimap(lmapper, rmapper){
-    return new Sequence(this).bimap(lmapper, rmapper);
-  }
+Core.prototype.bimap = function Core$bimap(lmapper, rmapper){
+  return new Sequence(this, [new BimapAction(lmapper, rmapper)]);
+};
 
-  chain(mapper){
-    return new Sequence(this).chain(mapper);
-  }
+Core.prototype.chain = function Core$chain(mapper){
+  return new Sequence(this, [new ChainAction(mapper)]);
+};
 
-  mapRej(mapper){
-    return new Sequence(this).mapRej(mapper);
-  }
+Core.prototype.mapRej = function Core$mapRej(mapper){
+  return new Sequence(this, [new MapRejAction(mapper)]);
+};
 
-  race(other){
-    return new Sequence(this).race(other);
-  }
+Core.prototype.race = function Core$race(other){
+  return new Sequence(this, [new RaceAction(other)]);
+};
 
-  both(other){
-    return new Sequence(this).both(other);
-  }
+Core.prototype.both = function Core$both(other){
+  return new Sequence(this, [new BothAction(other)]);
+};
 
-  or(other){
-    return new Sequence(this).or(other);
-  }
-
-  fork(rej, res){
-    return this._fork(rej, res);
-  }
-
-  value(res){
-    return this._fork(throwRejection, res);
-  }
-
-  promise(){
-    return new Promise((res, rej) => this._fork(rej, res));
-  }
-
-}
+Core.prototype.or = function Core$or(other){
+  return new Sequence(this, [new OrAction(other)]);
+};
 
 export const ap = (mx, mf) => mf.ap(mx);
 export const map = (f, m) => m.map(f);
@@ -100,198 +96,146 @@ export const fork = (rej, res, m) => m._fork(rej, res);
 export const value = (res, m) => m.value(res);
 export const promise = m => m.promise();
 
-export class Computation extends Core{
+export function Computation(computation){
+  this._computation = computation;
+}
 
-  constructor(computation){
-    super();
-    this._computation = computation;
-  }
+Computation.prototype = Object.create(Core.prototype);
 
-  _fork(rej, res){
-    let open = true;
-    const f = this._computation(function Computation$rej(x){
-      if(open){
-        open = false;
-        rej(x);
-      }
-    }, function Computation$res(x){
-      if(open){
-        open = false;
-        res(x);
-      }
-    });
-    return function Computation$cancel(){
-      open && f && f();
+Computation.prototype._fork = function Computation$_fork(rej, res){
+  let open = true;
+  const f = this._computation(function Computation$rej(x){
+    if(open){
       open = false;
-    };
-  }
+      rej(x);
+    }
+  }, function Computation$res(x){
+    if(open){
+      open = false;
+      res(x);
+    }
+  });
+  return function Computation$cancel(){
+    open && f && f();
+    open = false;
+  };
+};
 
-  toString(){
-    return `Future(${showf(this._computation)})`;
-  }
+Computation.prototype.toString = function Computation$toString(){
+  return `Future(${showf(this._computation)})`;
+};
 
+export function Rejected(value){
+  this._value = value;
 }
 
-export class Rejected extends Core{
+Rejected.prototype = Object.create(Core.prototype);
 
-  constructor(value){
-    super();
-    this._value = value;
-  }
+Rejected.prototype.ap = moop;
+Rejected.prototype.map = moop;
+Rejected.prototype.chain = moop;
+Rejected.prototype.race = moop;
+Rejected.prototype.both = moop;
 
-  ap(){
-    return this;
-  }
+Rejected.prototype.or = function Rejected$or(other){
+  return other;
+};
 
-  map(){
-    return this;
-  }
+Rejected.prototype._fork = function Rejected$_fork(rej){
+  rej(this._value);
+  return noop;
+};
 
-  chain(){
-    return this;
-  }
-
-  race(){
-    return this;
-  }
-
-  both(){
-    return this;
-  }
-
-  or(other){
-    return other;
-  }
-
-  _fork(rej){
-    rej(this._value);
-    return noop;
-  }
-
-  toString(){
-    return `Future.reject(${show(this._value)})`;
-  }
-
-}
+Rejected.prototype.toString = function Rejected$toString(){
+  return `Future.reject(${show(this._value)})`;
+};
 
 export const reject = x => new Rejected(x);
 export const isRejected = m => m instanceof Rejected;
 
-export class Resolved extends Core{
-
-  constructor(value){
-    super();
-    this._value = value;
-  }
-
-  race(){
-    return this;
-  }
-
-  mapRej(){
-    return this;
-  }
-
-  both(other){
-    return other.map(x => [this._value, x]);
-  }
-
-  or(){
-    return this;
-  }
-
-  _fork(rej, res){
-    res(this._value);
-    return noop;
-  }
-
-  toString(){
-    return `Future.of(${show(this._value)})`;
-  }
-
+export function Resolved(value){
+  this._value = value;
 }
+
+Resolved.prototype = Object.create(Core.prototype);
+
+Resolved.prototype.race = moop;
+Resolved.prototype.mapRej = moop;
+Resolved.prototype.or = moop;
+
+Resolved.prototype.both = function Resolved$both(other){
+  return other.map(x => [this._value, x]);
+};
+
+Resolved.prototype._fork = function _fork(rej, res){
+  res(this._value);
+  return noop;
+};
+
+Resolved.prototype.toString = function Resolved$toString(){
+  return `Future.of(${show(this._value)})`;
+};
 
 export const isResolved = m => m instanceof Resolved;
 export const of = x => new Resolved(x);
-Future[FL.of] = of;
 
-class Never extends Core{
+function Never(){}
 
-  ap(){
-    return this;
-  }
+Never.prototype = Object.create(Future.prototype);
 
-  map(){
-    return this;
-  }
+Never.prototype.ap = moop;
+Never.prototype.map = moop;
+Never.prototype.bimap = moop;
+Never.prototype.chain = moop;
+Never.prototype.mapRej = moop;
+Never.prototype.both = moop;
+Never.prototype.or = moop;
 
-  bimap(){
-    return this;
-  }
+Never.prototype.race = function Never$race(other){
+  return other;
+};
 
-  chain(){
-    return this;
-  }
+Never.prototype._fork = function Never$_fork(){
+  return noop;
+};
 
-  mapRej(){
-    return this;
-  }
-
-  race(other){
-    return other;
-  }
-
-  both(){
-    return this;
-  }
-
-  or(){
-    return this;
-  }
-
-  _fork(){
-    return noop;
-  }
-
-  toString(){
-    return 'Future.never';
-  }
-
-}
+Never.prototype.toString = function Never$toString(){
+  return 'Future.never';
+};
 
 export const never = new Never();
 export const isNever = x => x === never;
 
-export class Eager extends Core{
-  constructor(future){
-    super();
-    this.rej = noop;
-    this.res = noop;
-    this.rejected = false;
-    this.resolved = false;
-    this.value = null;
-    this.cancel = future._fork(x => {
-      this.value = x;
-      this.rejected = true;
-      this.cancel = noop;
-      this.rej(x);
-    }, x => {
-      this.value = x;
-      this.resolved = true;
-      this.cancel = noop;
-      this.res(x);
-    });
-  }
-  _fork(rej, res){
-    if(this.rejected) rej(this.value);
-    else if(this.resolved) res(this.value);
-    else{
-      this.rej = rej;
-      this.res = res;
-    }
-    return this.cancel;
-  }
+function Eager(future){
+  this.rej = noop;
+  this.res = noop;
+  this.rejected = false;
+  this.resolved = false;
+  this.value = null;
+  this.cancel = future._fork(x => {
+    this.value = x;
+    this.rejected = true;
+    this.cancel = noop;
+    this.rej(x);
+  }, x => {
+    this.value = x;
+    this.resolved = true;
+    this.cancel = noop;
+    this.res(x);
+  });
 }
+
+Eager.prototype = Object.create(Future.prototype);
+
+Eager.prototype._fork = function Eager$_fork(rej, res){
+  if(this.rejected) rej(this.value);
+  else if(this.resolved) res(this.value);
+  else{
+    this.rej = rej;
+    this.res = res;
+  }
+  return this.cancel;
+};
 
 export class Action{
   rejected(x){
@@ -463,125 +407,125 @@ const Undetermined = 0;
 const Synchronous = 1;
 const Asynchronous = 2;
 
-export class Sequence extends Core{
-
-  constructor(spawn, actions = []){
-    super();
-    this._spawn = spawn;
-    this._actions = actions;
-  }
-
-  _transform(action){
-    return new Sequence(this._spawn, this._actions.concat([action]));
-  }
-
-  ap(other){
-    return this._transform(new ApAction(other));
-  }
-
-  map(mapper){
-    return this._transform(new MapAction(mapper));
-  }
-
-  bimap(lmapper, rmapper){
-    return this._transform(new BimapAction(lmapper, rmapper));
-  }
-
-  chain(mapper){
-    return this._transform(new ChainAction(mapper));
-  }
-
-  mapRej(mapper){
-    return this._transform(new MapRejAction(mapper));
-  }
-
-  race(other){
-    return this._transform(new RaceAction(other));
-  }
-
-  both(other){
-    return this._transform(new BothAction(other));
-  }
-
-  or(other){
-    return this._transform(new OrAction(other));
-  }
-
-  _fork(rej, res){
-
-    const actions = new Denque(this._actions), queue = new Denque();
-    let action, cancel = noop, timing = Undetermined, future = this._spawn, settled;
-
-    function cancelAll(){
-      cancel();
-      action && action.cancel();
-      let running;
-      while(running = queue.shift()) running.cancel();
-      queue.clear();
-      actions.clear();
-      cancel = noop;
-    }
-
-    function absorb(m){
-      future = m;
-      settled = true;
-      while(future instanceof Sequence){
-        for(let i = future._actions.length - 1; i >= 0; i--) actions.unshift(future._actions[i]);
-        future = future._spawn;
-      }
-    }
-
-    function early(m){
-      cancelAll();
-      absorb(m);
-      timing = timing === Undetermined ? Synchronous : drain();
-    }
-
-    function rejected(x){
-      absorb(action.rejected(x));
-      timing = timing === Undetermined ? Synchronous : drain();
-    }
-
-    function resolved(x){
-      absorb(action.resolved(x));
-      timing = timing === Undetermined ? Synchronous : drain();
-    }
-
-    function drain(){
-      while(action = actions.shift() || queue.shift()){
-        settled = false;
-        timing = Undetermined;
-        cancel = future._fork(rejected, resolved);
-        if(settled) continue;
-        action = action.run(early);
-        if(settled) continue;
-        let running;
-        const runners = new Denque(actions.length);
-        while(!settled && (running = actions.shift())) runners.push(running.run(early));
-        if(settled) continue;
-        while(running = runners.pop()) queue.unshift(running);
-        if(timing !== Synchronous){
-          timing = Asynchronous;
-          return;
-        }
-      }
-      cancel = future._fork(rej, res);
-    }
-
-    drain();
-
-    return cancelAll;
-
-  }
-
-  toString(){
-    return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
-  }
-
+export function Sequence(spawn, actions = []){
+  this._spawn = spawn;
+  this._actions = actions;
 }
+
+Sequence.prototype = Object.create(Future.prototype);
+
+Sequence.prototype._transform = function Sequence$_transform(action){
+  return new Sequence(this._spawn, this._actions.concat([action]));
+};
+
+Sequence.prototype.ap = function Sequence$ap(other){
+  return this._transform(new ApAction(other));
+};
+
+Sequence.prototype.map = function Sequence$map(mapper){
+  return this._transform(new MapAction(mapper));
+};
+
+Sequence.prototype.bimap = function Sequence$bimap(lmapper, rmapper){
+  return this._transform(new BimapAction(lmapper, rmapper));
+};
+
+Sequence.prototype.chain = function Sequence$chain(mapper){
+  return this._transform(new ChainAction(mapper));
+};
+
+Sequence.prototype.mapRej = function Sequence$mapRej(mapper){
+  return this._transform(new MapRejAction(mapper));
+};
+
+Sequence.prototype.race = function Sequence$race(other){
+  return isNever(other) ? this : this._transform(new RaceAction(other));
+};
+
+Sequence.prototype.both = function Sequence$both(other){
+  return this._transform(new BothAction(other));
+};
+
+Sequence.prototype.or = function Sequence$or(other){
+  return this._transform(new OrAction(other));
+};
+
+Sequence.prototype._fork = function Sequence$_fork(rej, res){
+
+  const actions = new Denque(this._actions), queue = new Denque();
+  let action, cancel = noop, timing = Undetermined, future = this._spawn, settled;
+
+  function cancelAll(){
+    cancel();
+    action && action.cancel();
+    let running;
+    while(running = queue.shift()) running.cancel();
+    queue.clear();
+    actions.clear();
+    cancel = noop;
+  }
+
+  function absorb(m){
+    future = m;
+    settled = true;
+    while(future instanceof Sequence){
+      for(let i = future._actions.length - 1; i >= 0; i--) actions.unshift(future._actions[i]);
+      future = future._spawn;
+    }
+  }
+
+  function early(m){
+    cancelAll();
+    absorb(m);
+    timing = timing === Undetermined ? Synchronous : drain();
+  }
+
+  function rejected(x){
+    absorb(action.rejected(x));
+    timing = timing === Undetermined ? Synchronous : drain();
+  }
+
+  function resolved(x){
+    absorb(action.resolved(x));
+    timing = timing === Undetermined ? Synchronous : drain();
+  }
+
+  function drain(){
+    while(action = actions.shift() || queue.shift()){
+      settled = false;
+      timing = Undetermined;
+      cancel = future._fork(rejected, resolved);
+      if(settled) continue;
+      action = action.run(early);
+      if(settled) continue;
+      let running;
+      const runners = new Denque(actions.length);
+      while(!settled && (running = actions.shift())) runners.push(running.run(early));
+      if(settled) continue;
+      while(running = runners.pop()) queue.unshift(running);
+      if(timing !== Synchronous){
+        timing = Asynchronous;
+        return;
+      }
+    }
+    cancel = future._fork(rej, res);
+  }
+
+  drain();
+
+  return cancelAll;
+
+};
+
+Sequence.prototype.toString = function Sequence$toString(){
+  return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
+};
 
 export const chainRec = (step, init) => (function recur(x){
   return step(Next, Done, x).chain(o => o.done ? new Resolved(o.value) : recur(o.value));
 }(init));
 
+Future['@@type'] = TYPEOF_FUTURE;
 Future[FL.chainRec] = chainRec;
+Future[FL.of] = of;
+Future[FL.zero] = () => never;

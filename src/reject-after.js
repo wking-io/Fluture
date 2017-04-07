@@ -1,3 +1,4 @@
+import {never} from './core';
 import {After} from './after';
 import {show} from './internal/fn';
 
@@ -14,4 +15,4 @@ export class RejectAfter extends After{
 
 }
 
-export const rejectAfter = (n, x) => new RejectAfter(n, x);
+export const rejectAfter = (n, x) => n === Infinity ? never : new RejectAfter(n, x);
