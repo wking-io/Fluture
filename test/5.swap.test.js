@@ -25,7 +25,7 @@ const testInstance = swap => {
 
 };
 
-describe.skip('swap()', () => {
+describe('swap()', () => {
 
   it('throws when not given a Future', () => {
     const f = () => swap(1);
@@ -36,7 +36,7 @@ describe.skip('swap()', () => {
 
 });
 
-describe.skip('Future#swap()', () => {
+describe('Future#swap()', () => {
 
   testInstance(m => m.swap());
 

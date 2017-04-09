@@ -22,6 +22,10 @@ After.prototype.race = function After$race(other){
        : new Race([this, other]);
 };
 
+After.prototype.swap = function After$swap(){
+  return new RejectAfter(this._time, this._value);
+};
+
 After.prototype._fork = function After$_fork(rej, res){
   const id = setTimeout(res, this._time, this._value);
   return () => { clearTimeout(id) };

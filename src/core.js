@@ -106,6 +106,10 @@ Core.prototype.or = function Core$or(other){
   return new Sequence(this, [new OrAction(other)]);
 };
 
+Core.prototype.swap = function Core$swap(){
+  return new Sequence(this, [new SwapAction]);
+};
+
 function check$fork(f, c){
   if(!(f === undefined || (isFunction(f) && f.length === 0))) typeError(
     'Future expected its computation to return a nullary function or void'
@@ -159,6 +163,10 @@ Rejected.prototype.or = function Rejected$or(other){
   return other;
 };
 
+Rejected.prototype.swap = function Rejected$swap(){
+  return new Resolved(this._value);
+};
+
 Rejected.prototype._fork = function Rejected$_fork(rej){
   rej(this._value);
   return noop;
@@ -192,6 +200,10 @@ Resolved.prototype.both = function Resolved$both(other){
   return other.map(x => [this._value, x]);
 };
 
+Resolved.prototype.swap = function Resolved$swap(){
+  return new Rejected(this._value);
+};
+
 Resolved.prototype._fork = function _fork(rej, res){
   res(this._value);
   return noop;
@@ -222,6 +234,7 @@ Never.prototype.chain = moop;
 Never.prototype.mapRej = moop;
 Never.prototype.both = moop;
 Never.prototype.or = moop;
+Never.prototype.swap = moop;
 
 Never.prototype.race = function Never$race(other){
   return other;
@@ -365,6 +378,18 @@ export class MapRejAction extends Action{
   }
 }
 
+export class SwapAction extends Action{
+  constructor(){
+    return SwapAction.instance || (SwapAction.instance = this);
+  }
+  rejected(x){
+    return new Resolved(x);
+  }
+  resolved(x){
+    return new Rejected(x);
+  }
+}
+
 export class RaceAction extends Action{
   constructor(other){
     this.other = other;
@@ -488,6 +513,10 @@ Sequence.prototype.both = function Sequence$both(other){
 
 Sequence.prototype.or = function Sequence$or(other){
   return this._transform(new OrAction(other));
+};
+
+Sequence.prototype.swap = function Sequence$swap(){
+  return this._transform(new SwapAction);
 };
 
 Sequence.prototype._fork = function Sequence$_fork(rej, res){

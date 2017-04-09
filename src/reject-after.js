@@ -13,6 +13,10 @@ RejectAfter.prototype = Object.create(Core.prototype);
 
 RejectAfter.prototype.race = After.prototype.race;
 
+RejectAfter.prototype.swap = function RejectAfter$swap(){
+  return new After(this._time, this._value);
+};
+
 RejectAfter.prototype._fork = function RejectAfter$_fork(rej){
   const id = setTimeout(rej, this._time, this._value);
   return () => { clearTimeout(id) };
