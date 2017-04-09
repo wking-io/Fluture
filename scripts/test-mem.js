@@ -3,7 +3,7 @@
 
 'use strict';
 
-const {after, of, race} = require('..');
+const {after, of} = require('..');
 const log = require('util').log;
 const sync = process.argv[2] === 'sync';
 const id = x => x;
@@ -28,9 +28,9 @@ const recursive = () => {
     );
     stamp = now;
   }
-  return spawn('l').chain(recursive).race(spawn('r')); //Runs out of memory in "sync" mode
+  // return spawn('l').chain(recursive).race(spawn('r')); //Runs out of memory in "sync" mode
   // return spawn('l').race(spawn('r').chain(recursive)); //Immediately exits with "l"
-  // return spawn('l').race(spawn('r')).chain(recursive); //Infinite recursion
+  return spawn('l').race(spawn('r')).chain(recursive); //Infinite recursion
 };
 
 const cancel = recursive().fork(

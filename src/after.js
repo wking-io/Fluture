@@ -1,4 +1,6 @@
-import {Sequence, Core, isRejected, isResolved, isNever, never, RaceAction} from './core';
+import {Core, isNever, never} from './core';
+import {RejectAfter} from './reject-after';
+import {Race} from './race';
 import {show, partial1} from './internal/fn';
 import {isUnsigned} from './internal/is';
 import {invalidArgument} from './internal/throw';
@@ -11,11 +13,13 @@ export function After(time, value){
 After.prototype = Object.create(Core.prototype);
 
 After.prototype.race = function After$race(other){
-  return isRejected(other) ? other
-       : isResolved(other) ? other
-       : isNever(other) ? this
-       : other instanceof After ? other._time < this._time ? other : this
-       : new Sequence(this, [new RaceAction(other)]);
+  return other.isSettled()
+       ? other
+       : isNever(other)
+       ? this
+       : (other instanceof After || other instanceof RejectAfter)
+       ? other._time < this._time ? other : this
+       : new Race([this, other]);
 };
 
 After.prototype._fork = function After$_fork(rej, res){

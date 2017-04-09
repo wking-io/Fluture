@@ -1,4 +1,4 @@
-import {Core, isRejected, Resolved, isFuture} from './core';
+import {Core, Resolved, isFuture} from './core';
 import {invalidArgument, typeError} from './internal/throw';
 import {show, mapArray, partial1} from './internal/fn';
 import {isUnsigned, isArray} from './internal/is';
@@ -51,6 +51,10 @@ Parallel.prototype.toString = function Parallel$toString(){
 
 const arrof = x => [x];
 const emptyArray = new Resolved([]);
+
+function isRejected(m){
+  return m.isRejected();
+}
 
 function parallel$max(max, xs){
   if(!isArray(xs)) invalidArgument('Future.parallel', 1, 'be an array', xs);

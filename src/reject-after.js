@@ -1,21 +1,22 @@
-import {Future, never} from './core';
+import {Core, never} from './core';
 import {After} from './after';
 import {show, partial1} from './internal/fn';
 import {isUnsigned} from './internal/is';
 import {invalidArgument} from './internal/throw';
 
 export function RejectAfter(time, value){
-  After.call(this, time, value);
+  this._time = time;
+  this._value = value;
 }
 
-RejectAfter.prototype = Object.create(After.prototype);
+RejectAfter.prototype = Object.create(Core.prototype);
+
+RejectAfter.prototype.race = After.prototype.race;
 
 RejectAfter.prototype._fork = function RejectAfter$_fork(rej){
   const id = setTimeout(rej, this._time, this._value);
   return () => { clearTimeout(id) };
 };
-
-RejectAfter.prototype.extractRight = Future.prototype.extractRight;
 
 RejectAfter.prototype.extractLeft = function After$extractLeft(){
   return [this._value];

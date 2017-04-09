@@ -50,6 +50,18 @@ Future.prototype.promise = function Future$promise(){
   return new Promise((res, rej) => this._fork(rej, res));
 };
 
+Future.prototype.isRejected = function Future$isRejected(){
+  return false;
+};
+
+Future.prototype.isResolved = function Future$isResolved(){
+  return false;
+};
+
+Future.prototype.isSettled = function Future$isSettled(){
+  return this.isRejected() || this.isResolved();
+};
+
 Future.prototype.extractLeft = function Future$extractLeft(){
   return [];
 };
@@ -152,6 +164,10 @@ Rejected.prototype._fork = function Rejected$_fork(rej){
   return noop;
 };
 
+Rejected.prototype.isRejected = function Rejected$isRejected(){
+  return true;
+};
+
 Rejected.prototype.extractLeft = function Rejected$extractLeft(){
   return [this._value];
 };
@@ -161,7 +177,6 @@ Rejected.prototype.toString = function Rejected$toString(){
 };
 
 export const reject = x => new Rejected(x);
-export const isRejected = m => m instanceof Rejected;
 
 export function Resolved(value){
   this._value = value;
@@ -182,6 +197,10 @@ Resolved.prototype._fork = function _fork(rej, res){
   return noop;
 };
 
+Resolved.prototype.isResolved = function Resolved$isResolved(){
+  return true;
+};
+
 Resolved.prototype.extractRight = function Resolved$extractRight(){
   return [this._value];
 };
@@ -190,7 +209,6 @@ Resolved.prototype.toString = function Resolved$toString(){
   return `Future.of(${show(this._value)})`;
 };
 
-export const isResolved = m => m instanceof Resolved;
 export const of = x => new Resolved(x);
 
 function Never(){}
@@ -241,11 +259,19 @@ function Eager(future){
 
 Eager.prototype = Object.create(Core.prototype);
 
+Eager.prototype.isRejected = function Eager$isRejected(){
+  return this.rejected;
+};
+
+Eager.prototype.isResolved = function Eager$isResolved(){
+  return this.resolved;
+};
+
 Eager.prototype.extractLeft = function Eager$extractLeft(){
   return this.rejected ? [this.value] : [];
 };
 
-Eager.prototype.extractLeft = function Eager$extractLeft(){
+Eager.prototype.extractRight = function Eager$extractRight(){
   return this.resolved ? [this.value] : [];
 };
 

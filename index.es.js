@@ -3,9 +3,7 @@ export {
   Future as default,
   isFuture,
   reject,
-  isRejected,
   of,
-  isResolved,
   never,
   isNever,
   chainRec
