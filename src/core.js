@@ -318,230 +318,99 @@ Eager.prototype._fork = function Eager$_fork(rej, res){
 };
 
 export class Action{
-  rejected(x){
-    return new Rejected(x);
-  }
-  resolved(x){
-    return new Resolved(x);
-  }
-  run(){
-    return this;
-  }
+  rejected(x){ return new Rejected(x) }
+  resolved(x){ return new Resolved(x) }
+  run(){ return this }
   cancel(){}
-  toString(){
-    return '';
-  }
+  toString(){ return '' }
 }
-
 export class ApAction extends Action{
-  constructor(other){
-    this.other = other;
-  }
-  resolved(x){
-    return this.other.map(f => f(x));
-  }
-  toString(){
-    return `ap(${this.other.toString()})`;
-  }
+  constructor(other){ this.other = other }
+  resolved(x){ return this.other.map(f => f(x)) }
+  toString(){ return `ap(${this.other.toString()})` }
 }
-
 export class MapAction extends Action{
-  constructor(mapper){
-    this.mapper = mapper;
-  }
-  resolved(x){
-    return new Resolved(this.mapper(x));
-  }
-  toString(){
-    return `map(${showf(this.mapper)})`;
-  }
+  constructor(mapper){ this.mapper = mapper }
+  resolved(x){ return new Resolved(this.mapper(x)) }
+  toString(){ return `map(${showf(this.mapper)})` }
 }
-
 export class BimapAction extends Action{
-  constructor(lmapper, rmapper){
-    this.lmapper = lmapper;
-    this.rmapper = rmapper;
-  }
-  rejected(x){
-    return new Rejected(this.lmapper(x));
-  }
-  resolved(x){
-    return new Resolved(this.rmapper(x));
-  }
-  toString(){
-    return `bimap(${showf(this.lmapper)}, ${showf(this.rmapper)})`;
-  }
+  constructor(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper }
+  rejected(x){ return new Rejected(this.lmapper(x)) }
+  resolved(x){ return new Resolved(this.rmapper(x)) }
+  toString(){ return `bimap(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
 }
-
 export class ChainAction extends Action{
-  constructor(mapper){
-    this.mapper = mapper;
-  }
-  resolved(x){
-    return this.mapper(x);
-  }
-  toString(){
-    return `chain(${showf(this.mapper)})`;
-  }
+  constructor(mapper){ this.mapper = mapper }
+  resolved(x){ return this.mapper(x) }
+  toString(){ return `chain(${showf(this.mapper)})` }
 }
-
 export class MapRejAction extends Action{
-  constructor(mapper){
-    this.mapper = mapper;
-  }
-  rejected(x){
-    return new Rejected(this.mapper(x));
-  }
-  toString(){
-    return `mapRej(${showf(this.mapper)})`;
-  }
+  constructor(mapper){ this.mapper = mapper }
+  rejected(x){ return new Rejected(this.mapper(x)) }
+  toString(){ return `mapRej(${showf(this.mapper)})` }
 }
-
 export class ChainRejAction extends Action{
-  constructor(mapper){
-    this.mapper = mapper;
-  }
-  rejected(x){
-    return this.mapper(x);
-  }
-  toString(){
-    return `chainRej(${showf(this.mapper)})`;
-  }
+  constructor(mapper){ this.mapper = mapper }
+  rejected(x){ return this.mapper(x) }
+  toString(){ return `chainRej(${showf(this.mapper)})` }
 }
-
 export class SwapAction extends Action{
-  constructor(){
-    return SwapAction.instance || (SwapAction.instance = this);
-  }
-  rejected(x){
-    return new Resolved(x);
-  }
-  resolved(x){
-    return new Rejected(x);
-  }
-  toString(){
-    return 'swap()';
-  }
+  constructor(){ return SwapAction.instance || (SwapAction.instance = this) }
+  rejected(x){ return new Resolved(x) }
+  resolved(x){ return new Rejected(x) }
+  toString(){ return 'swap()' }
 }
-
 export class FoldAction extends Action{
-  constructor(lmapper, rmapper){
-    this.lmapper = lmapper;
-    this.rmapper = rmapper;
-  }
-  rejected(x){
-    return new Resolved(this.lmapper(x));
-  }
-  resolved(x){
-    return new Resolved(this.rmapper(x));
-  }
-  toString(){
-    return `fold(${showf(this.lmapper)}, ${showf(this.rmapper)})`;
-  }
+  constructor(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper }
+  rejected(x){ return new Resolved(this.lmapper(x)) }
+  resolved(x){ return new Resolved(this.rmapper(x)) }
+  toString(){ return `fold(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
 }
-
 export class RaceAction extends Action{
-  constructor(other){
-    this.other = other;
-  }
-  run(early){
-    return new RaceActionState(early, this.other);
-  }
-  toString(){
-    return `race(${this.other.toString()})`;
-  }
+  constructor(other){ this.other = other }
+  run(early){ return new RaceActionState(early, this.other) }
+  toString(){ return `race(${this.other.toString()})` }
 }
-
 export class RaceActionState extends RaceAction{
   constructor(early, other){
     this.other = other;
-    this.cancel = other._fork(
-      x => early(new Rejected(x)),
-      x => early(new Resolved(x))
-    );
+    this.cancel = other._fork(x => early(new Rejected(x)), x => early(new Resolved(x)));
   }
-  rejected(x){
-    this.cancel();
-    return new Rejected(x);
-  }
-  resolved(x){
-    this.cancel();
-    return new Resolved(x);
-  }
+  rejected(x){ this.cancel(); return new Rejected(x) }
+  resolved(x){ this.cancel(); return new Resolved(x) }
 }
-
 export class BothAction extends Action{
-  constructor(other){
-    this.other = other;
-  }
-  run(early){
-    return new BothActionState(early, this.other);
-  }
-  resolved(x){
-    return this.other.map(y => [x, y]);
-  }
-  toString(){
-    return `both(${this.other.toString()})`;
-  }
+  constructor(other){ this.other = other }
+  run(early){ return new BothActionState(early, this.other) }
+  resolved(x){ return this.other.map(y => [x, y]) }
+  toString(){ return `both(${this.other.toString()})` }
 }
-
 export class BothActionState extends BothAction{
   constructor(early, other){
     this.other = new Eager(other);
     this.cancel = this.other.fork(x => early(new Rejected(x)), noop);
   }
 }
-
 export class AndAction extends Action{
-  constructor(other){
-    this.other = other;
-  }
-  run(early){
-    return new AndActionState(early, this.other);
-  }
-  resolved(){
-    return this.other;
-  }
-  toString(){
-    return `and(${this.other.toString()})`;
-  }
+  constructor(other){ this.other = other }
+  run(early){ return new AndActionState(early, this.other) }
+  resolved(){ return this.other }
+  toString(){ return `and(${this.other.toString()})` }
 }
-
 export class AndActionState extends AndAction{
-  constructor(early, other){
-    this.other = new Eager(other);
-    this.cancel = this.other.cancel;
-  }
-  rejected(x){
-    this.cancel();
-    return new Rejected(x);
-  }
+  constructor(early, other){ this.other = new Eager(other); this.cancel = this.other.cancel }
+  rejected(x){ this.cancel(); return new Rejected(x) }
 }
-
 export class OrAction extends Action{
-  constructor(other){
-    this.other = other;
-  }
-  run(early){
-    return new OrActionState(early, this.other);
-  }
-  rejected(){
-    return this.other;
-  }
-  toString(){
-    return `or(${this.other.toString()})`;
-  }
+  constructor(other){ this.other = other }
+  run(early){ return new OrActionState(early, this.other) }
+  rejected(){ return this.other }
+  toString(){ return `or(${this.other.toString()})` }
 }
-
 export class OrActionState extends OrAction{
-  constructor(early, other){
-    this.other = new Eager(other);
-    this.cancel = this.other.cancel;
-  }
-  resolved(x){
-    this.cancel();
-    return new Resolved(x);
-  }
+  constructor(early, other){ this.other = new Eager(other); this.cancel = this.other.cancel }
+  resolved(x){ this.cancel(); return new Resolved(x) }
 }
 
 const Undetermined = 0;
