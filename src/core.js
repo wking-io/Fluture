@@ -110,6 +110,10 @@ Core.prototype.swap = function Core$swap(){
   return new Sequence(this, [new SwapAction]);
 };
 
+Core.prototype.fold = function Core$fold(lmapper, rmapper){
+  return new Sequence(this, [new FoldAction(lmapper, rmapper)]);
+};
+
 function check$fork(f, c){
   if(!(f === undefined || (isFunction(f) && f.length === 0))) typeError(
     'Future expected its computation to return a nullary function or void'
@@ -235,6 +239,7 @@ Never.prototype.mapRej = moop;
 Never.prototype.both = moop;
 Never.prototype.or = moop;
 Never.prototype.swap = moop;
+Never.prototype.fold = moop;
 
 Never.prototype.race = function Never$race(other){
   return other;
@@ -390,6 +395,19 @@ export class SwapAction extends Action{
   }
 }
 
+export class FoldAction extends Action{
+  constructor(lmapper, rmapper){
+    this.lmapper = lmapper;
+    this.rmapper = rmapper;
+  }
+  rejected(x){
+    return new Resolved(this.lmapper(x));
+  }
+  resolved(x){
+    return new Resolved(this.rmapper(x));
+  }
+}
+
 export class RaceAction extends Action{
   constructor(other){
     this.other = other;
@@ -517,6 +535,10 @@ Sequence.prototype.or = function Sequence$or(other){
 
 Sequence.prototype.swap = function Sequence$swap(){
   return this._transform(new SwapAction);
+};
+
+Sequence.prototype.fold = function Sequence$fold(lmapper, rmapper){
+  return this._transform(new FoldAction(lmapper, rmapper));
 };
 
 Sequence.prototype._fork = function Sequence$_fork(rej, res){

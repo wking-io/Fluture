@@ -23,7 +23,7 @@ const testInstance = fold => {
 
 };
 
-describe.skip('fold()', () => {
+describe('fold()', () => {
 
   it('is a curried ternary function', () => {
     expect(fold).to.be.a('function');
@@ -52,7 +52,7 @@ describe.skip('fold()', () => {
 
 });
 
-describe.skip('Future#fold()', () => {
+describe('Future#fold()', () => {
 
   testInstance((m, f, g) => m.fold(f, g));
 
