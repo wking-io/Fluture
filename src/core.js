@@ -94,6 +94,10 @@ Core.prototype.mapRej = function Core$mapRej(mapper){
   return new Sequence(this, [new MapRejAction(mapper)]);
 };
 
+Core.prototype.chainRej = function Core$chainRej(mapper){
+  return new Sequence(this, [new ChainRejAction(mapper)]);
+};
+
 Core.prototype.race = function Core$race(other){
   return new Sequence(this, [new RaceAction(other)]);
 };
@@ -245,6 +249,7 @@ Never.prototype.map = moop;
 Never.prototype.bimap = moop;
 Never.prototype.chain = moop;
 Never.prototype.mapRej = moop;
+Never.prototype.chainRej = moop;
 Never.prototype.both = moop;
 Never.prototype.or = moop;
 Never.prototype.swap = moop;
@@ -389,6 +394,18 @@ export class MapRejAction extends Action{
   }
   toString(){
     return `mapRej(${showf(this.mapper)})`;
+  }
+}
+
+export class ChainRejAction extends Action{
+  constructor(mapper){
+    this.mapper = mapper;
+  }
+  rejected(x){
+    return this.mapper(x);
+  }
+  toString(){
+    return `chainRej(${showf(this.mapper)})`;
   }
 }
 
@@ -554,6 +571,10 @@ Sequence.prototype.chain = function Sequence$chain(mapper){
 
 Sequence.prototype.mapRej = function Sequence$mapRej(mapper){
   return this._transform(new MapRejAction(mapper));
+};
+
+Sequence.prototype.chainRej = function Sequence$chainRej(mapper){
+  return this._transform(new ChainRejAction(mapper));
 };
 
 Sequence.prototype.race = function Sequence$race(other){

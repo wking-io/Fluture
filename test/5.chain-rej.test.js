@@ -44,7 +44,7 @@ const testInstance = chainRej => {
 
 };
 
-describe.skip('chainRej()', () => {
+describe('chainRej()', () => {
 
   it('is a curried binary function', () => {
     expect(chainRej).to.be.a('function');
@@ -66,7 +66,7 @@ describe.skip('chainRej()', () => {
 
 });
 
-describe.skip('Future#chainRej()', () => {
+describe('Future#chainRej()', () => {
 
   testInstance((m, f) => m.chainRej(f));
 
