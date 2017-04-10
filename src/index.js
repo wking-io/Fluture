@@ -12,6 +12,7 @@ import * as dispatchers from './dispatchers/index';
 import {after} from './after';
 import {both} from './both';
 import {chainRec} from './chain-rec';
+import {encase, encase2, encase3, attempt} from './encase';
 import {first} from './race';
 import {go} from './go';
 import {node} from './node';
@@ -37,6 +38,11 @@ export default Object.assign(Future, dispatchers, {
   parallel,
   rejectAfter,
   chainRec,
+  encase,
+  encase2,
+  encase3,
+  attempt,
   go,
+  try: attempt,
   do: go
 });
