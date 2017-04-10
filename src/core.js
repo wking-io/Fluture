@@ -38,6 +38,10 @@ Future.prototype[FL.chain] = function Future$FL$chain(mapper){
   return this.chain(mapper);
 };
 
+Future.prototype.lastly = function Future$lastly(other){
+  return this.finally(other);
+};
+
 Future.prototype.fork = function Future$fork(rej, res){
   return this._fork(rej, res);
 };
@@ -122,6 +126,10 @@ Core.prototype.fold = function Core$fold(lmapper, rmapper){
   return new Sequence(this, [new FoldAction(lmapper, rmapper)]);
 };
 
+Core.prototype.finally = function Core$finally(other){
+  return new Sequence(this, [new FinallyAction(other)]);
+};
+
 function check$fork(f, c){
   if(!(f === undefined || (isFunction(f) && f.length === 0))) typeError(
     'Future expected its computation to return a nullary function or void'
@@ -176,6 +184,10 @@ Rejected.prototype.or = function Rejected$or(other){
   return other;
 };
 
+Rejected.prototype.finally = function Rejected$finally(other){
+  return other.and(this);
+};
+
 Rejected.prototype.swap = function Rejected$swap(){
   return new Resolved(this._value);
 };
@@ -221,6 +233,10 @@ Resolved.prototype.swap = function Resolved$swap(){
   return new Rejected(this._value);
 };
 
+Resolved.prototype.finally = function Resolved$finally(other){
+  return other.map(() => this._value);
+};
+
 Resolved.prototype._fork = function _fork(rej, res){
   res(this._value);
   return noop;
@@ -254,6 +270,7 @@ Never.prototype.both = moop;
 Never.prototype.or = moop;
 Never.prototype.swap = moop;
 Never.prototype.fold = moop;
+Never.prototype.finally = moop;
 
 Never.prototype.race = function Never$race(other){
   return other;
@@ -367,6 +384,13 @@ export class FoldAction extends Action{
   resolved(x){ return new Resolved(this.rmapper(x)) }
   toString(){ return `fold(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
 }
+export class FinallyAction extends Action{
+  constructor(other){ this.other = other }
+  cancel(){ this.other._fork(noop, noop)() }
+  rejected(x){ return this.other.and(new Rejected(x)) }
+  resolved(x){ return this.other.map(() => x) }
+  toString(){ return `finally(${this.other.toString()})` }
+}
 export class RaceAction extends Action{
   constructor(other){ this.other = other }
   run(early){ return new RaceActionState(early, this.other) }
@@ -474,6 +498,10 @@ Sequence.prototype.swap = function Sequence$swap(){
 
 Sequence.prototype.fold = function Sequence$fold(lmapper, rmapper){
   return this._transform(new FoldAction(lmapper, rmapper));
+};
+
+Sequence.prototype.finally = function Sequence$finally(other){
+  return this._transform(new FinallyAction(other));
 };
 
 Sequence.prototype._fork = function Sequence$_fork(rej, res){

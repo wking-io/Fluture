@@ -56,7 +56,7 @@ const testInstance = fin => {
 
 };
 
-describe.skip('lastly()', () => {
+describe('finally()', () => {
 
   it('is a curried binary function', () => {
     expect(lastly).to.be.a('function');
@@ -78,7 +78,7 @@ describe.skip('lastly()', () => {
 
 });
 
-describe.skip('Future#finally()', () => {
+describe('Future#finally()', () => {
 
   testInstance((a, b) => a.finally(b));
 
