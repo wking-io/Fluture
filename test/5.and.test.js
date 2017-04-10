@@ -71,7 +71,7 @@ const testInstance = and => {
 
 };
 
-describe.skip('and()', () => {
+describe('and()', () => {
 
   it('is a curried binary function', () => {
     expect(and).to.be.a('function');
@@ -106,7 +106,7 @@ describe.skip('and()', () => {
 
 });
 
-describe.skip('Future#and()', () => {
+describe('Future#and()', () => {
 
   testInstance((a, b) => a.and(b));
 

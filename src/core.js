@@ -102,6 +102,10 @@ Core.prototype.both = function Core$both(other){
   return new Sequence(this, [new BothAction(other)]);
 };
 
+Core.prototype.and = function Core$and(other){
+  return new Sequence(this, [new AndAction(other)]);
+};
+
 Core.prototype.or = function Core$or(other){
   return new Sequence(this, [new OrAction(other)]);
 };
@@ -162,6 +166,7 @@ Rejected.prototype.map = moop;
 Rejected.prototype.chain = moop;
 Rejected.prototype.race = moop;
 Rejected.prototype.both = moop;
+Rejected.prototype.and = moop;
 
 Rejected.prototype.or = function Rejected$or(other){
   return other;
@@ -199,6 +204,10 @@ Resolved.prototype = Object.create(Core.prototype);
 Resolved.prototype.race = moop;
 Resolved.prototype.mapRej = moop;
 Resolved.prototype.or = moop;
+
+Resolved.prototype.and = function Resolved$and(other){
+  return other;
+};
 
 Resolved.prototype.both = function Resolved$both(other){
   return other.map(x => [this._value, x]);
@@ -460,6 +469,32 @@ export class BothActionState extends BothAction{
   }
 }
 
+export class AndAction extends Action{
+  constructor(other){
+    this.other = other;
+  }
+  run(early){
+    return new AndActionState(early, this.other);
+  }
+  resolved(){
+    return this.other;
+  }
+  toString(){
+    return `or(${this.other.toString()})`;
+  }
+}
+
+export class AndActionState extends AndAction{
+  constructor(early, other){
+    this.other = new Eager(other);
+    this.cancel = this.other.cancel;
+  }
+  rejected(x){
+    this.cancel();
+    return new Rejected(x);
+  }
+}
+
 export class OrAction extends Action{
   constructor(other){
     this.other = other;
@@ -527,6 +562,10 @@ Sequence.prototype.race = function Sequence$race(other){
 
 Sequence.prototype.both = function Sequence$both(other){
   return this._transform(new BothAction(other));
+};
+
+Sequence.prototype.and = function Sequence$and(other){
+  return this._transform(new AndAction(other));
 };
 
 Sequence.prototype.or = function Sequence$or(other){
