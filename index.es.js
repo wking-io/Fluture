@@ -15,5 +15,6 @@ export {both} from './src/both';
 export {chainRec} from './src/chain-rec';
 export {first} from './src/race';
 export {go, go as do} from './src/go';
+export {node} from './src/node';
 export {parallel} from './src/parallel';
 export {rejectAfter} from './src/reject-after';

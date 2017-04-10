@@ -14,6 +14,7 @@ import {both} from './both';
 import {chainRec} from './chain-rec';
 import {first} from './race';
 import {go} from './go';
+import {node} from './node';
 import {parallel} from './parallel';
 import {rejectAfter} from './reject-after';
 
@@ -32,6 +33,7 @@ export default Object.assign(Future, dispatchers, {
   after,
   both,
   first,
+  node,
   parallel,
   rejectAfter,
   chainRec,

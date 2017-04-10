@@ -3,7 +3,7 @@ import {Future, node} from '../index.es.js';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe.skip('node()', () => {
+describe('node()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
@@ -17,7 +17,7 @@ describe.skip('node()', () => {
 
 });
 
-describe.skip('FutureNode', () => {
+describe('FutureNode', () => {
 
   it('extends Future', () => {
     expect(node(U.noop)).to.be.an.instanceof(Future);
@@ -60,8 +60,9 @@ describe.skip('FutureNode', () => {
   describe('#toString()', () => {
 
     it('returns the code to create the FutureNode', () => {
-      const m = node(done => done(1));
-      expect(m.toString()).to.equal('node(done => done(1))');
+      const f = done => done(1);
+      const m = node(f);
+      expect(m.toString()).to.equal(`Future.node(${f.toString()})`);
     });
 
   });
