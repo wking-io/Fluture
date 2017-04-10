@@ -1,10 +1,15 @@
 import {expect} from 'chai';
 import {Future, cache, of, reject, after} from '../index.es.js';
-import {Cached} from '../src/core';
+import {Cached} from '../src/cache';
 import U from './util';
 import type from 'sanctuary-type-identifiers';
 
-const testInstance = cache => {
+describe('cache()', () => {
+
+  it('throws when not given a Future', () => {
+    const f = () => cache(1);
+    expect(f).to.throw(TypeError, /Future/);
+  });
 
   it('is considered a member of fluture/Fluture', () => {
     expect(type(cache(of(1)))).to.equal(Future['@@type']);
@@ -159,7 +164,7 @@ const testInstance = cache => {
 
     it('returns the code to create the Cached', () => {
       const m = cache(of(1));
-      const s = 'of(1).cache()';
+      const s = 'Future.cache(Future.of(1))';
       expect(m.toString()).to.equal(s);
     });
 
@@ -167,11 +172,11 @@ const testInstance = cache => {
 
   describe('#extractLeft()', () => {
 
-    it('returns empty array for cold CachedFutures', () => {
+    it('returns empty array for cold Cacheds', () => {
       expect(cache(reject(1)).extractLeft()).to.deep.equal([]);
     });
 
-    it('returns array with reason for rejected CachedFutures', () => {
+    it('returns array with reason for rejected Cacheds', () => {
       const m = cache(reject(1));
       m.run();
       expect(m.extractLeft()).to.deep.equal([1]);
@@ -181,33 +186,16 @@ const testInstance = cache => {
 
   describe('#extractRight()', () => {
 
-    it('returns empty array for cold CachedFutures', () => {
+    it('returns empty array for cold Cacheds', () => {
       expect(cache(of(1)).extractRight()).to.deep.equal([]);
     });
 
-    it('returns array with value for resolved CachedFutures', () => {
+    it('returns array with value for resolved Cacheds', () => {
       const m = cache(of(1));
       m.run();
       expect(m.extractRight()).to.deep.equal([1]);
     });
 
   });
-
-};
-
-describe.skip('cache()', () => {
-
-  it('throws when not given a Future', () => {
-    const f = () => cache(1);
-    expect(f).to.throw(TypeError, /Future/);
-  });
-
-  testInstance(cache);
-
-});
-
-describe.skip('Future#cache()', () => {
-
-  testInstance(m => m.cache());
 
 });

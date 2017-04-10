@@ -12,6 +12,7 @@ export * from './src/dispatchers/index';
 
 export {after} from './src/after';
 export {both} from './src/both';
+export {cache} from './src/cache';
 export {chainRec} from './src/chain-rec';
 export {encase, encase2, encase3, attempt, attempt as try} from './src/encase';
 export {first} from './src/race';

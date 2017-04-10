@@ -11,6 +11,7 @@ import * as dispatchers from './dispatchers/index';
 
 import {after} from './after';
 import {both} from './both';
+import {cache} from './cache';
 import {chainRec} from './chain-rec';
 import {encase, encase2, encase3, attempt} from './encase';
 import {first} from './race';
@@ -33,6 +34,7 @@ export default Object.assign(Future, dispatchers, {
   isNever,
   after,
   both,
+  cache,
   first,
   node,
   parallel,
