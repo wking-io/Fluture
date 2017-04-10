@@ -419,6 +419,9 @@ export class SwapAction extends Action{
   resolved(x){
     return new Rejected(x);
   }
+  toString(){
+    return 'swap()';
+  }
 }
 
 export class FoldAction extends Action{
@@ -431,6 +434,9 @@ export class FoldAction extends Action{
   }
   resolved(x){
     return new Resolved(this.rmapper(x));
+  }
+  toString(){
+    return `fold(${showf(this.lmapper)}, ${showf(this.rmapper)})`;
   }
 }
 
@@ -497,7 +503,7 @@ export class AndAction extends Action{
     return this.other;
   }
   toString(){
-    return `or(${this.other.toString()})`;
+    return `and(${this.other.toString()})`;
   }
 }
 
