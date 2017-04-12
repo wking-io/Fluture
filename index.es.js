@@ -17,6 +17,7 @@ export {chainRec} from './src/chain-rec';
 export {encase, encase2, encase3, attempt, attempt as try} from './src/encase';
 export {first} from './src/race';
 export {go, go as do} from './src/go';
+export {hook} from './src/hook';
 export {node} from './src/node';
 export {parallel} from './src/parallel';
 export {rejectAfter} from './src/reject-after';

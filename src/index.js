@@ -16,6 +16,7 @@ import {chainRec} from './chain-rec';
 import {encase, encase2, encase3, attempt} from './encase';
 import {first} from './race';
 import {go} from './go';
+import {hook} from './hook';
 import {node} from './node';
 import {parallel} from './parallel';
 import {rejectAfter} from './reject-after';
@@ -36,6 +37,7 @@ export default Object.assign(Future, dispatchers, {
   both,
   cache,
   first,
+  hook,
   node,
   parallel,
   rejectAfter,

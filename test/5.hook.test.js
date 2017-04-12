@@ -4,7 +4,30 @@ import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
 
-const testInstance = hook => {
+describe('Future.hook()', () => {
+
+  it('is a curried ternary function', () => {
+    expect(hook).to.be.a('function');
+    expect(hook.length).to.equal(3);
+    expect(hook(of(1))).to.be.a('function');
+    expect(hook(of(1))(U.noop)).to.be.a('function');
+    expect(hook(of(1), U.noop)).to.be.a('function');
+  });
+
+  it('throws when not given a Future as first argument', () => {
+    const f = () => hook(1);
+    expect(f).to.throw(TypeError, /Future.*first/);
+  });
+
+  it('throws when not given a Function as second argument', () => {
+    const f = () => hook(of(1), 1);
+    expect(f).to.throw(TypeError, /Future.*second/);
+  });
+
+  it('throws when not given a Function as third argument', () => {
+    const f = () => hook(of(1), U.add(1), 1);
+    expect(f).to.throw(TypeError, /Future.*third/);
+  });
 
   it('is considered a member of fluture/Fluture', () => {
     const m = hook(of(1), () => of(2), () => of(3));
@@ -83,40 +106,5 @@ const testInstance = hook => {
     });
 
   });
-
-};
-
-describe.skip('hook()', () => {
-
-  it('is a curried ternary function', () => {
-    expect(hook).to.be.a('function');
-    expect(hook.length).to.equal(3);
-    expect(hook(of(1))).to.be.a('function');
-    expect(hook(of(1))(U.noop)).to.be.a('function');
-    expect(hook(of(1), U.noop)).to.be.a('function');
-  });
-
-  it('throws when not given a Future as first argument', () => {
-    const f = () => hook(1);
-    expect(f).to.throw(TypeError, /Future.*first/);
-  });
-
-  it('throws when not given a Function as second argument', () => {
-    const f = () => hook(of(1), 1);
-    expect(f).to.throw(TypeError, /Future.*second/);
-  });
-
-  it('throws when not given a Function as third argument', () => {
-    const f = () => hook(of(1), U.add(1), 1);
-    expect(f).to.throw(TypeError, /Future.*third/);
-  });
-
-  testInstance((m, f, g) => hook(m, f, g));
-
-});
-
-describe.skip('Future#hook()', () => {
-
-  testInstance((m, f, g) => m.hook(f, g));
 
 });
