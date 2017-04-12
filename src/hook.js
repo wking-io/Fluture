@@ -27,12 +27,12 @@ Hook.prototype = Object.create(Core.prototype);
 
 Hook.prototype._fork = function Hook$fork(rej, res){
 
-  const _this = this;
+  const {_acquire, _dispose, _consume} = this;
   let cancel, cancelAcquire = noop, cancelConsume = noop, resource, value, cont = noop;
 
   function Hook$dispose(){
-    const disposal = _this._dispose(resource);
-    check$dispose(disposal, _this._dispose, resource);
+    const disposal = _dispose(resource);
+    check$dispose(disposal, _dispose, resource);
     cancel = disposal._fork(rej, Hook$done);
     return cancel;
   }
@@ -61,13 +61,13 @@ Hook.prototype._fork = function Hook$fork(rej, res){
 
   function Hook$acquireResolved(x){
     resource = x;
-    const consumption = _this._consume(resource);
-    check$consume(consumption, _this._consume, resource);
+    const consumption = _consume(resource);
+    check$consume(consumption, _consume, resource);
     cancel = Hook$cancelAll;
     cancelConsume = consumption._fork(Hook$consumptionRejected, Hook$consumptionResolved);
   }
 
-  cancelAcquire = _this._acquire._fork(rej, Hook$acquireResolved);
+  cancelAcquire = _acquire._fork(rej, Hook$acquireResolved);
 
   cancel = cancel || cancelAcquire;
 
@@ -76,7 +76,8 @@ Hook.prototype._fork = function Hook$fork(rej, res){
 };
 
 Hook.prototype.toString = function Hook$toString(){
-  return `${this._acquire.toString()}.hook(${showf(this._dispose)}, ${showf(this._consume)})`;
+  const {_acquire, _dispose, _consume} = this;
+  return `Future.hook(${_acquire.toString()}, ${showf(_dispose)}, ${showf(_consume)})`;
 };
 
 function hook$acquire$cleanup(acquire, cleanup, consume){
