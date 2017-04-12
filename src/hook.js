@@ -3,14 +3,14 @@ import {noop, show, showf, partial1, partial2} from './internal/fn';
 import {isFunction} from './internal/is';
 import {typeError, invalidArgument} from './internal/throw';
 
-function check$hook$f(m, f, x){
+function check$dispose(m, f, x){
   if(!isFuture(m)) typeError(
     'Future.hook expects the first function its given to return a Future'
     + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
   );
 }
 
-function check$hook$g(m, g, x){
+function check$consume(m, g, x){
   if(!isFuture(m)) typeError(
     'Future.hook expects the second function its given to return a Future'
     + `\n  Actual: ${show(m)}\n  From calling: ${showf(g)}\n  With: ${show(x)}`
@@ -28,33 +28,46 @@ Hook.prototype = Object.create(Core.prototype);
 Hook.prototype._fork = function Hook$fork(rej, res){
 
   const _this = this;
-  let cancel, cancelAcquire = noop, cancelConsume = noop, resource;
+  let cancel, cancelAcquire = noop, cancelConsume = noop, resource, value, cont = noop;
 
-  function Hook$fork$dispose(callback){
+  function Hook$dispose(){
     const disposal = _this._dispose(resource);
-    check$hook$f(disposal, _this._dispose, resource);
-    cancel = disposal._fork(rej, callback);
+    check$dispose(disposal, _this._dispose, resource);
+    cancel = disposal._fork(rej, Hook$done);
     return cancel;
   }
 
-  function Hook$fork$cancelConsume(){
-    Hook$fork$dispose(noop)();
-    cancelAcquire();
-    cancelConsume();
+  function Hook$done(){
+    cont(value);
   }
 
-  function Hook$fork$res(x){
+  function Hook$cancelAll(){
+    cancelConsume();
+    Hook$dispose()();
+    cancelAcquire();
+  }
+
+  function Hook$consumptionRejected(x){
+    cont = rej;
+    value = x;
+    Hook$dispose();
+  }
+
+  function Hook$consumptionResolved(x){
+    cont = res;
+    value = x;
+    Hook$dispose();
+  }
+
+  function Hook$acquireResolved(x){
     resource = x;
     const consumption = _this._consume(resource);
-    check$hook$g(consumption, _this._consume, resource);
-    cancelConsume = consumption._fork(
-      x => Hook$fork$dispose(_ => rej(x)),
-      x => Hook$fork$dispose(_ => res(x))
-    );
-    cancel = Hook$fork$cancelConsume;
+    check$consume(consumption, _this._consume, resource);
+    cancel = Hook$cancelAll;
+    cancelConsume = consumption._fork(Hook$consumptionRejected, Hook$consumptionResolved);
   }
 
-  cancelAcquire = _this._acquire._fork(rej, Hook$fork$res);
+  cancelAcquire = _this._acquire._fork(rej, Hook$acquireResolved);
 
   cancel = cancel || cancelAcquire;
 

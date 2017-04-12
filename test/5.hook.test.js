@@ -4,7 +4,7 @@ import U from './util';
 import F from './futures';
 import type from 'sanctuary-type-identifiers';
 
-describe('Future.hook()', () => {
+describe('hook()', () => {
 
   it('is a curried ternary function', () => {
     expect(hook).to.be.a('function');
@@ -88,14 +88,54 @@ describe('Future.hook()', () => {
     });
 
     it('does not hook after being cancelled', done => {
-      hook(F.resolvedSlow, _ => of('clean'), U.failRes).fork(U.failRej, U.failRes)();
+      hook(F.resolvedSlow, _ => of('dispose'), U.failRes).fork(U.failRej, U.failRes)();
       setTimeout(done, 25);
     });
 
     it('does not reject after being cancelled', done => {
-      hook(F.rejectedSlow, _ => of('clean'), U.failRes).fork(U.failRej, U.failRes)();
-      hook(F.resolved, _ => of('clean'), () => F.rejectedSlow).fork(U.failRej, U.failRes)();
+      hook(F.rejectedSlow, _ => of('dispose'), U.failRes).fork(U.failRej, U.failRes)();
+      hook(F.resolved, _ => of('dispose'), () => F.rejectedSlow).fork(U.failRej, U.failRes)();
       setTimeout(done, 25);
+    });
+
+    it('cancels acquire appropriately', done => {
+      const acquire = Future(() => () => done());
+      const cancel =
+        hook(acquire, _ => of('dispose'), _ => of('consume'))
+        .fork(U.failRej, U.failRes);
+      setTimeout(cancel, 10);
+    });
+
+    it('cancels consume appropriately', done => {
+      const consume = Future(() => () => done());
+      const cancel =
+        hook(F.resolved, _ => of('dispose'), _ => consume)
+        .fork(U.failRej, U.failRes);
+      setTimeout(cancel, 10);
+    });
+
+    it('cancels delayed consume appropriately', done => {
+      const consume = Future(() => () => done());
+      const cancel =
+        hook(F.resolvedSlow, _ => of('dispose'), _ => consume)
+        .fork(U.failRej, U.failRes);
+      setTimeout(cancel, 25);
+    });
+
+    it('cancels dispose appropriately', done => {
+      const dispose = Future(() => () => done());
+      const cancel =
+        hook(F.resolved, _ => dispose, _ => of('consume'))
+        .fork(U.failRej, U.failRes);
+      setTimeout(cancel, 10);
+    });
+
+    it('cancels delayed dispose appropriately', done => {
+      const dispose = Future(() => () => done());
+      const cancel =
+        hook(F.resolved, _ => dispose, _ => F.resolvedSlow)
+        .fork(U.failRej, U.failRes);
+      setTimeout(cancel, 25);
     });
 
     it('immediately runs and cancels the disposal Future when cancelled after acquire', done => {
