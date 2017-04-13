@@ -30,6 +30,10 @@ Hook.prototype._fork = function Hook$fork(rej, res){
   const {_acquire, _dispose, _consume} = this;
   let cancel, cancelAcquire = noop, cancelConsume = noop, resource, value, cont = noop;
 
+  function Hook$done(){
+    cont(value);
+  }
+
   function Hook$dispose(){
     const disposal = _dispose(resource);
     check$dispose(disposal, _dispose, resource);
@@ -37,14 +41,9 @@ Hook.prototype._fork = function Hook$fork(rej, res){
     return cancel;
   }
 
-  function Hook$done(){
-    cont(value);
-  }
-
-  function Hook$cancelAll(){
+  function Hook$cancelConsuption(){
     cancelConsume();
     Hook$dispose()();
-    cancelAcquire();
   }
 
   function Hook$consumptionRejected(x){
@@ -63,7 +62,7 @@ Hook.prototype._fork = function Hook$fork(rej, res){
     resource = x;
     const consumption = _consume(resource);
     check$consume(consumption, _consume, resource);
-    cancel = Hook$cancelAll;
+    cancel = Hook$cancelConsuption;
     cancelConsume = consumption._fork(Hook$consumptionRejected, Hook$consumptionResolved);
   }
 
