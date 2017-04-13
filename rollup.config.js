@@ -6,10 +6,11 @@ import uglify from 'rollup-plugin-uglify';
 const pkg = require('./package.json');
 
 const dependencies = {
-  'sanctuary-type-classes': 'sanctuaryTypeClasses',
-  'sanctuary-type-identifiers': 'sanctuaryTypeIdentifiers',
+  'concurrify': 'concurrify',
+  'denque': 'Denque',
   'inspect-f': 'inspectf',
-  'denque': 'Denque'
+  'sanctuary-type-classes': 'sanctuaryTypeClasses',
+  'sanctuary-type-identifiers': 'sanctuaryTypeIdentifiers'
 };
 
 export default {

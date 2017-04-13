@@ -20,5 +20,6 @@ export {fromPromise, fromPromise2, fromPromise3} from './src/from-promise';
 export {go, go as do} from './src/go';
 export {hook} from './src/hook';
 export {node} from './src/node';
+export {Par, seq} from './src/par';
 export {parallel} from './src/parallel';
 export {rejectAfter} from './src/reject-after';

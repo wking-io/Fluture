@@ -1,10 +1,10 @@
 import {expect} from 'chai';
-import {Future, Par, seq, of, reject} from '../index.es.js';
+import {Future, Par, seq, of, reject, never, ap, map} from '../index.es.js';
 import U from './util';
 import F from './futures';
 import Z from 'sanctuary-type-classes';
 
-describe.skip('Par()', () => {
+describe('Par()', () => {
 
   it('is a unary function', () => {
     expect(Par).to.be.a('function');
@@ -33,7 +33,7 @@ describe.skip('Par()', () => {
 
     it('creates a never-ending ConcurrentFuture', () => {
       const m = zero(Par);
-      expect(seq(m)).to.equal(Future.never);
+      expect(seq(m)).to.equal(never);
     });
 
   });
@@ -41,7 +41,6 @@ describe.skip('Par()', () => {
   describe('#ap()', () => {
 
     const mf = of(U.bang);
-    const ap = Future.ap;
 
     it('calls the function contained in the given Future to its contained value', () => {
       const actual = ap(Par(mf), Par(F.resolved));
@@ -87,15 +86,13 @@ describe.skip('Par()', () => {
 
     it('shows a reasonable representation when cast to string', () => {
       const m = ap(Par(of(1)), Par(reject(0)));
-      const s = 'ConcurrentFuture(new FutureParallelAp(reject(0), of(1)))';
+      const s = 'ConcurrentFuture@2(new ParallelAp(Future.reject(0), Future.of(1)))';
       expect(m.toString()).to.equal(s);
     });
 
   });
 
   describe('#map()', () => {
-
-    const map = Future.map;
 
     it('applies the given function to its inner', () => {
       const actual = map(U.add(1), Par(of(1)));
@@ -109,7 +106,8 @@ describe.skip('Par()', () => {
 
     it('shows a reasonable representation when cast to string', () => {
       const m = map(U.noop, Par(F.resolved));
-      expect(m.toString()).to.equal('ConcurrentFuture(of("resolved").map(() => {}))');
+      const expected = 'ConcurrentFuture@2(Future.of("resolved").map(function () {}))';
+      expect(m.toString()).to.equal(expected);
     });
 
   });
@@ -132,7 +130,7 @@ describe.skip('Par()', () => {
 
     it('shows a reasonable representation when cast to string', () => {
       const m = alt(Par(of(2)), Par(of(1)));
-      const s = 'ConcurrentFuture(of(1).race(of(2)))';
+      const s = 'ConcurrentFuture@2(Future.of(1))';
       expect(m.toString()).to.equal(s);
     });
 

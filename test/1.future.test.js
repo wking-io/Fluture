@@ -118,7 +118,7 @@ describe('Future', () => {
 
   });
 
-  describe.skip('.seq()', () => {
+  describe('.seq()', () => {
 
     it('throws when not given a Parallel', () => {
       const f = () => seq(1);
@@ -127,8 +127,8 @@ describe('Future', () => {
 
     it('returns the Future contained in the Parallel', () => {
       const par = Par(F.mock);
-      const seq = seq(par);
-      expect(seq).to.equal(F.mock);
+      const x = seq(par);
+      expect(x).to.equal(F.mock);
     });
 
   });

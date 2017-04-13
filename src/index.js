@@ -19,6 +19,7 @@ import {fromPromise, fromPromise2, fromPromise3} from './from-promise';
 import {go} from './go';
 import {hook} from './hook';
 import {node} from './node';
+import {Par, seq} from './par';
 import {parallel} from './parallel';
 import {rejectAfter} from './reject-after';
 
@@ -43,6 +44,8 @@ export default Object.assign(Future, dispatchers, {
   fromPromise3,
   hook,
   node,
+  Par,
+  seq,
   parallel,
   rejectAfter,
   chainRec,
