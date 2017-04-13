@@ -43,36 +43,6 @@ describe('is', () => {
 
   });
 
-  describe('.isBinary()', () => {
-
-    const fs = [(a, b) => b, (a, b, c) => c];
-    const xs = [U.noop, a => a];
-
-    it('returns true when given a binary Function', () => {
-      fs.forEach(f => expect(util.isBinary(f)).to.equal(true));
-    });
-
-    it('returns false when not given a binary Function', () => {
-      xs.forEach(x => expect(util.isBinary(x)).to.equal(false));
-    });
-
-  });
-
-  describe('.isTernary()', () => {
-
-    const fs = [(a, b, c) => c, (a, b, c, d) => d];
-    const xs = [U.noop, a => a, (a, b) => b];
-
-    it('returns true when given a ternary Function', () => {
-      fs.forEach(f => expect(util.isTernary(f)).to.equal(true));
-    });
-
-    it('returns false when not given a ternary Function', () => {
-      xs.forEach(x => expect(util.isTernary(x)).to.equal(false));
-    });
-
-  });
-
   describe('.isUnsigned()', () => {
 
     const is = [1, 2, 99999999999999999999, Infinity];
