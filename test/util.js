@@ -1,15 +1,14 @@
-'use strict';
-
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const Z = require('sanctuary-type-classes');
-const AssertionError = require('assert').AssertionError;
+import {expect} from 'chai';
+import Future from '../index.es.js';
+import Z from 'sanctuary-type-classes';
+import {AssertionError} from 'assert';
 
 exports.STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
 exports.noop = () => {};
 exports.add = a => b => a + b;
 exports.sub = a => b => a - b;
 exports.bang = s => `${s}!`;
+exports.I = x => x;
 exports.B = f => g => x => f(g(x));
 exports.error = new Error('Intentional error for unit testing');
 

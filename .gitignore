@@ -28,8 +28,12 @@ coverage/
 # Test file - who doesn't have a test file?
 test.js
 
-# Transpiled ES5 file - for publishing only
-es5.js
+# Build files
+index.js
+.nyc_output/
 
 # Heap snapshots
 *.heapsnapshot
+
+# TEMP: Ignore perf directory for now
+perf/
