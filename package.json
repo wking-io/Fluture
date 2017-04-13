@@ -5,7 +5,8 @@
   "main": "index.js",
   "jsnext:main": "index.es.js",
   "files": [
-    "dist"
+    "src",
+    "index.es.js"
   ],
   "repository": "https://github.com/fluture-js/Fluture.git",
   "scripts": {
