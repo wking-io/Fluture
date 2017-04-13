@@ -7,7 +7,7 @@ import {
   isNever
 } from './core';
 
-import * as dispatchers from './dispatchers/index.js';
+import * as dispatchers from './dispatchers';
 
 import {after} from './after';
 import {both} from './both';

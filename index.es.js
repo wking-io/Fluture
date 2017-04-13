@@ -8,7 +8,7 @@ export {
   isNever
 } from './src/core';
 
-export * from './src/dispatchers/index';
+export * from './src/dispatchers';
 
 export {after} from './src/after';
 export {both} from './src/both';
