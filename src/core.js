@@ -338,54 +338,64 @@ export class Action{
   rejected(x){ return new Rejected(x) }
   resolved(x){ return new Resolved(x) }
   run(){ return this }
+  on(m){ return m }
   cancel(){}
   toString(){ return '' }
 }
 export class ApAction extends Action{
   constructor(other){ this.other = other }
+  on(m){ return m.ap(this.other) }
   resolved(x){ return this.other.map(f => f(x)) }
   toString(){ return `ap(${this.other.toString()})` }
 }
 export class MapAction extends Action{
   constructor(mapper){ this.mapper = mapper }
+  on(m){ return m.map(this.mapper) }
   resolved(x){ return new Resolved(this.mapper(x)) }
   toString(){ return `map(${showf(this.mapper)})` }
 }
 export class BimapAction extends Action{
   constructor(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper }
+  on(m){ return m.bimap(this.lmapper, this.rmapper) }
   rejected(x){ return new Rejected(this.lmapper(x)) }
   resolved(x){ return new Resolved(this.rmapper(x)) }
   toString(){ return `bimap(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
 }
 export class ChainAction extends Action{
   constructor(mapper){ this.mapper = mapper }
+  on(m){ return m.chain(this.mapper) }
   resolved(x){ return this.mapper(x) }
   toString(){ return `chain(${showf(this.mapper)})` }
 }
 export class MapRejAction extends Action{
   constructor(mapper){ this.mapper = mapper }
+  on(m){ return m.mapRej(this.mapper) }
   rejected(x){ return new Rejected(this.mapper(x)) }
   toString(){ return `mapRej(${showf(this.mapper)})` }
 }
 export class ChainRejAction extends Action{
   constructor(mapper){ this.mapper = mapper }
+  on(m){ return m.chainRej(this.mapper) }
   rejected(x){ return this.mapper(x) }
   toString(){ return `chainRej(${showf(this.mapper)})` }
 }
 export class SwapAction extends Action{
   constructor(){ return SwapAction.instance || (SwapAction.instance = this) }
+  on(m){ return m.swap() }
   rejected(x){ return new Resolved(x) }
   resolved(x){ return new Rejected(x) }
   toString(){ return 'swap()' }
 }
 export class FoldAction extends Action{
   constructor(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper }
+  on(m){ return m.fold(this.lmapper, this.rmapper) }
   rejected(x){ return new Resolved(this.lmapper(x)) }
   resolved(x){ return new Resolved(this.rmapper(x)) }
   toString(){ return `fold(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
 }
 export class FinallyAction extends Action{
   constructor(other){ this.other = other }
+  on(m){ return m.finally(this.other) }
   cancel(){ this.other._fork(noop, noop)() }
   rejected(x){ return this.other.and(new Rejected(x)) }
   resolved(x){ return this.other.map(() => x) }
@@ -393,6 +403,7 @@ export class FinallyAction extends Action{
 }
 export class RaceAction extends Action{
   constructor(other){ this.other = other }
+  on(m){ return m.race(this.other) }
   run(early){ return new RaceActionState(early, this.other) }
   toString(){ return `race(${this.other.toString()})` }
 }
@@ -406,6 +417,7 @@ export class RaceActionState extends RaceAction{
 }
 export class BothAction extends Action{
   constructor(other){ this.other = other }
+  on(m){ return m.both(this.other) }
   run(early){ return new BothActionState(early, this.other) }
   resolved(x){ return this.other.map(y => [x, y]) }
   toString(){ return `both(${this.other.toString()})` }
@@ -418,6 +430,7 @@ export class BothActionState extends BothAction{
 }
 export class AndAction extends Action{
   constructor(other){ this.other = other }
+  on(m){ return m.and(this.other) }
   run(early){ return new AndActionState(early, this.other) }
   resolved(){ return this.other }
   toString(){ return `and(${this.other.toString()})` }
@@ -428,6 +441,7 @@ export class AndActionState extends AndAction{
 }
 export class OrAction extends Action{
   constructor(other){ this.other = other }
+  on(m){ return m.or(this.other) }
   run(early){ return new OrActionState(early, this.other) }
   rejected(){ return this.other }
   toString(){ return `or(${this.other.toString()})` }
@@ -516,12 +530,16 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
   }
 
   function absorb(m){
-    future = m;
     settled = true;
-    while(future instanceof Sequence){
-      for(let i = future._actions.length - 1; i >= 0; i--) actions.unshift(future._actions[i]);
-      future = future._spawn;
+    future = m;
+    while(!(future instanceof Sequence)){
+      if(action = actions.shift() || queue.shift()) future = action.on(future);
+      else return;
     }
+    for(let i = future._actions.length - 1; i >= 0; i--){
+      actions.unshift(future._actions[i]);
+    }
+    future = future._spawn;
   }
 
   function early(m){
