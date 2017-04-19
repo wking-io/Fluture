@@ -5,7 +5,6 @@ import Denque from 'denque';
 import {show, showf, noop, moop} from './internal/fn';
 import {isFunction} from './internal/is';
 import {error, typeError, invalidArgument} from './internal/throw';
-import {Undetermined, Synchronous, Asynchronous} from './internal/timing';
 import {FL} from './internal/const';
 import type from 'sanctuary-type-identifiers';
 
@@ -516,8 +515,10 @@ Sequence.prototype.finally = function Sequence$finally(other){
 
 Sequence.prototype._fork = function Sequence$_fork(rej, res){
 
-  const actions = new Denque(this._actions), queue = new Denque();
-  let action, cancel = noop, timing = Undetermined, future = this._spawn, settled;
+  const actions = new Denque(this._actions);
+  const runners = new Denque(this._actions.length);
+  const queue = new Denque(this._actions.length);
+  let action, cancel = noop, future = this._spawn, settled, async;
 
   function cancelAll(){
     cancel();
@@ -545,36 +546,34 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
   function early(m){
     cancelAll();
     absorb(m);
-    timing = timing === Undetermined ? Synchronous : drain();
+    if(async) drain();
   }
 
   function rejected(x){
     absorb(action.rejected(x));
-    timing = timing === Undetermined ? Synchronous : drain();
+    if(async) drain();
   }
 
   function resolved(x){
     absorb(action.resolved(x));
-    timing = timing === Undetermined ? Synchronous : drain();
+    if(async) drain();
   }
 
   function drain(){
     while(action = actions.shift() || queue.shift()){
       settled = false;
-      timing = Undetermined;
+      async = false;
+      runners.clear();
       cancel = future._fork(rejected, resolved);
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
       let running;
-      const runners = new Denque(actions.length);
       while(!settled && (running = actions.shift())) runners.push(running.run(early));
       if(settled) continue;
       while(running = runners.pop()) queue.unshift(running);
-      if(timing !== Synchronous){
-        timing = Asynchronous;
-        return;
-      }
+      async = true;
+      return;
     }
     cancel = future._fork(rej, res);
   }
