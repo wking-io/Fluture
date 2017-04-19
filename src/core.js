@@ -533,7 +533,7 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
     settled = true;
     future = m;
     while(!(future instanceof Sequence)){
-      if(action = actions.shift() || queue.shift()) future = action.on(future);
+      if(action = actions.shift()) future = action.on(future);
       else return;
     }
     for(let i = future._actions.length - 1; i >= 0; i--){
