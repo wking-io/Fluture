@@ -261,9 +261,9 @@ Furthermore; `encase2` and `encase3` are binary and ternary versions of
 
 Allows Promise-returning functions to be turned into Future-returning functions.
 
-Takes a function which returns a Promise, and a value, and returns a Future
-which calls the function with the value to produce the Promise, and resolves
-with the Promise resolution value, or rejects with the Promise rejection reason.
+Takes a function which returns a Promise, and a value, and returns a Future.
+When forked, the Future calls the function with the value to produce the Promise,
+and resolves with its resolution value, or rejects with its rejection reason.
 
 ```js
 const fetchf = Future.fromPromise(fetch);
