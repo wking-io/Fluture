@@ -518,12 +518,11 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
   const actions = new Denque(this._actions);
   const runners = new Denque(this._actions.length);
   const queue = new Denque(this._actions.length);
-  let action, cancel = noop, future = this._spawn, settled, async;
+  let action, cancel = noop, future = this._spawn, running, settled, async;
 
   function cancelAll(){
     cancel();
     action && action.cancel();
-    let running;
     while(running = queue.shift()) running.cancel();
     queue.clear();
     actions.clear();
@@ -568,7 +567,6 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
-      let running;
       while(!settled && (running = actions.shift())) runners.push(running.run(early));
       if(settled) continue;
       while(running = runners.pop()) queue.unshift(running);
