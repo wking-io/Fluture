@@ -543,11 +543,11 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
     while(action = actions.shift() || queue.shift()){
       settled = false;
       async = false;
-      runners.clear();
       cancel = future._fork(rejected, resolved);
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
+      runners.clear();
       while(!settled && (running = actions.shift())) runners.push(running.run(early));
       if(settled) continue;
       while(running = runners.pop()) queue.unshift(running);

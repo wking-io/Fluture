@@ -1,14 +1,15 @@
-import {Core, Resolved, isFuture} from './core';
+/*eslint consistent-return: 0*/
+
+import {Core, isFuture} from './core';
 import {isFunction, isIterator} from './internal/is';
 import {isIteration} from './internal/iteration';
-import {show, showf} from './internal/fn';
+import {show, showf, noop} from './internal/fn';
 import {invalidArgument, typeError} from './internal/throw';
+import {Undetermined, Synchronous, Asynchronous} from './internal/timing';
 
-const check$iterator = g => {
-  if(!isIterator(g)) invalidArgument(
-    'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
-  );
-};
+const check$iterator = g => isIterator(g) ? g : invalidArgument(
+  'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
+);
 
 const check$iteration = o => {
   if(!isIteration(o)) typeError(
@@ -16,7 +17,8 @@ const check$iteration = o => {
     + ' Its iterator did not return a valid iteration from iterator.next()'
     + `\n  Actual: ${show(o)}`
   );
-  if(!o.done && !isFuture(o.value)) typeError(
+  if(o.done || isFuture(o.value)) return o;
+  return typeError(
     'A non-Future was produced by iterator.next() in Future.do.'
     + ' If you\'re using a generator, make sure you always `yield` a Future'
     + `\n  Actual: ${o.value}`
@@ -30,13 +32,35 @@ export function Go(generator){
 Go.prototype = Object.create(Core.prototype);
 
 Go.prototype._fork = function Go$_fork(rej, res){
-  const iterator = this._generator();
-  check$iterator(iterator);
-  (function recur(x){
-    const iteration = iterator.next(x);
-    check$iteration(iteration);
-    return iteration.done ? new Resolved(iteration.value) : iteration.value.chain(recur);
-  }(undefined))._fork(rej, res);
+
+  const iterator = check$iterator(this._generator());
+
+  let timing = Undetermined, cancel = noop, state, value;
+
+  function resolved(x){
+    value = x;
+    if(timing === Asynchronous) return drain();
+    timing = Synchronous;
+    state = check$iteration(iterator.next(value));
+  }
+
+  function drain(){
+    state = check$iteration(iterator.next(value));
+    while(!state.done){
+      timing = Undetermined;
+      cancel = state.value._fork(rej, resolved);
+      if(timing !== Synchronous){
+        timing = Asynchronous;
+        return;
+      }
+    }
+    res(state.value);
+  }
+
+  drain();
+
+  return function Future$chainRec$cancel(){ cancel() };
+
 };
 
 Go.prototype.toString = function Go$toString(){
