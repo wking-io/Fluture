@@ -11,19 +11,19 @@
   "repository": "https://github.com/fluture-js/Fluture.git",
   "scripts": {
     "build": "rollup -c",
-    "clean": "rimraf npm-debug.log coverage dist",
+    "clean": "rimraf npm-debug.log coverage dist coverage.lcov .nyc_output index.js",
     "lint": "eslint src test index.es.js",
     "lint:fix": "npm run lint -- --fix",
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "prepublish": "npm run build",
     "release": "npm outdated --long && xyz --edit --repo git@github.com:fluture-js/Fluture.git --tag 'X.Y.Z' --increment",
     "toc": "node scripts/toc.js",
-    "test": "npm run test:all && npm run test:coverage",
+    "test": "npm run clean && npm run test:all && npm run test:coverage",
     "test:opt": "node --allow-natives-syntax --trace-opt --trace-deopt --trace-inlining scripts/test-opt",
     "test:mem": "node scripts/test-mem",
     "test:all": "npm run lint && npm run lint:readme && npm run test:unit",
-    "test:unit": "npm run clean && nyc mocha --require buba/register --reporter list test/**.test.js",
-    "test:coverage": "nyc report --reporter=text-lcov && codecov"
+    "test:unit": "nyc mocha --require buba/register --reporter list test/**.test.js",
+    "test:coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
   "homepage": "https://github.com/fluture-js/Fluture",

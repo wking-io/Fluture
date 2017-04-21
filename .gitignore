@@ -24,13 +24,14 @@ node_modules/
 
 # Code coverage report
 coverage/
+.nyc_output/
+*.lcov
 
 # Test file - who doesn't have a test file?
 test.js
 
 # Build files
 index.js
-.nyc_output/
 
 # Heap snapshots
 *.heapsnapshot
