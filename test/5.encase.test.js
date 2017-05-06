@@ -31,7 +31,7 @@ describe('encase()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => encase(x)(1));
+    const fs = xs.map(x => () => encase(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
@@ -53,7 +53,7 @@ describe('encase2()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => encase2(x)(1)(2));
+    const fs = xs.map(x => () => encase2(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
@@ -79,7 +79,7 @@ describe('encase3()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => encase3(x)(1)(2)(3));
+    const fs = xs.map(x => () => encase3(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 

@@ -56,28 +56,26 @@ export function attempt(f){
 }
 
 export function encase(f, x){
-  if(arguments.length === 1) return partial1(encase, f);
   if(!isFunction(f)) invalidArgument('Future.encase', 0, 'be a function', f);
+  if(arguments.length === 1) return partial1(encase, f);
   return new Encase(f, x);
 }
 
 export function encase2(f, x, y){
+  if(!isFunction(f)) invalidArgument('Future.encase2', 0, 'be a function', f);
   switch(arguments.length){
     case 1: return partial1(encase2, f);
     case 2: return partial2(encase2, f, x);
-    default:
-      if(!isFunction(f)) invalidArgument('Future.encase2', 0, 'be a function', f);
-      return new Encase(f, x, y);
+    default: return new Encase(f, x, y);
   }
 }
 
 export function encase3(f, x, y, z){
+  if(!isFunction(f)) invalidArgument('Future.encase3', 0, 'be a function', f);
   switch(arguments.length){
     case 1: return partial1(encase3, f);
     case 2: return partial2(encase3, f, x);
     case 3: return partial3(encase3, f, x, y);
-    default:
-      if(!isFunction(f)) invalidArgument('Future.encase3', 0, 'be a function', f);
-      return new Encase(f, x, y, z);
+    default: return new Encase(f, x, y, z);
   }
 }

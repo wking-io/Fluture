@@ -51,28 +51,26 @@ FromPromise.prototype.toString = function FromPromise$toString(){
 };
 
 export function fromPromise(f, x){
-  if(arguments.length === 1) return partial1(fromPromise, f);
   if(!isFunction(f)) invalidArgument('Future.fromPromise', 0, 'be a function', f);
+  if(arguments.length === 1) return partial1(fromPromise, f);
   return new FromPromise(f, x);
 }
 
 export function fromPromise2(f, x, y){
+  if(!isFunction(f)) invalidArgument('Future.fromPromise2', 0, 'be a function', f);
   switch(arguments.length){
     case 1: return partial1(fromPromise2, f);
     case 2: return partial2(fromPromise2, f, x);
-    default:
-      if(!isFunction(f)) invalidArgument('Future.fromPromise2', 0, 'be a function', f);
-      return new FromPromise(f, x, y);
+    default: return new FromPromise(f, x, y);
   }
 }
 
 export function fromPromise3(f, x, y, z){
+  if(!isFunction(f)) invalidArgument('Future.fromPromise3', 0, 'be a function', f);
   switch(arguments.length){
     case 1: return partial1(fromPromise3, f);
     case 2: return partial2(fromPromise3, f, x);
     case 3: return partial3(fromPromise3, f, x, y);
-    default:
-      if(!isFunction(f)) invalidArgument('Future.fromPromise3', 0, 'be a function', f);
-      return new FromPromise(f, x, y, z);
+    default: return new FromPromise(f, x, y, z);
   }
 }

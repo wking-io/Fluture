@@ -17,7 +17,7 @@ describe('fromPromise()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => fromPromise(x)(1));
+    const fs = xs.map(x => () => fromPromise(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
@@ -39,7 +39,7 @@ describe('fromPromise2()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => fromPromise2(x)(1)(2));
+    const fs = xs.map(x => () => fromPromise2(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
@@ -65,7 +65,7 @@ describe('fromPromise3()', () => {
 
   it('throws TypeError when not given a function', () => {
     const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => () => fromPromise3(x)(1)(2)(3));
+    const fs = xs.map(x => () => fromPromise3(x));
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
