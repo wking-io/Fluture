@@ -471,6 +471,16 @@ export class FinallyAction extends Action{
   resolved(x){ return this.other._map(() => x) }
   toString(){ return `finally(${this.other.toString()})` }
 }
+export class AndAction extends Action{
+  constructor(other){ super(); this.other = other }
+  resolved(){ return this.other }
+  toString(){ return `and(${this.other.toString()})` }
+}
+export class OrAction extends Action{
+  constructor(other){ super(); this.other = other }
+  rejected(){ return this.other }
+  toString(){ return `or(${this.other.toString()})` }
+}
 export class RaceAction extends Action{
   constructor(other){ super(); this.other = other }
   run(early){ return new RaceActionState(early, this.other) }
@@ -495,26 +505,6 @@ export class BothActionState extends BothAction{
     super(new Eager(other));
     this.cancel = this.other.fork(x => early(new Rejected(x)), noop);
   }
-}
-export class AndAction extends Action{
-  constructor(other){ super(); this.other = other }
-  run(early){ return new AndActionState(early, this.other) }
-  resolved(){ return this.other }
-  toString(){ return `and(${this.other.toString()})` }
-}
-export class AndActionState extends AndAction{
-  constructor(early, other){ super(new Eager(other)); this.cancel = this.other.cancel }
-  rejected(x){ this.cancel(); return new Rejected(x) }
-}
-export class OrAction extends Action{
-  constructor(other){ super(); this.other = other }
-  run(early){ return new OrActionState(early, this.other) }
-  rejected(){ return this.other }
-  toString(){ return `or(${this.other.toString()})` }
-}
-export class OrActionState extends OrAction{
-  constructor(early, other){ super(new Eager(other)); this.cancel = this.other.cancel }
-  resolved(x){ this.cancel(); return new Resolved(x) }
 }
 
 export function Sequence(spawn, actions = []){
