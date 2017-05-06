@@ -27,6 +27,7 @@ import {error} from './internal/throw';
 
 if(typeof Object.create !== 'function') error('Please polyfill Object.create to use Fluture');
 if(typeof Object.assign !== 'function') error('Please polyfill Object.assign to use Fluture');
+if(typeof Array.isArray !== 'function') error('Please polyfill Array.isArray to use Fluture');
 
 export default Object.assign(Future, dispatchers, {
   Future,
