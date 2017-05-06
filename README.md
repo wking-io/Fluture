@@ -61,7 +61,7 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
         * [rejectAfter](#rejectafter)
         * [try](#try)
         * [encase](#encase)
-        * [fromPromise](#frompromise)
+        * [encaseP](#encasep)
         * [node](#node)
         * [chainRec](#chainrec)
     1. [Transforming Futures](#transforming-futures)
@@ -254,10 +254,10 @@ safeJsonParse(data).fork(console.error, console.log)
 Furthermore; `encase2` and `encase3` are binary and ternary versions of
 `encase`, applying two or three arguments to the given function respectively.
 
-#### fromPromise
-##### `.fromPromise :: (a -> Promise e r) -> a -> Future e r`
-##### `.fromPromise2 :: (a, b -> Promise e r) -> a -> b -> Future e r`
-##### `.fromPromise3 :: (a, b, c -> Promise e r) -> a -> b -> c -> Future e r`
+#### encaseP
+##### `.encaseP :: (a -> Promise e r) -> a -> Future e r`
+##### `.encaseP2 :: (a, b -> Promise e r) -> a -> b -> Future e r`
+##### `.encaseP3 :: (a, b, c -> Promise e r) -> a -> b -> c -> Future e r`
 
 Allows Promise-returning functions to be turned into Future-returning functions.
 
@@ -266,17 +266,17 @@ When forked, the Future calls the function with the value to produce the Promise
 and resolves with its resolution value, or rejects with its rejection reason.
 
 ```js
-const fetchf = Future.fromPromise(fetch);
+const fetchf = Future.encaseP(fetch);
 
 fetchf('https://api.github.com/users/Avaq')
-.chain(res => Future.fromPromise(_ => res.json(), 0))
+.chain(res => Future.encaseP(_ => res.json(), 0))
 .map(user => user.name)
 .fork(console.error, console.log);
 //> "Aldwin Vlasblom"
 ```
 
-Furthermore; `fromPromise2` and `fromPromise3` are binary and ternary versions
-of `fromPromise`, applying two or three arguments to the given function respectively.
+Furthermore; `encaseP2` and `encaseP3` are binary and ternary versions
+of `encaseP`, applying two or three arguments to the given function respectively.
 
 #### node
 ##### `.node :: (((a, b) -> ()) -> ()) -> Future a b`
