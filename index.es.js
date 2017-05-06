@@ -15,7 +15,6 @@ export {both} from './src/both';
 export {cache} from './src/cache';
 export {chainRec} from './src/chain-rec';
 export {encase, encase2, encase3, attempt, attempt as try} from './src/encase';
-export {first} from './src/race';
 export {fromPromise, fromPromise2, fromPromise3} from './src/from-promise';
 export {go, go as do} from './src/go';
 export {hook} from './src/hook';
