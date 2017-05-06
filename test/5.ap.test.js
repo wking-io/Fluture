@@ -3,6 +3,7 @@ import {Future, ap, of, reject, after} from '../index.es.js';
 import * as U from './util';
 import * as F from './futures';
 import type from 'sanctuary-type-identifiers';
+import R from 'ramda';
 
 const testInstance = ap => {
 
@@ -24,7 +25,7 @@ const testInstance = ap => {
     });
 
     it('rejects if one of the two reject', () => {
-      const left = ap(reject('err'), of(1));
+      const left = ap(reject('err'), of(U.add(1)));
       const right = ap(of(U.add(1)), reject('err'));
       return Promise.all([
         U.assertRejected(left, 'err'),
@@ -51,7 +52,7 @@ const testInstance = ap => {
 
     it('cancels the left Future if cancel is called while it is running', done => {
       const left = Future(() => () => done());
-      const right = after(20, U.add(1));
+      const right = of(U.add(1));
       const cancel = ap(left, right).fork(U.noop, U.noop);
       cancel();
     });
@@ -102,6 +103,12 @@ describe('Future#ap()', () => {
     fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
-  testInstance((a, b) => a.ap(b));
+  testInstance((a, b) => b.ap(a));
+
+});
+
+describe('Ramda#ap()', () => {
+
+  testInstance((a, b) => R.ap(b, a));
 
 });

@@ -24,7 +24,7 @@ export function isFuture(x){
 }
 
 Future.prototype[FL.ap] = function Future$FL$ap(other){
-  return this._ap(other);
+  return other._ap(this);
 };
 
 Future.prototype[FL.map] = function Future$FL$map(mapper){
@@ -415,7 +415,7 @@ const check$ap = f => isFunction(f) ? f : typeError(
 );
 export class ApAction extends Action{
   constructor(other){ super(); this.other = other }
-  resolved(x){ return this.other._map(f => check$ap(f)(x)) }
+  resolved(f){ check$ap(f); return this.other._map(x => f(x)) }
   toString(){ return `ap(${this.other.toString()})` }
 }
 export class MapAction extends Action{

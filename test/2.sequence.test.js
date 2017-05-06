@@ -10,7 +10,7 @@ describe('Sequence', () => {
 
   describe('ap', () => {
 
-    const seq = dummy.ap(of(bang));
+    const seq = of(bang).ap(dummy);
 
     describe('#fork()', () => {
 
@@ -23,7 +23,7 @@ describe('Sequence', () => {
     describe('#toString()', () => {
 
       it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of("resolved").ap(Future.of(s => `${s}!`))');
+        expect(seq.toString()).to.equal('Future.of(s => `${s}!`).ap(Future.of("resolved"))');
       });
 
     });
