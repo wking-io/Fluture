@@ -13,6 +13,12 @@ function check$promise(p, f, a, b, c){
   );
 }
 
+function EncaseP$0$fork(rej, res){
+  const {_fn} = this;
+  check$promise(_fn(), _fn).then(res, rej);
+  return noop;
+}
+
 function EncaseP$1$fork(rej, res){
   const {_fn, _a} = this;
   check$promise(_fn(_a), _fn, _a).then(res, rej);
@@ -31,7 +37,7 @@ function EncaseP$3$fork(rej, res){
   return noop;
 }
 
-const forks = [noop, EncaseP$1$fork, EncaseP$2$fork, EncaseP$3$fork];
+const forks = [EncaseP$0$fork, EncaseP$1$fork, EncaseP$2$fork, EncaseP$3$fork];
 
 function EncaseP(fn, a, b, c){
   this._length = arguments.length - 1;
@@ -49,6 +55,11 @@ EncaseP.prototype.toString = function EncaseP$toString(){
   const name = `encaseP${this._length > 1 ? this._length : ''}`;
   return `Future.${name}(${show(this._fn)}, ${args})`;
 };
+
+export function tryP(f){
+  if(!isFunction(f)) invalidArgument('Future.tryP', 0, 'be a function', f);
+  return new EncaseP(f);
+}
 
 export function encaseP(f, x){
   if(!isFunction(f)) invalidArgument('Future.encaseP', 0, 'be a function', f);

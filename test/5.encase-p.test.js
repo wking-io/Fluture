@@ -1,11 +1,25 @@
 import {expect} from 'chai';
-import {Future, encaseP, encaseP2, encaseP3} from '../index.es.js';
+import {Future, encaseP, encaseP2, encaseP3, tryP} from '../index.es.js';
 import * as U from './util';
 import type from 'sanctuary-type-identifiers';
 
 const unaryNoop = a => Promise.resolve(a);
 const binaryNoop = (a, b) => Promise.resolve(b);
 const ternaryNoop = (a, b, c) => Promise.resolve(c);
+
+describe('tryP()', () => {
+
+  it('throws TypeError when not given a function', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    const fs = xs.map(x => () => tryP(x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
+  it('returns an instance of Future', () => {
+    expect(tryP(unaryNoop)).to.be.an.instanceof(Future);
+  });
+
+});
 
 describe('encaseP()', () => {
 
@@ -87,6 +101,25 @@ describe('FromPromise', () => {
   });
 
   describe('#fork()', () => {
+
+    describe('(nullary)', () => {
+
+      it('throws TypeError when the function does not return a Promise', () => {
+        const f = () => tryP(U.noop).fork(U.noop, U.noop);
+        expect(f).to.throw(TypeError, /Future.*Promise/);
+      });
+
+      it('resolves with the resolution value of the returned Promise', () => {
+        const actual = tryP(_ => Promise.resolve(1));
+        return U.assertResolved(actual, 1);
+      });
+
+      it('rejects with rejection reason of the returned Promise', () => {
+        const actual = tryP(_ => Promise.reject(U.error));
+        return U.assertRejected(actual, U.error);
+      });
+
+    });
 
     describe('(unary)', () => {
 

@@ -255,6 +255,7 @@ Furthermore; `encase2` and `encase3` are binary and ternary versions of
 `encase`, applying two or three arguments to the given function respectively.
 
 #### encaseP
+##### `.tryP` :: (a -> Promise e r) -> Future e r
 ##### `.encaseP :: (a -> Promise e r) -> a -> Future e r`
 ##### `.encaseP2 :: (a, b -> Promise e r) -> a -> b -> Future e r`
 ##### `.encaseP3 :: (a, b, c -> Promise e r) -> a -> b -> c -> Future e r`
@@ -269,7 +270,7 @@ and resolves with its resolution value, or rejects with its rejection reason.
 const fetchf = Future.encaseP(fetch);
 
 fetchf('https://api.github.com/users/Avaq')
-.chain(res => Future.encaseP(_ => res.json(), 0))
+.chain(res => Future.tryP(_ => res.json()))
 .map(user => user.name)
 .fork(console.error, console.log);
 //> "Aldwin Vlasblom"
