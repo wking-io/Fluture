@@ -10,7 +10,6 @@ import {
 import * as dispatchers from './dispatchers';
 
 import {after} from './after';
-import {both} from './both';
 import {cache} from './cache';
 import {chainRec} from './chain-rec';
 import {encase, encase2, encase3, attempt} from './encase';
@@ -36,7 +35,6 @@ export default Object.assign(Future, dispatchers, {
   never,
   isNever,
   after,
-  both,
   cache,
   fromPromise,
   fromPromise2,
