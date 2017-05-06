@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {Future, both, of} from '../index.es.js';
-import U from './util';
-import F from './futures';
+import * as U from './util';
+import * as F from './futures';
 import type from 'sanctuary-type-identifiers';
 
 const testInstance = both => {

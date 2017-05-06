@@ -1,5 +1,3 @@
-/*eslint camelcase: 0*/
-
 import buble from 'rollup-plugin-buble';
 import uglify from 'rollup-plugin-uglify';
 
@@ -15,10 +13,7 @@ const dependencies = {
 
 export default {
   entry: 'src/index.js',
-  plugins: [
-    buble(),
-    uglify({mangle: false})
-  ],
+  plugins: [buble(), uglify({mangle: false})],
   external: Object.keys(dependencies),
   globals: dependencies,
   format: 'umd',

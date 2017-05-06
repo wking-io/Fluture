@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {Future, cache, of, reject, after} from '../index.es.js';
 import {Cached} from '../src/cache';
-import U from './util';
+import * as U from './util';
 import type from 'sanctuary-type-identifiers';
 
 describe('cache()', () => {

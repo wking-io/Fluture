@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {Future, chainRec, of, after, reject} from '../index.es.js';
 import {isIteration} from '../src/internal/iteration';
-import U from './util';
+import * as U from './util';
 import type from 'sanctuary-type-identifiers';
 
 describe('chainRec()', () => {

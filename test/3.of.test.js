@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import FL from 'fantasy-land';
 import {Future, of} from '../index.es.js';
-import U from './util';
+import * as U from './util';
 import type from 'sanctuary-type-identifiers';
 
 describe('of()', () => {

@@ -3,7 +3,7 @@
   "version": "5.0.0",
   "description": "FantasyLand compliant (monadic) alternative to Promises",
   "main": "index.js",
-  "jsnext:main": "index.es.js",
+  "module": "index.es.js",
   "files": [
     "src",
     "index.es.js"
@@ -11,19 +11,18 @@
   "repository": "https://github.com/fluture-js/Fluture.git",
   "scripts": {
     "build": "rollup -c",
-    "clean": "rimraf npm-debug.log coverage dist coverage.lcov .nyc_output index.js",
+    "clean": "rimraf npm-debug.log coverage index.js index.test.js",
     "lint": "eslint src test index.es.js",
     "lint:fix": "npm run lint -- --fix",
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "prepublish": "npm run build",
     "release": "npm outdated --long && xyz --edit --repo git@github.com:fluture-js/Fluture.git --tag 'X.Y.Z' --increment",
     "toc": "node scripts/toc.js",
-    "test": "npm run clean && npm run test:all && npm run test:coverage",
+    "test": "npm run lint && npm run lint:readme && npm run test:unit",
     "test:opt": "node --allow-natives-syntax --trace-opt --trace-deopt --trace-inlining scripts/test-opt",
     "test:mem": "node scripts/test-mem",
-    "test:all": "npm run lint && npm run lint:readme && npm run test:unit",
-    "test:unit": "nyc mocha --require buba/register --reporter list test/**.test.js",
-    "test:coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
+    "test:unit": "rollup -c rollup.config.test.js && mocha --require source-map-support/register --reporter test/reporter.js index.test.js",
+    "test:coverage": "codecov"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
   "homepage": "https://github.com/fluture-js/Fluture",
@@ -61,7 +60,6 @@
   },
   "devDependencies": {
     "benchmark": "^2.1.0",
-    "buba": "^4.0.2",
     "chai": "^3.4.0",
     "codecov": "^1.0.1",
     "data.task": "^3.0.0",
@@ -70,19 +68,21 @@
     "eslint-config-warp": "^1.2.0",
     "fantasy-land": "^3.0.0",
     "fun-task": "^1.5.1",
-    "istanbul": "^0.4.2",
+    "istanbul": "^0.4.5",
     "jsverify": "^0.7.1",
     "lodash.curry": "^4.1.1",
     "markdown-toc": "^1.0.2",
     "mocha": "^3.0.2",
-    "nyc": "^10.2.0",
     "ramda-fantasy": "^0.7.0",
     "remark-cli": "^2.1.0",
     "remark-validate-links": "^5.0.0",
     "rimraf": "^2.4.3",
     "rollup": "^0.41.6",
     "rollup-plugin-buble": "^0.15.0",
+    "rollup-plugin-istanbul": "^1.1.0",
+    "rollup-plugin-multi-entry": "^2.0.1",
     "rollup-plugin-uglify": "^1.0.1",
+    "source-map-support": "^0.4.14",
     "xyz": "^2.0.1"
   }
 }

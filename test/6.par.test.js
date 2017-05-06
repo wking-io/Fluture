@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import {Future, Par, seq, of, reject, never, ap, map} from '../index.es.js';
-import U from './util';
-import F from './futures';
+import * as U from './util';
+import * as F from './futures';
 import Z from 'sanctuary-type-classes';
 
 describe('Par()', () => {
@@ -106,7 +106,7 @@ describe('Par()', () => {
 
     it('shows a reasonable representation when cast to string', () => {
       const m = map(U.noop, Par(F.resolved));
-      const expected = 'ConcurrentFuture@2(Future.of("resolved").map(function () {}))';
+      const expected = `ConcurrentFuture@2(Future.of("resolved").map(${U.noop.toString()}))`;
       expect(m.toString()).to.equal(expected);
     });
 

@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import {Future, fromPromise, fromPromise2, fromPromise3} from '../index.es.js';
-import U from './util';
+import * as U from './util';
 import type from 'sanctuary-type-identifiers';
 
 const unaryNoop = a => Promise.resolve(a);

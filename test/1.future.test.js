@@ -1,6 +1,6 @@
 import {expect} from 'chai';
-import U from './util';
-import F from './futures';
+import * as U from './util';
+import * as F from './futures';
 import type from 'sanctuary-type-identifiers';
 import {
   Future,

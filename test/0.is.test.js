@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import U from './util';
+import * as U from './util';
 import Future from '../index.es.js';
 import * as util from '../src/internal/is';
 

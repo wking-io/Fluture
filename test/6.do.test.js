@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import {go, of} from '../index.es.js';
-import U from './util';
+import * as U from './util';
 
 describe('go()', () => {
 
@@ -63,8 +63,9 @@ describe('Go', () => {
   describe('#toString()', () => {
 
     it('returns the code to create the Go', () => {
-      const m = go(function*(){});
-      const s = 'Future.do(function* () {})';
+      const f = function*(){};
+      const m = go(f);
+      const s = `Future.do(${f.toString()})`;
       expect(m.toString()).to.equal(s);
     });
 
