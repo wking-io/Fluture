@@ -56,6 +56,23 @@ describe('bimap()', () => {
 
 describe('Future#bimap()', () => {
 
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).bimap.call(null, U.noop, U.noop);
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('throws TypeError when not given a function as first argument', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    const fs = xs.map(x => () => of(1).bimap(x, U.noop));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
+  it('throws TypeError when not given a function as second argument', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    const fs = xs.map(x => () => of(1).bimap(U.noop, x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
   testInstance((m, f, g) => m.bimap(f, g));
 
 });

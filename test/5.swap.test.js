@@ -38,6 +38,11 @@ describe('swap()', () => {
 
 describe('Future#swap()', () => {
 
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).swap.call(null);
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
   testInstance(m => m.swap());
 
 });

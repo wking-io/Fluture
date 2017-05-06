@@ -54,6 +54,25 @@ describe('fold()', () => {
 
 describe('Future#fold()', () => {
 
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).fold.call(null, U.noop, U.noop);
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('throws TypeError when first argument is not a function', () => {
+    const m = of(1);
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    const fs = xs.map(x => () => m.fold(x, U.noop));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
+  it('throws TypeError when second argument is not a function', () => {
+    const m = of(1);
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    const fs = xs.map(x => () => m.fold(U.noop, x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
   testInstance((m, f, g) => m.fold(f, g));
 
 });

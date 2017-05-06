@@ -105,6 +105,17 @@ describe('or()', () => {
 
 describe('Future#or()', () => {
 
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).or.call(null, of(1));
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('throws TypeError when not given a Future', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+    const fs = xs.map(x => () => of(1).or(x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
   testInstance((a, b) => a.or(b));
 
 });

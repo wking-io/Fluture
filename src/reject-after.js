@@ -11,9 +11,9 @@ export function RejectAfter(time, value){
 
 RejectAfter.prototype = Object.create(Core.prototype);
 
-RejectAfter.prototype.race = After.prototype.race;
+RejectAfter.prototype._race = After.prototype._race;
 
-RejectAfter.prototype.swap = function RejectAfter$swap(){
+RejectAfter.prototype._swap = function RejectAfter$swap(){
   return new After(this._time, this._value);
 };
 

@@ -12,7 +12,7 @@ export function After(time, value){
 
 After.prototype = Object.create(Core.prototype);
 
-After.prototype.race = function After$race(other){
+After.prototype._race = function After$race(other){
   return other.isSettled()
        ? other
        : isNever(other)
@@ -22,7 +22,7 @@ After.prototype.race = function After$race(other){
        : new Race([this, other]);
 };
 
-After.prototype.swap = function After$swap(){
+After.prototype._swap = function After$swap(){
   return new RejectAfter(this._time, this._value);
 };
 

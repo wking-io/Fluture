@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {Future, mapRej} from '../index.es.js';
+import {Future, mapRej, of} from '../index.es.js';
 import * as U from './util';
 import * as F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -59,6 +59,17 @@ describe('mapRej()', () => {
 });
 
 describe('Future#mapRej()', () => {
+
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).mapRej.call(null, U.noop);
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('throws TypeError when not given a function', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+    const fs = xs.map(x => () => of(1).mapRej(x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
 
   testInstance((m, f) => m.mapRej(f));
 

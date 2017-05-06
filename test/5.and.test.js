@@ -108,6 +108,17 @@ describe('and()', () => {
 
 describe('Future#and()', () => {
 
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).and.call(null, of(1));
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('throw TypeError when not given a Future', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+    const fs = xs.map(x => () => of(1).and(x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
   testInstance((a, b) => a.and(b));
 
 });
