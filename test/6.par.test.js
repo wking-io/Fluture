@@ -42,6 +42,11 @@ describe('Par()', () => {
 
     const mf = of(U.bang);
 
+    it('throws TypeError when the Future does not resolve to a Function', () => {
+      const f = () => seq(ap(Par(of(1)), Par(F.resolved))).fork(U.noop, U.noop);
+      expect(f).to.throw(TypeError, /Future#ap/);
+    });
+
     it('calls the function contained in the given Future to its contained value', () => {
       const actual = ap(Par(mf), Par(F.resolved));
       return U.assertResolved(seq(actual), 'resolved!');
