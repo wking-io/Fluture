@@ -125,12 +125,14 @@ Future.prototype.lastly = function Future$lastly(other){
 };
 
 Future.prototype.fork = function Future$fork(rej, res){
+  if(!isFuture(this)) invalidContext('Future#fork', this);
   if(!isFunction(rej)) invalidArgument('Future#fork', 0, 'to be a Function', rej);
   if(!isFunction(res)) invalidArgument('Future#fork', 0, 'to be a Function', res);
   return this._fork(rej, res);
 };
 
 Future.prototype.value = function Future$value(res){
+  if(!isFuture(this)) invalidContext('Future#value', this);
   if(!isFunction(res)) invalidArgument('Future#value', 0, 'to be a Function', res);
   return this._fork(throwRejection, res);
 };
