@@ -408,7 +408,6 @@ export class Action{
   resolved(x){ return new Resolved(x) }
   run(){ return this }
   cancel(){}
-  toString(){ return '' }
 }
 const check$ap = f => isFunction(f) ? f : typeError(
   'Future#ap expects its first argument to be a Future of a Function'
