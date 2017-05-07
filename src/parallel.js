@@ -14,7 +14,7 @@ export function Parallel(max, futures){
   this._max = Math.min(this._length, max);
 }
 
-Parallel.prototype = Object.create(Core.prototype);
+Parallel.prototype = Object.create(Core);
 
 Parallel.prototype._fork = function Parallel$_fork(rej, res){
 
@@ -49,21 +49,12 @@ Parallel.prototype.toString = function Parallel$toString(){
   return `Future.parallel(${this._max}, ${show(this._futures)})`;
 };
 
-const arrof = x => [x];
 const emptyArray = new Resolved([]);
-
-function isRejected(m){
-  return m.isRejected();
-}
 
 function parallel$max(max, xs){
   if(!isArray(xs)) invalidArgument('Future.parallel', 1, 'be an array', xs);
   const futures = mapArray(xs, check$parallel);
-  return futures.length === 0
-  ? emptyArray
-  : futures.length === 1
-  ? futures[0].map(arrof)
-  : futures.find(isRejected) || new Parallel(max, futures);
+  return futures.length === 0 ? emptyArray : new Parallel(max, futures);
 }
 
 export function parallel(max, xs){

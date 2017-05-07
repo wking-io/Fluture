@@ -7,7 +7,7 @@ export function Node(computation){
   this._computation = computation;
 }
 
-Node.prototype = Object.create(Core.prototype);
+Node.prototype = Object.create(Core);
 
 Node.prototype._fork = function Node$_fork(rej, res){
   let open = true;

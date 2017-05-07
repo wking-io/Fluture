@@ -1,4 +1,4 @@
-import {Core, never} from './core';
+import {Core, isNever, never} from './core';
 import {After} from './after';
 import {show, partial1} from './internal/fn';
 import {isUnsigned} from './internal/is';
@@ -9,9 +9,17 @@ export function RejectAfter(time, value){
   this._value = value;
 }
 
-RejectAfter.prototype = Object.create(Core.prototype);
+RejectAfter.prototype = Object.create(Core);
 
-RejectAfter.prototype._race = After.prototype._race;
+RejectAfter.prototype._race = function RejectAfter$race(other){
+  return other.isSettled()
+       ? other
+       : isNever(other)
+       ? this
+       : (other instanceof After || other instanceof RejectAfter)
+       ? other._time < this._time ? other : this
+       : Core._race.call(this, other);
+};
 
 RejectAfter.prototype._swap = function RejectAfter$swap(){
   return new After(this._time, this._value);
@@ -22,7 +30,7 @@ RejectAfter.prototype._fork = function RejectAfter$_fork(rej){
   return () => { clearTimeout(id) };
 };
 
-RejectAfter.prototype.extractLeft = function After$extractLeft(){
+RejectAfter.prototype.extractLeft = function RejectAfter$extractLeft(){
   return [this._value];
 };
 

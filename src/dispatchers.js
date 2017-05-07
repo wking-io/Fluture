@@ -8,6 +8,7 @@ export {chainRej} from './dispatchers/chain-rej';
 export {lastly, lastly as finally} from './dispatchers/lastly';
 
 export {and} from './dispatchers/and';
+export {both} from './dispatchers/both';
 export {or} from './dispatchers/or';
 export {race} from './dispatchers/race';
 

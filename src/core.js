@@ -125,12 +125,14 @@ Future.prototype.lastly = function Future$lastly(other){
 };
 
 Future.prototype.fork = function Future$fork(rej, res){
+  if(!isFuture(this)) invalidContext('Future#fork', this);
   if(!isFunction(rej)) invalidArgument('Future#fork', 0, 'to be a Function', rej);
   if(!isFunction(res)) invalidArgument('Future#fork', 0, 'to be a Function', res);
   return this._fork(rej, res);
 };
 
 Future.prototype.value = function Future$value(res){
+  if(!isFuture(this)) invalidContext('Future#value', this);
   if(!isFunction(res)) invalidArgument('Future#value', 0, 'to be a Function', res);
   return this._fork(throwRejection, res);
 };
@@ -159,59 +161,57 @@ Future.prototype.extractRight = function Future$extractRight(){
   return [];
 };
 
-export function Core(){}
+export const Core = Object.create(Future.prototype);
 
-Core.prototype = Object.create(Future.prototype);
-
-Core.prototype._ap = function Core$ap(other){
+Core._ap = function Core$ap(other){
   return new Sequence(this, [new ApAction(other)]);
 };
 
-Core.prototype._map = function Core$map(mapper){
+Core._map = function Core$map(mapper){
   return new Sequence(this, [new MapAction(mapper)]);
 };
 
-Core.prototype._bimap = function Core$bimap(lmapper, rmapper){
+Core._bimap = function Core$bimap(lmapper, rmapper){
   return new Sequence(this, [new BimapAction(lmapper, rmapper)]);
 };
 
-Core.prototype._chain = function Core$chain(mapper){
+Core._chain = function Core$chain(mapper){
   return new Sequence(this, [new ChainAction(mapper)]);
 };
 
-Core.prototype._mapRej = function Core$mapRej(mapper){
+Core._mapRej = function Core$mapRej(mapper){
   return new Sequence(this, [new MapRejAction(mapper)]);
 };
 
-Core.prototype._chainRej = function Core$chainRej(mapper){
+Core._chainRej = function Core$chainRej(mapper){
   return new Sequence(this, [new ChainRejAction(mapper)]);
 };
 
-Core.prototype._race = function Core$race(other){
+Core._race = function Core$race(other){
   return new Sequence(this, [new RaceAction(other)]);
 };
 
-Core.prototype._both = function Core$both(other){
+Core._both = function Core$both(other){
   return new Sequence(this, [new BothAction(other)]);
 };
 
-Core.prototype._and = function Core$and(other){
+Core._and = function Core$and(other){
   return new Sequence(this, [new AndAction(other)]);
 };
 
-Core.prototype._or = function Core$or(other){
+Core._or = function Core$or(other){
   return new Sequence(this, [new OrAction(other)]);
 };
 
-Core.prototype._swap = function Core$swap(){
+Core._swap = function Core$swap(){
   return new Sequence(this, [new SwapAction]);
 };
 
-Core.prototype._fold = function Core$fold(lmapper, rmapper){
+Core._fold = function Core$fold(lmapper, rmapper){
   return new Sequence(this, [new FoldAction(lmapper, rmapper)]);
 };
 
-Core.prototype._finally = function Core$finally(other){
+Core._finally = function Core$finally(other){
   return new Sequence(this, [new FinallyAction(other)]);
 };
 
@@ -226,7 +226,7 @@ export function Computation(computation){
   this._computation = computation;
 }
 
-Computation.prototype = Object.create(Core.prototype);
+Computation.prototype = Object.create(Core);
 
 Computation.prototype._fork = function Computation$_fork(rej, res){
   let open = true;
@@ -256,7 +256,7 @@ export function Rejected(value){
   this._value = value;
 }
 
-Rejected.prototype = Object.create(Core.prototype);
+Rejected.prototype = Object.create(Core);
 
 Rejected.prototype._ap = moop;
 Rejected.prototype._map = moop;
@@ -300,7 +300,7 @@ export function Resolved(value){
   this._value = value;
 }
 
-Resolved.prototype = Object.create(Core.prototype);
+Resolved.prototype = Object.create(Core);
 
 Resolved.prototype._race = moop;
 Resolved.prototype._mapRej = moop;
@@ -391,23 +391,7 @@ function Eager(future){
   });
 }
 
-Eager.prototype = Object.create(Core.prototype);
-
-Eager.prototype.isRejected = function Eager$isRejected(){
-  return this.rejected;
-};
-
-Eager.prototype.isResolved = function Eager$isResolved(){
-  return this.resolved;
-};
-
-Eager.prototype.extractLeft = function Eager$extractLeft(){
-  return this.rejected ? [this.value] : [];
-};
-
-Eager.prototype.extractRight = function Eager$extractRight(){
-  return this.resolved ? [this.value] : [];
-};
+Eager.prototype = Object.create(Core);
 
 Eager.prototype._fork = function Eager$_fork(rej, res){
   if(this.rejected) rej(this.value);
@@ -424,7 +408,6 @@ export class Action{
   resolved(x){ return new Resolved(x) }
   run(){ return this }
   cancel(){}
-  toString(){ return '' }
 }
 const check$ap = f => isFunction(f) ? f : typeError(
   'Future#ap expects its first argument to be a Future of a Function'
@@ -607,8 +590,7 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
   function cancelAll(){
     cancel();
     action && action.cancel();
-    while(running = queue.shift()) running.cancel();
-    queue.clear();
+    while(running = queue.shift() || runners.shift()) running.cancel();
     actions.clear();
     cancel = noop;
   }
@@ -667,4 +649,3 @@ Sequence.prototype.toString = function Sequence$toString(){
 
 Future['@@type'] = TYPEOF_FUTURE;
 Future[FL.of] = of;
-Future[FL.zero] = () => never;

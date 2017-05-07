@@ -34,7 +34,7 @@ export function ChainRec(step, init){
   this._init = init;
 }
 
-ChainRec.prototype = Object.create(Core.prototype);
+ChainRec.prototype = Object.create(Core);
 
 ChainRec.prototype._fork = function ChainRec$_fork(rej, res){
 

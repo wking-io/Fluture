@@ -165,6 +165,23 @@ describe('Future', () => {
 
   describe('#fork()', () => {
 
+    it('throws when invoked out of context', () => {
+      const f = () => Future.prototype.fork.call(null, U.noop, U.noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws TypeError when first argument is not a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => F.mock.fork(x, U.noop));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('throws TypeError when second argument is not a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => F.mock.fork(U.noop, x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
     it('does not throw when both arguments are functions', () => {
       const f = () => F.mock.fork(U.noop, U.noop);
       expect(f).to.not.throw(TypeError);
@@ -185,6 +202,17 @@ describe('Future', () => {
   });
 
   describe('#value()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => F.mock.value.call(null, U.noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => F.mock.value(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
 
     it('dispatches to #_fork(), using the input as resolution callback', done => {
       const mock = Object.create(Future.prototype);

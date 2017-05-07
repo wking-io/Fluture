@@ -43,6 +43,11 @@ describe('Future#swap()', () => {
     expect(f).to.throw(TypeError, /Future/);
   });
 
+  it('swaps Computation', () => {
+    const m = Future(rej => rej(1));
+    return U.assertResolved(m.swap(), 1);
+  });
+
   testInstance(m => m.swap());
 
 });

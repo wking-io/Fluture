@@ -17,7 +17,7 @@ export function Cached(pure){
   this.reset();
 }
 
-Cached.prototype = Object.create(Core.prototype);
+Cached.prototype = Object.create(Core);
 
 Cached.prototype.isRejected = function Cached$isRejected(){
   return this._state === Rejected;

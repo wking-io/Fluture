@@ -10,11 +10,9 @@ import {
 import * as dispatchers from './dispatchers';
 
 import {after} from './after';
-import {both} from './both';
 import {cache} from './cache';
 import {chainRec} from './chain-rec';
 import {encase, encase2, encase3, attempt} from './encase';
-import {first} from './race';
 import {fromPromise, fromPromise2, fromPromise3} from './from-promise';
 import {go} from './go';
 import {hook} from './hook';
@@ -37,9 +35,7 @@ export default Object.assign(Future, dispatchers, {
   never,
   isNever,
   after,
-  both,
   cache,
-  first,
   fromPromise,
   fromPromise2,
   fromPromise3,

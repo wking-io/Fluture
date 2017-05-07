@@ -1,6 +1,5 @@
 import {Core, isNever, never} from './core';
 import {RejectAfter} from './reject-after';
-import {Race} from './race';
 import {show, partial1} from './internal/fn';
 import {isUnsigned} from './internal/is';
 import {invalidArgument} from './internal/throw';
@@ -10,7 +9,7 @@ export function After(time, value){
   this._value = value;
 }
 
-After.prototype = Object.create(Core.prototype);
+After.prototype = Object.create(Core);
 
 After.prototype._race = function After$race(other){
   return other.isSettled()
@@ -19,7 +18,7 @@ After.prototype._race = function After$race(other){
        ? this
        : (other instanceof After || other instanceof RejectAfter)
        ? other._time < this._time ? other : this
-       : new Race([this, other]);
+       : Core._race.call(this, other);
 };
 
 After.prototype._swap = function After$swap(){

@@ -18,7 +18,7 @@ export function ParallelAp(mval, mfunc){
   this._mfunc = mfunc;
 }
 
-ParallelAp.prototype = Object.create(Core.prototype);
+ParallelAp.prototype = Object.create(Core);
 
 ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
   let func, val, okval = false, okfunc = false, rejected = false, c1, c2;

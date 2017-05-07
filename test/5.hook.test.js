@@ -147,4 +147,17 @@ describe('hook()', () => {
 
   });
 
+  describe('#toString()', () => {
+
+    it('returns the code which creates the same data-structure', () => {
+      const a = of(1);
+      const d = () => of(2);
+      const c = () => of(3);
+      const m = hook(a, d, c);
+      const expected = `Future.hook(${a.toString()}, ${d.toString()}, ${c.toString()})`;
+      expect(m.toString()).to.equal(expected);
+    });
+
+  });
+
 });

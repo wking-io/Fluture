@@ -23,7 +23,7 @@ export function Hook(acquire, dispose, consume){
   this._consume = consume;
 }
 
-Hook.prototype = Object.create(Core.prototype);
+Hook.prototype = Object.create(Core);
 
 Hook.prototype._fork = function Hook$fork(rej, res){
 

@@ -42,7 +42,7 @@ function FromPromise(fn, a, b, c){
   this._fork = forks[this._length];
 }
 
-FromPromise.prototype = Object.create(Core.prototype);
+FromPromise.prototype = Object.create(Core);
 
 FromPromise.prototype.toString = function FromPromise$toString(){
   const args = [this._a, this._b, this._c].slice(0, this._length).map(show).join(', ');

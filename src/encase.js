@@ -42,7 +42,7 @@ function Encase(fn, a, b, c){
   this._fork = forks[this._length];
 }
 
-Encase.prototype = Object.create(Core.prototype);
+Encase.prototype = Object.create(Core);
 
 Encase.prototype.toString = function Encase$toString(){
   const args = [this._a, this._b, this._c].slice(0, this._length).map(show).map(x => `, ${x}`);
