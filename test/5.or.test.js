@@ -60,11 +60,20 @@ const testInstance = or => {
 
     });
 
-    it('creates a cancel function which cancels both Futures', done => {
-      let cancelled = false;
-      const m = Future(() => () => (cancelled ? done() : (cancelled = true)));
+    it('cancels the running Future', done => {
+      const m = Future(() => () => done());
       const cancel = or(m, m).fork(U.noop, U.noop);
       cancel();
+    });
+
+  });
+
+  describe('#toString()', () => {
+
+    it('returns the code to create the data-structure', () => {
+      const m = Future(() => () => {});
+      const actual = or(m, m).toString();
+      expect(actual).to.equal(`${m.toString()}.or(${m.toString()})`);
     });
 
   });

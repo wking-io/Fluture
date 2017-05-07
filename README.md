@@ -70,6 +70,9 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
         * [chain](#chain)
         * [ap](#ap)
         * [swap](#swap)
+    1. [Combining Futures](#combining-futures)
+        * [and](#and)
+        * [or](#or)
     1. [Error handling](#error-handling)
         * [mapRej](#maprej)
         * [chainRej](#chainrej)
@@ -83,8 +86,6 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
         * [promise](#promise)
     1. [Parallelism](#parallelism)
         * [race](#race)
-        * [and](#and)
-        * [or](#or)
         * [both](#both)
         * [parallel](#parallel)
         * [ConcurrentFuture](#concurrentfuture)
@@ -406,6 +407,50 @@ Future.reject('Nothing broke').swap().fork(console.error, console.log);
 //> "Nothing broke"
 ```
 
+### Combining Futures
+
+#### and
+##### `#and :: Future a b ~> Future a b -> Future a b`
+##### `.and :: Future a b -> Future a b -> Future a b`
+
+Logical and for Futures.
+
+Returns a new Future which either rejects with the first rejection reason, or
+resolves with the last resolution value once and if both Futures resolve. This
+behaves analogues to how JavaScript's and operator does.
+
+```js
+//An asynchronous version of:
+//const result = isResolved() && getValue();
+const result = isResolved().and(getValue());
+
+//Asynchronous "all", where the resulting Future will be the leftmost to reject:
+const all = ms => ms.reduce(Future.and, Future.of(true));
+all([Future.after(20, 1), Future.of(2)]).value(console.log);
+//> 2
+```
+
+#### or
+##### `#or :: Future a b ~> Future a b -> Future a b`
+##### `.or :: Future a b -> Future a b -> Future a b`
+
+Logical or for Futures.
+
+Returns a new Future which either resolves with the first resolution value, or
+rejects with the last rejection value once and if both Futures reject. This
+behaves analogues to how JavaScript's or operator does.
+
+```js
+//An asynchronous version of:
+//const result = planA() || planB();
+const result = planA().or(planB());
+
+//Asynchronous "any", where the resulting Future will be the leftmost to resolve:
+const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
+any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
+//> 2
+```
+
 ### Error handling
 
 Functions listed under this category allow you to get at or transform the
@@ -653,60 +698,6 @@ first([
 .fork(console.error, console.log)
 //! "nope"
 ```
-
-#### and
-##### `#and :: Future a b ~> Future a b -> Future a b`
-##### `.and :: Future a b -> Future a b -> Future a b`
-
-Logical and for Futures.
-
-Returns a new Future which either rejects with the first rejection reason, or
-resolves with the last resolution value once and if both Futures resolve.
-
-This behaves analogues to how JavaScript's and operator does, except both
-Futures run simultaneously, so it is *not* short-circuited. That means that
-if the second has side-effects, they will run (and possibly be cancelled) even
-if the first rejects.
-
-```js
-//An asynchronous version of:
-//const result = isResolved() && getValue();
-const result = isResolved().and(getValue());
-
-//Asynchronous "all", where the resulting Future will be the leftmost to reject:
-const all = ms => ms.reduce(Future.and, Future.of(true));
-all([Future.after(20, 1), Future.of(2)]).value(console.log);
-//> 2
-```
-
-#### or
-##### `#or :: Future a b ~> Future a b -> Future a b`
-##### `.or :: Future a b -> Future a b -> Future a b`
-
-Logical or for Futures.
-
-Returns a new Future which either resolves with the first resolution value, or
-rejects with the last rejection value once and if both Futures reject.
-
-This behaves analogues to how JavaScript's or operator does, except both
-Futures run simultaneously, so it is *not* short-circuited. That means that
-if the second has side-effects, they will run even if the first resolves.
-
-```js
-//An asynchronous version of:
-//const result = planA() || planB();
-const result = planA().or(planB());
-
-//Asynchronous "any", where the resulting Future will be the leftmost to resolve:
-const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
-any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
-//> 2
-```
-
-In the example, assume both plans return Futures. Both plans are executed in
-parallel. If `planA` resolves, the returned Future will resolve with its value.
-If `planA` fails there is always `planB`. If both plans fail then the returned
-Future will also reject using the rejection reason of `planB`.
 
 #### both
 ##### `#both :: Future a b ~> Future a b -> Future a b`
