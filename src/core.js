@@ -393,22 +393,6 @@ function Eager(future){
 
 Eager.prototype = Object.create(Core);
 
-Eager.prototype.isRejected = function Eager$isRejected(){
-  return this.rejected;
-};
-
-Eager.prototype.isResolved = function Eager$isResolved(){
-  return this.resolved;
-};
-
-Eager.prototype.extractLeft = function Eager$extractLeft(){
-  return this.rejected ? [this.value] : [];
-};
-
-Eager.prototype.extractRight = function Eager$extractRight(){
-  return this.resolved ? [this.value] : [];
-};
-
 Eager.prototype._fork = function Eager$_fork(rej, res){
   if(this.rejected) rej(this.value);
   else if(this.resolved) res(this.value);
