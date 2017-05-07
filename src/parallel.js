@@ -14,7 +14,7 @@ export function Parallel(max, futures){
   this._max = Math.min(this._length, max);
 }
 
-Parallel.prototype = Object.create(Core.prototype);
+Parallel.prototype = Object.create(Core);
 
 Parallel.prototype._fork = function Parallel$_fork(rej, res){
 

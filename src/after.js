@@ -9,7 +9,7 @@ export function After(time, value){
   this._value = value;
 }
 
-After.prototype = Object.create(Core.prototype);
+After.prototype = Object.create(Core);
 
 After.prototype._race = function After$race(other){
   return other.isSettled()
@@ -18,7 +18,7 @@ After.prototype._race = function After$race(other){
        ? this
        : (other instanceof After || other instanceof RejectAfter)
        ? other._time < this._time ? other : this
-       : Core.prototype._race.call(this, other);
+       : Core._race.call(this, other);
 };
 
 After.prototype._swap = function After$swap(){

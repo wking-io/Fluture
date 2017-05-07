@@ -29,7 +29,7 @@ export function Go(generator){
   this._generator = generator;
 }
 
-Go.prototype = Object.create(Core.prototype);
+Go.prototype = Object.create(Core);
 
 Go.prototype._fork = function Go$_fork(rej, res){
 
