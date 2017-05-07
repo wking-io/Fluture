@@ -590,8 +590,7 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
   function cancelAll(){
     cancel();
     action && action.cancel();
-    while(running = queue.shift()) running.cancel();
-    queue.clear();
+    while(running = queue.shift() || runners.shift()) running.cancel();
     actions.clear();
     cancel = noop;
   }
