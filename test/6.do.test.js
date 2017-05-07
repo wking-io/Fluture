@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {go, of} from '../index.es.js';
+import {Future, go, of, after} from '../index.es.js';
 import * as U from './util';
 
 describe('go()', () => {
@@ -36,15 +36,31 @@ describe('Go', () => {
       fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
     });
 
-    it('can be used to chain Futures in do-notation', () => {
-      const actual = go(function*(){
+    it('handles synchronous Futures', () => {
+      return U.assertResolved(go(function*(){
         const a = yield of(1);
         const b = yield of(2);
         return a + b;
+      }), 3);
+    });
+
+    it('handles asynchronous Futures', () => {
+      return U.assertResolved(go(function*(){
+        const a = yield after(10, 1);
+        const b = yield after(10, 2);
+        return a + b;
+      }), 3);
+    });
+
+    it('does not mix state over multiple forks', () => {
+      const m = go(function*(){
+        const a = yield of(1);
+        const b = yield after(10, 2);
+        return a + b;
       });
       return Promise.all([
-        U.assertResolved(actual, 3),
-        U.assertResolved(actual, 3)
+        U.assertResolved(m, 3),
+        U.assertResolved(m, 3)
       ]);
     });
 
@@ -56,6 +72,14 @@ describe('Go', () => {
       };
       const m = go(gen);
       return U.assertResolved(m, U.STACKSIZE + 1);
+    });
+
+    it('cancels the running operation when cancelled', done => {
+      const cancel = go(function*(){
+        yield of(1);
+        yield Future(() => () => done());
+      }).fork(U.noop, U.noop);
+      cancel();
     });
 
   });
