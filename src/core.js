@@ -651,4 +651,3 @@ Sequence.prototype.toString = function Sequence$toString(){
 
 Future['@@type'] = TYPEOF_FUTURE;
 Future[FL.of] = of;
-Future[FL.zero] = () => never;
