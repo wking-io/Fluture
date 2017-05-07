@@ -80,6 +80,34 @@ describe('finally()', () => {
 
 describe('Future#finally()', () => {
 
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).finally.call(null, of(1));
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('throws TypeError when not given a Future', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+    const fs = xs.map(x => () => of(1).finally(x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
   testInstance((a, b) => a.finally(b));
+
+});
+
+describe('Future#lastly()', () => {
+
+  it('throws when invoked out of context', () => {
+    const f = () => of(1).lastly.call(null, of(1));
+    expect(f).to.throw(TypeError, /Future/);
+  });
+
+  it('throws TypeError when not given a Future', () => {
+    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null, x => x];
+    const fs = xs.map(x => () => of(1).lastly(x));
+    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+  });
+
+  testInstance((a, b) => a.lastly(b));
 
 });
