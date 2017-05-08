@@ -519,17 +519,15 @@ Functions listed under this category allow for more fine-grained control over
 the flow of acquired values.
 
 #### hook
-##### `#hook :: Future a b ~> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 ##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 
-Much like [`chain`](#chain), but takes a "dispose" operation first, which runs
-*after* the second settles (successfully or unsuccessfully). So the signature is
-like `hook(acquire, dispose, consume)`, where `acquire` is a Future which might
-create connections, open file handlers, etc. `dispose` is a function that takes
-the result from `acquire` and should be used to clean up (close connections etc)
-and `consume` also takes the result from `acquire`, and may be used to perform
-any arbitrary computations using the resource. The resolution value of `dispose`
-is ignored.
+Allows a Future-returning function to be decorated with resource acquistion
+and disposal. The signature is like `hook(acquire, dispose, consume)`, where
+`acquire` is a Future which might create connections, open file handlers, etc.
+`dispose` is a function that takes the result from `acquire` and should be used
+to clean up (close connections etc) and `consume` also takes the result from
+`acquire`, and may be used to perform any arbitrary computations using the
+resource. The resolution value of `dispose` is ignored.
 
 ```js
 const withConnection = Future.hook(
