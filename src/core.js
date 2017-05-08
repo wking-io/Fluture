@@ -489,7 +489,7 @@ export class RaceAction extends Action{
 export class RaceActionState extends RaceAction{
   constructor(early, other){
     super(other);
-    this.cancel = other._fork(x => early(new Rejected(x)), x => early(new Resolved(x)));
+    this.cancel = other._fork(x => early(new Rejected(x), this), x => early(new Resolved(x), this));
   }
   rejected(x){ this.cancel(); return new Rejected(x) }
   resolved(x){ this.cancel(); return new Resolved(x) }
@@ -503,7 +503,7 @@ export class BothAction extends Action{
 export class BothActionState extends BothAction{
   constructor(early, other){
     super(new Eager(other));
-    this.cancel = this.other.fork(x => early(new Rejected(x)), noop);
+    this.cancel = this.other.fork(x => early(new Rejected(x), this), noop);
   }
 }
 
@@ -574,13 +574,12 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
 
   const actions = new Denque(this._actions);
   const runners = new Denque(this._actions.length);
-  const queue = new Denque(this._actions.length);
   let action, cancel = noop, future = this._spawn, running, settled, async;
 
   function cancelAll(){
     cancel();
     action && action.cancel();
-    while(running = queue.shift() || runners.shift()) running.cancel();
+    while(running = runners.shift()) running.cancel();
     actions.clear();
     cancel = noop;
   }
@@ -593,8 +592,12 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
     future = future._spawn;
   }
 
-  function early(m){
-    cancelAll();
+  function early(m, terminator){
+    cancel();
+    if(action !== terminator){
+      action.cancel();
+      while((running = runners.shift()) && running !== terminator) running.cancel();
+    }
     absorb(m);
     if(async) drain();
   }
@@ -610,17 +613,15 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
   }
 
   function drain(){
-    while(action = actions.shift() || queue.shift()){
+    while(action = actions.shift() || runners.shift()){
       settled = false;
       async = false;
       cancel = future._fork(rejected, resolved);
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
-      runners.clear();
       while(!settled && (running = actions.shift())) runners.push(running.run(early));
       if(settled) continue;
-      while(running = runners.pop()) queue.unshift(running);
       async = true;
       return;
     }
