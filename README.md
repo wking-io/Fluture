@@ -92,6 +92,7 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
     1. [Utility functions](#utility-functions)
         * [isFuture](#isfuture)
         * [never](#never)
+        * [isNever](#isnever)
     1. [Sanctuary](#sanctuary)
     1. [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
@@ -872,6 +873,11 @@ Future1.isFuture(m2) !== (m2 instanceof Future1);
 
 A Future that never settles. Can be useful as an initial value when reducing
 with [`race`](#race), for example.
+
+#### isNever
+##### `.isNever :: a -> Boolean`
+
+Returns `true` if the given input is a `never`.
 
 ### Sanctuary
 
