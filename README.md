@@ -30,21 +30,43 @@ For more information:
 
 > `npm install --save fluture`
 
-```js
-const fs = require('fs');
-const Future = require('fluture');
+### In ES5 or older environments
 
-const getPackageName = file =>
-  Future.node(done => fs.readFile(file, 'utf8', done))
+Fluture depends on these functions being present: `Object.create`,
+`Object.assign` and `Array.isArray`. You may need to polyfill one or more.
+
+```js
+var fs = require('fs');
+var Future = require('fluture');
+
+var getPackageName = function(file){
+  return Future.node(function(done){ fs.readFile(file, 'utf8', done) })
   .chain(Future.encase(JSON.parse))
-  .map(x => x.name);
+  .map(function(x){ return x.name });
+};
 
 getPackageName('package.json')
 .fork(console.error, console.log);
 //> "fluture"
 ```
 
-For front-end applications and node <v4, please use `require('fluture/es5')`.
+### In ES6 or newer environments
+
+The `package.json` sets a `module`-field for build-tools like [Rollup][].
+
+```js
+import {readFile} from 'fs';
+import {node, encase} from 'fluture';
+
+const getPackageName = file =>
+  node(done => fs.readFile(file, 'utf8', done))
+  .chain(encase(JSON.parse))
+  .map(x => x.name);
+
+getPackageName('package.json')
+.fork(console.error, console.log);
+//> "fluture"
+```
 
 ## Table of contents
 
@@ -991,6 +1013,8 @@ Credits for the logo go to [Erik Fuente][8].
 [$:BinaryType]:         https://github.com/sanctuary-js/sanctuary-def#BinaryType
 
 [concurrify]:           https://github.com/fluture-js/concurrify
+
+[Rollup]:               https://rollupjs.org/
 
 [1]:                    https://github.com/futurize/futurize
 [2]:                    https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
