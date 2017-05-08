@@ -17,6 +17,7 @@ Some of the features provided by Fluture include:
 
 * [Cancellation](#future).
 * [Resource management utilities](#resource-management).
+* [Stack safe composition and recursion](#stack-safety).
 * Great integration with functional libraries such as [Sanctuary][S].
 * A pleasant debugging experience through informative error messages.
 
@@ -74,6 +75,7 @@ getPackageName('package.json')
 - [Interoperability](#interoperability)
 - [Documentation](#documentation)
     1. [Type signatures](#type-signatures)
+    1. [Stack safety](#stack-safety)
     1. [Creating Futures](#creating-futures)
         * [Future](#future)
         * [of](#of)
@@ -156,6 +158,32 @@ A list of all types used within the signatures follows:
 - **Next** - An incomplete (`{done: false}`) Iteration.
 - **Done** - A complete (`{done: true}`) Iteration.
 - **Cancel** - The nullary cancellation functions returned from computations.
+
+### Stack safety
+
+Fluture interprets your transformations in a stack safe way. This means that
+none of the following operations raise `RangeError: Maximum call stack size exceeded`:
+
+```js
+const add1 = x => x + 1;
+let m = Future.of(1);
+for(let i = 0; i < 100000; i++){
+  m = m.map(add1);
+}
+
+m.fork(console.error, console.log);
+//> 100001
+```
+
+```js
+const m = (function recur(x){
+  const mx = Future.of(x + 1);
+  return x < 100000 ? mx.chain(recur) : mx;
+}(1));
+
+m.fork(console.error, console.log);
+//> 100001
+```
 
 ### Creating Futures
 
@@ -384,26 +412,6 @@ Future.node(done => fs.readFile('package.json', 'utf8', done))
 //> "{...}"
 ```
 
-#### chainRec
-##### `.chainRec :: ((b -> Next, c -> Done, b) -> Future a Iteration) -> b -> Future a c`
-
-Stack- and memory-safe asynchronous "recursion" based on [Fantasy Land ChainRec][FL:chainrec].
-
-Calls the given function with the initial value (as third argument), and expects
-a Future of an [Iteration](#type-signatures). If the Iteration is incomplete
-(`{done: false}`), then the function is called again with the Iteration value
-until it returns a Future of a complete (`{done: true}`) Iteration.
-
-For convenience and interoperability, the first two arguments passed to the
-function are functions for creating an incomplete Iteration, and for creating a
-complete Iteration, respectively.
-
-```js
-Future.chainRec((next, done, x) => Future.of(x < 1000000 ? next(x + 1) : done(x)), 0)
-.fork(console.error, console.log);
-//> 1000000
-```
-
 ### Transforming Futures
 
 #### map
@@ -459,11 +467,6 @@ Future.of(1)
 .fork(console.error, console.log);
 //> 2
 ```
-
-Note that, due to its lazy nature, the stack and/or heap will slowly fill up as
-you chain more over the same structure. It's therefore recommended that you use
-[`chainRec`](#chainrec) in cases where you wish to `chain` recursively or
-traverse a large list (10000+ items).
 
 #### swap
 ##### `#swap :: Future a b ~> Future b a`
