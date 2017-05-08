@@ -1,8 +1,8 @@
 import {Future, of, never, after} from '../index.es.js';
 import {expect} from 'chai';
-import {add, bang, noop, assertResolved, assertRejected} from './util';
+import {add, bang, noop, error, assertResolved, assertRejected} from './util';
 import {resolved, rejected} from './futures';
-import {Sequence} from '../src/core';
+import {Sequence, Core} from '../src/core';
 
 describe('Sequence', () => {
 
@@ -338,6 +338,13 @@ describe('Sequence', () => {
                   .race(new Sequence(after(20, 'b')))
                   .map(x => `${x}c`);
         return assertResolved(m, 'bc');
+      });
+
+      it('does not run early terminating actions twice', done => {
+        const mock = Object.create(Core);
+        mock._fork = (l, r) => r(done()) || (() => done(error));
+        const m = new Sequence(after(30, 'a')).map(x => `${x}b`).race(mock);
+        m.fork(noop, noop);
       });
 
       it('returns a cancel function which cancels all running actions', done => {

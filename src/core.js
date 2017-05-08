@@ -620,7 +620,11 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
-      while(!settled && (running = actions.shift())) runners.push(running.run(early));
+      while(running = actions.shift()){
+        const tmp = running.run(early);
+        if(settled) break;
+        runners.push(tmp);
+      }
       if(settled) continue;
       async = true;
       return;
