@@ -103,12 +103,10 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][FL]
 [<img src="https://raw.githubusercontent.com/rpominov/static-land/master/logo/logo.png" align="right" height="82" alt="Static Land" />][6]
 
-* `Future` implements [Fantasy Land 1][FL1], [Fantasy Land 2][FL2],
-  [Fantasy Land 3][FL3], and [Static Land][6] -compatible `Bifunctor`, `Monad`
-  and `ChainRec` (`of`, `ap`, `map`, `bimap`, `chain`, `chainRec`). Fantasy Land
-  0.x is *mostly* supported. Everything but `Apply` (`ap`) is, this means that
-  dispatchers to Fantasy Land 0.x `ap` (like the one in Ramda) will not work.
-* `Future.Par` implements [Fantasy Land 3][FL3] `Alternative` (`of`, `zero`, `map`, `ap`, `alt`).
+* `Future` implements [Fantasy Land][FL] and [Static Land][6] -compatible
+  `Bifunctor`, `Monad` and `ChainRec` (`of`, `ap`, `map`, `bimap`, `chain`, `chainRec`).
+  All versions of Fantasy Land are supported.
+* `Future.Par` implements [Fantasy Land 3][FL] `Alternative` (`of`, `zero`, `map`, `ap`, `alt`).
 * The Future representative contains a `@@type` property for [Sanctuary Type Identifiers][STI].
 
 ## Documentation
@@ -378,20 +376,24 @@ you chain more over the same structure. It's therefore recommended that you use
 traverse a large list (10000+ items).
 
 #### ap
-##### `#ap :: Future a b ~> Future a (b -> c) -> Future a c`
+##### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
 ##### `.ap :: Apply m => m (a -> b) -> m a -> m b`
 
-Applies the function contained in the right-hand Future or Apply to the value
-contained in the left-hand Future or Apply. If one of the Futures rejects the
-resulting Future will also be rejected. To learn more about the exact behaviour
-of `ap`, check out its [spec][FL:apply].
+Applies the function contained in the left-hand Future or Apply to the value
+contained in the right-hand Future or Apply. If one of the Futures rejects the
+resulting Future will also be rejected.
 
 ```js
-Future.of(1)
-.ap(Future.of(x => x + 1))
+Future.of(x => y => x + y)
+.ap(Future.of(1))
+.ap(Future.of(2))
 .fork(console.error, console.log);
-//> 2
+//> 3
 ```
+
+Note that even though `#ap` does *not* conform to the latest [spec][FL:apply],
+the hidden `fantasy-land/ap`-method *does*. Therefore Future remains fully
+compliant to Fantasy Land.
 
 #### swap
 ##### `#swap :: Future a b ~> Future b a`
@@ -958,9 +960,6 @@ Credits for the logo go to [Erik Fuente][8].
 [wiki:promises]:        https://github.com/fluture-js/Fluture/wiki/Comparison-to-Promises
 
 [FL]:                   https://github.com/fantasyland/fantasy-land
-[FL1]:                  https://github.com/fantasyland/fantasy-land/tree/v1.0.1
-[FL2]:                  https://github.com/fantasyland/fantasy-land/tree/v2.2.0
-[FL3]:                  https://github.com/fantasyland/fantasy-land
 [FL:alternative]:       https://github.com/fantasyland/fantasy-land#alternative
 [FL:functor]:           https://github.com/fantasyland/fantasy-land#functor
 [FL:chain]:             https://github.com/fantasyland/fantasy-land#chain
