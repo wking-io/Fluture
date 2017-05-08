@@ -851,8 +851,8 @@ seq(alt(zero(Par), parx)).value(console.log) //> 1
 ##### `.isFuture :: a -> Boolean`
 
 Returns true for [Futures](#type-signatures) and false for everything else. This
-function (and [`S.is`][S:is]) also return `true` for instances of Future that were
-created within other contexts. It is therefore recommended to use this over
+function (and [`S.is`][S:is]) also return `true` for instances of Future that
+were created within other contexts. It is therefore recommended to use this over
 `instanceof`, unless your intent is to explicitly check for Futures created
 using the exact `Future` constructor you're testing against.
 
