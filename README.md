@@ -417,7 +417,7 @@ Logical and for Futures.
 
 Returns a new Future which either rejects with the first rejection reason, or
 resolves with the last resolution value once and if both Futures resolve. This
-behaves analogues to how JavaScript's and operator does.
+behaves analogously to how JavaScript's *and*-operator does.
 
 ```js
 //An asynchronous version of:
@@ -438,7 +438,7 @@ Logical or for Futures.
 
 Returns a new Future which either resolves with the first resolution value, or
 rejects with the last rejection value once and if both Futures reject. This
-behaves analogues to how JavaScript's or operator does.
+behaves analogously to how JavaScript's *or*-operator does.
 
 ```js
 //An asynchronous version of:
