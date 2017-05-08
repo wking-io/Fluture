@@ -88,7 +88,6 @@ getPackageName('package.json')
         * [encase](#encase)
         * [encaseP](#encasep)
         * [node](#node)
-        * [chainRec](#chainrec)
     1. [Transforming Futures](#transforming-futures)
         * [map](#map)
         * [bimap](#bimap)
@@ -998,7 +997,6 @@ Credits for the logo go to [Erik Fuente][8].
 [FL:apply]:             https://github.com/fantasyland/fantasy-land#apply
 [FL:applicative]:       https://github.com/fantasyland/fantasy-land#applicative
 [FL:bifunctor]:         https://github.com/fantasyland/fantasy-land#bifunctor
-[FL:chainrec]:          https://github.com/fantasyland/fantasy-land#chainrec
 
 [S]:                    https://sanctuary.js.org/
 [S:Either]:             https://sanctuary.js.org/#either-type
