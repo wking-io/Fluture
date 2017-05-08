@@ -227,6 +227,7 @@ eventualPackage.fork(console.error, console.log);
 
 #### do
 ##### `.do :: (() -> Iterator) -> Future a b`
+##### `.go :: (() -> Iterator) -> Future a b`
 
 A specialized version of [fantasy-do][4] which works only for Futures, but has
 the advantage of type-checking and not having to pass `Future.of`. Another
@@ -270,8 +271,11 @@ Future.do(function*(){
 //> "Oh no! Failed to load /message"
 ```
 
+This function has an alias `go`, for environments in which `do` is a reserved word.
+
 #### try
 ##### `.try :: (() -> !a | b) -> Future a b`
+##### `.attempt :: (() -> !a | b) -> Future a b`
 
 Creates a Future which resolves with the result of calling the given function,
 or rejects with the error thrown by the given function.
@@ -284,6 +288,8 @@ Future.try(() => data.foo.bar.baz)
 .fork(console.error, console.log)
 //> [TypeError: Cannot read property 'baz' of undefined]
 ```
+
+This function has an alias `attempt`, for environments in which `try` is a reserved word.
 
 #### encase
 ##### `.encase :: (a -> !e | r) -> a -> Future e r`
@@ -624,7 +630,9 @@ const closeConnection = conn => Future((rej, res) => {
 
 #### finally
 ##### `#finally :: Future a b ~> Future a c -> Future a b`
+##### `#lastly :: Future a b ~> Future a c -> Future a b`
 ##### `.finally :: Future a c -> Future a b -> Future a b`
+##### `.lastly :: Future a c -> Future a b -> Future a b`
 
 Run a second Future after the first settles (successfully or unsuccessfully).
 Rejects with the rejection reason from the first or second Future, or resolves
@@ -655,6 +663,8 @@ program('Hello')
 As with [`hook`](#hook); when the Future is cancelled before the *finally
 computation* is running, the *finally computation* is executed and immediately
 cancelled.
+
+This function has an alias `lastly`, for environments in which `finally` is a reserved word.
 
 ### Consuming Futures
 
