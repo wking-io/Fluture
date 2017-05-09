@@ -41,7 +41,7 @@ var fs = require('fs');
 var Future = require('fluture');
 
 var getPackageName = function(file){
-  return Future.node(function(done){ fs.readFile(file, 'utf8', done) })
+  return Future.node(function(done){ fs.readFile(file, 'utf8', done); })
   .chain(Future.encase(JSON.parse))
   .map(function(x){ return x.name });
 };
