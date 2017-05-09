@@ -12,7 +12,7 @@
   "scripts": {
     "build": "rollup -c",
     "clean": "rimraf npm-debug.log coverage index.js index.test.js",
-    "lint": "eslint src test index.es.js",
+    "lint": "eslint src test index.es.js README.md",
     "lint:fix": "npm run lint -- --fix",
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "prepublish": "npm run build",
@@ -66,6 +66,7 @@
     "denque": "^1.1.1",
     "eslint": "^3.0.1",
     "eslint-config-warp": "^1.2.0",
+    "eslint-plugin-markdown": "^1.0.0-beta.6",
     "fantasy-land": "^3.0.0",
     "fun-task": "^1.5.1",
     "istanbul": "^0.4.5",

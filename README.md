@@ -38,12 +38,13 @@ Fluture depends on these functions being present:
 [`Object.assign`][JS:Object.assign] and [`Array.isArray`][JS:Array.isArray].
 You may need to polyfill one or more.
 
+<!-- eslint-disable no-var -->
 ```js
 var fs = require('fs');
 var Future = require('fluture');
 
 var getPackageName = function(file){
-  return Future.node(function(done){ fs.readFile(file, 'utf8', done); })
+  return Future.node(function(done){ fs.readFile(file, 'utf8', done) })
   .chain(Future.encase(JSON.parse))
   .map(function(x){ return x.name });
 };
@@ -62,7 +63,7 @@ import {readFile} from 'fs';
 import {node, encase} from 'fluture';
 
 const getPackageName = file =>
-  node(done => fs.readFile(file, 'utf8', done))
+  node(done => { readFile(file, 'utf8', done) })
   .chain(encase(JSON.parse))
   .map(x => x.name);
 
@@ -261,10 +262,11 @@ whenever it's forked, it can load the value from cache rather than reexecuting
 the chain.
 
 ```js
+const {readFile} = require('fs');
 const eventualPackage = Future.cache(
   Future.node(done => {
     console.log('Reading some big data');
-    fs.readFile('package.json', 'utf8', done)
+    readFile('package.json', 'utf8', done);
   })
 );
 
@@ -299,7 +301,7 @@ Future.do(function*(){
   const message = yield Future.after(300, 'Hello ' + thing);
   return message + '!';
 })
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //After 600ms:
 //> "Hello world!"
 ```
@@ -334,9 +336,9 @@ or rejects with the error thrown by the given function.
 Sugar for `Future.encase(f, undefined)`.
 
 ```js
-const data = {foo: 'bar'}
+const data = {foo: 'bar'};
 Future.try(() => data.foo.bar.baz)
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> [TypeError: Cannot read property 'baz' of undefined]
 ```
 
@@ -352,9 +354,9 @@ function with the value and resolves with the result. If the function throws
 an exception, it is caught and the Future will reject with the exception:
 
 ```js
-const data = '{"foo" = "bar"}'
+const data = '{"foo" = "bar"}';
 Future.encase(JSON.parse, data)
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //! [SyntaxError: Unexpected token =]
 ```
 
@@ -363,9 +365,9 @@ version of `f`. Instead of throwing exceptions, the encased version always
 returns a Future when given the remaining argument(s):
 
 ```js
-const data = '{"foo" = "bar"}'
-const safeJsonParse = Future.encase(JSON.parse)
-safeJsonParse(data).fork(console.error, console.log)
+const data = '{"foo" = "bar"}';
+const safeJsonParse = Future.encase(JSON.parse);
+safeJsonParse(data).fork(console.error, console.log);
 //! [SyntaxError: Unexpected token =]
 ```
 
@@ -408,8 +410,9 @@ a node style callback API. To permanently turn a function into one that returns
 a Future, check out [futurization](#futurization).
 
 ```js
-Future.node(done => fs.readFile('package.json', 'utf8', done))
-.fork(console.error, console.log)
+const {readFile} = require('fs');
+Future.node(done => readFile('package.json', 'utf8', done))
+.fork(console.error, console.log);
 //> "{...}"
 ```
 
@@ -491,10 +494,9 @@ Map over the **rejection** reason of the Future. This is like `map`, but for the
 rejection branch.
 
 ```js
-Future.reject(new Error('It broke!')).mapRej(err => {
-  return new Error('Some extra info: ' + err.message);
-})
-.fork(console.error, console.log)
+Future.reject(new Error('It broke!'))
+.mapRej(err => new Error('Some extra info: ' + err.message))
+.fork(console.error, console.log);
 //! [Some extra info: It broke!]
 ```
 
@@ -508,9 +510,9 @@ the rejection branch.
 ```js
 Future.reject(new Error('It broke!')).chainRej(err => {
   console.error(err);
-  return Future.of('All is good')
+  return Future.of('All is good');
 })
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> "All is good"
 ```
 
@@ -569,11 +571,14 @@ Returns a new Future which either rejects with the first rejection reason, or
 resolves with the last resolution value once and if both Futures resolve. This
 behaves analogously to how JavaScript's *and*-operator does.
 
+<!-- eslint-disable no-undef -->
 ```js
 //An asynchronous version of:
-//const result = isResolved() && getValue();
-const result = isResolved().and(getValue());
+//isResolved() && getValue();
+isResolved().and(getValue());
+```
 
+```js
 //Asynchronous "all", where the resulting Future will be the leftmost to reject:
 const all = ms => ms.reduce(Future.and, Future.of(true));
 all([Future.after(20, 1), Future.of(2)]).value(console.log);
@@ -590,11 +595,14 @@ Returns a new Future which either resolves with the first resolution value, or
 rejects with the last rejection value once and if both Futures reject. This
 behaves analogously to how JavaScript's *or*-operator does.
 
+<!-- eslint-disable no-undef -->
 ```js
 //An asynchronous version of:
-//const result = planA() || planB();
-const result = planA().or(planB());
+//planA() || planB();
+planA().or(planB());
+```
 
+```js
 //Asynchronous "any", where the resulting Future will be the leftmost to resolve:
 const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
 any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
@@ -617,6 +625,7 @@ to clean up (close connections etc) and `consume` also takes the result from
 `acquire`, and may be used to perform any arbitrary computations using the
 resource. The resolution value of `dispose` is ignored.
 
+<!-- eslint-disable no-undef -->
 ```js
 const withConnection = Future.hook(
   openConnection('localhost'),
@@ -626,7 +635,7 @@ const withConnection = Future.hook(
 withConnection(
   conn => query(conn, 'EAT * cakes FROM bakery')
 )
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 ```
 
 In the case that a hooked Future is *cancelled* after the resource was acquired,
@@ -635,6 +644,7 @@ which may happen during this disposal are **silently ignored**. To ensure that
 resources are disposed during cancellation, you might synchronously dispose
 resources in the `cancel` function of the disposal Future:
 
+<!-- eslint-disable no-unused-vars -->
 ```js
 const closeConnection = conn => Future((rej, res) => {
 
@@ -667,7 +677,7 @@ with the resolution value from the first Future.
 ```js
 Future.of('Hello')
 .finally(Future.of('All done!').map(console.log))
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> "All done!"
 //> "Hello"
 ```
@@ -679,9 +689,9 @@ const program = S.pipe([
   Future.of,
   Future.finally(Future.of('All done!').map(console.log)),
   Future.fork(console.error, console.log)
-])
+]);
 
-program('Hello')
+program('Hello');
 //> "All done!"
 //> "Hello"
 ```
@@ -741,7 +751,7 @@ if you are sure the Future is going to be resolved, for example; after using
 ```js
 Future.reject(new Error('It broke'))
 .fold(S.Left, S.Right)
-.value(console.log)
+.value(console.log);
 //> Left([Error: It broke])
 ```
 
@@ -778,7 +788,7 @@ rejects with the resolution or rejection value of the first Future to settle.
 ```js
 Future.after(100, 'hello')
 .race(Future.after(50, 'bye'))
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> "bye"
 
 const first = futures => futures.reduce(Future.race, Future.never);
@@ -787,7 +797,7 @@ first([
   Future.after(50, 'bye'),
   Future.rejectAfter(25, 'nope')
 ])
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //! "nope"
 ```
 
@@ -799,11 +809,11 @@ Run two Futures in parallel. Basically like calling
 [`Future.parallel`](#parallel) with exactly two Futures:
 
 ```js
-Future.parallel(2, [a, b])
-===
-Future.both(a, b)
-===
-a.both(b)
+const a = Future.of('a');
+const b = Future.of('b');
+
+Future.both(a, b).fork(console.error, console.log);
+//> ['a', 'b']
 ```
 
 #### parallel
@@ -839,7 +849,7 @@ const instableFutures = Array.from({length: 4}, (_, i) =>
   Future.node(done => done(Math.random() > 0.75 ? 'failed' : null, i))
 );
 
-const stabalizedFutures = instableFutures.map(Future.fold(S.Left, S.Right))
+const stabalizedFutures = instableFutures.map(Future.fold(S.Left, S.Right));
 
 Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
@@ -873,13 +883,16 @@ const parx = of(Par, x);
 const parf = Par(of(Future, f));
 
 //We can make use of parallel apply
-seq(ap(parx, parf)).value(console.log) //> 2
+seq(ap(parx, parf)).value(console.log);
+//> 2
 
 //Or concurrent sequencing
-seq(sequence(Par, [parx, parf])).value(console.log) //> [x, f]
+seq(sequence(Par, [parx, parf])).value(console.log);
+//> [x, f]
 
 //Or racing with alternative
-seq(alt(zero(Par), parx)).value(console.log) //> 1
+seq(alt(zero(Par), parx)).value(console.log);
+//> 1
 ```
 
 ### Utility functions
@@ -893,15 +906,19 @@ were created within other contexts. It is therefore recommended to use this over
 `instanceof`, unless your intent is to explicitly check for Futures created
 using the exact `Future` constructor you're testing against.
 
+<!-- eslint-disable no-unused-expressions -->
 ```js
 const Future1 = require('/path/to/fluture');
 const Future2 = require('/other/path/to/fluture');
+const noop = () => {};
 
 const m1 = Future1(noop);
 Future1.isFuture(m1) === (m1 instanceof Future1);
+//> true
 
 const m2 = Future2(noop);
-Future1.isFuture(m2) !== (m2 instanceof Future1);
+Future1.isFuture(m2) === (m2 instanceof Future1);
+//> false
 ```
 
 #### never
