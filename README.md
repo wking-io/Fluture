@@ -33,8 +33,10 @@ For more information:
 
 ### In ES5 or older environments
 
-Fluture depends on these functions being present: `Object.create`,
-`Object.assign` and `Array.isArray`. You may need to polyfill one or more.
+Fluture depends on these functions being present:
+[`Object.create`][JS:Object.create],
+[`Object.assign`][JS:Object.assign] and [`Array.isArray`][JS:Array.isArray].
+You may need to polyfill one or more.
 
 ```js
 var fs = require('fs');
@@ -997,6 +999,10 @@ Credits for the logo go to [Erik Fuente][8].
 [FL:apply]:             https://github.com/fantasyland/fantasy-land#apply
 [FL:applicative]:       https://github.com/fantasyland/fantasy-land#applicative
 [FL:bifunctor]:         https://github.com/fantasyland/fantasy-land#bifunctor
+
+[JS:Object.create]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+[JS:Object.assign]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
+[JS:Array.isArray]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
 
 [S]:                    https://sanctuary.js.org/
 [S:Either]:             https://sanctuary.js.org/#either-type
