@@ -17,6 +17,7 @@ Some of the features provided by Fluture include:
 
 * [Cancellation](#future).
 * [Resource management utilities](#resource-management).
+* [Stack safe composition and recursion](#stack-safety).
 * Great integration with functional libraries such as [Sanctuary][S].
 * A pleasant debugging experience through informative error messages.
 
@@ -30,13 +31,40 @@ For more information:
 
 > `npm install --save fluture`
 
+### In ES5 or older environments
+
+Fluture depends on these functions being present:
+[`Object.create`][JS:Object.create],
+[`Object.assign`][JS:Object.assign] and [`Array.isArray`][JS:Array.isArray].
+You may need to polyfill one or more.
+
+<!-- eslint-disable no-var -->
 ```js
-const fs = require('fs');
-const Future = require('fluture');
+var fs = require('fs');
+var Future = require('fluture');
+
+var getPackageName = function(file){
+  return Future.node(function(done){ fs.readFile(file, 'utf8', done) })
+  .chain(Future.encase(JSON.parse))
+  .map(function(x){ return x.name });
+};
+
+getPackageName('package.json')
+.fork(console.error, console.log);
+//> "fluture"
+```
+
+### In ES6 or newer environments
+
+The `package.json` sets a `module`-field for build-tools like [Rollup][].
+
+```js
+import {readFile} from 'fs';
+import {node, encase} from 'fluture';
 
 const getPackageName = file =>
-  Future.node(done => fs.readFile(file, 'utf8', done))
-  .chain(Future.encase(JSON.parse))
+  node(done => { readFile(file, 'utf8', done) })
+  .chain(encase(JSON.parse))
   .map(x => x.name);
 
 getPackageName('package.json')
@@ -44,39 +72,37 @@ getPackageName('package.json')
 //> "fluture"
 ```
 
-For front-end applications and node <v4, please use `require('fluture/es5')`.
-
 ## Table of contents
 
 - [Usage](#usage)
 - [Interoperability](#interoperability)
 - [Documentation](#documentation)
     1. [Type signatures](#type-signatures)
+    1. [Stack safety](#stack-safety)
     1. [Creating Futures](#creating-futures)
         * [Future](#future)
         * [of](#of)
-        * [never](#never)
         * [reject](#reject)
         * [after](#after)
         * [rejectAfter](#rejectafter)
+        * [cache](#cache)
+        * [do](#do)
         * [try](#try)
         * [encase](#encase)
         * [encaseP](#encasep)
         * [node](#node)
-        * [chainRec](#chainrec)
     1. [Transforming Futures](#transforming-futures)
         * [map](#map)
         * [bimap](#bimap)
         * [chain](#chain)
-        * [ap](#ap)
         * [swap](#swap)
-    1. [Combining Futures](#combining-futures)
-        * [and](#and)
-        * [or](#or)
-    1. [Error handling](#error-handling)
         * [mapRej](#maprej)
         * [chainRej](#chainrej)
         * [fold](#fold)
+    1. [Combining Futures](#combining-futures)
+        * [ap](#ap)
+        * [and](#and)
+        * [or](#or)
     1. [Resource management](#resource-management)
         * [hook](#hook)
         * [finally](#finally)
@@ -91,8 +117,8 @@ For front-end applications and node <v4, please use `require('fluture/es5')`.
         * [ConcurrentFuture](#concurrentfuture)
     1. [Utility functions](#utility-functions)
         * [isFuture](#isfuture)
-        * [cache](#cache)
-        * [do](#do)
+        * [never](#never)
+        * [isNever](#isnever)
     1. [Sanctuary](#sanctuary)
     1. [Futurization](#futurization)
 - [Benchmarks](#benchmarks)
@@ -135,6 +161,32 @@ A list of all types used within the signatures follows:
 - **Done** - A complete (`{done: true}`) Iteration.
 - **Cancel** - The nullary cancellation functions returned from computations.
 
+### Stack safety
+
+Fluture interprets your transformations in a stack safe way. This means that
+none of the following operations raise `RangeError: Maximum call stack size exceeded`:
+
+```js
+const add1 = x => x + 1;
+let m = Future.of(1);
+for(let i = 0; i < 100000; i++){
+  m = m.map(add1);
+}
+
+m.fork(console.error, console.log);
+//> 100001
+```
+
+```js
+const m = (function recur(x){
+  const mx = Future.of(x + 1);
+  return x < 100000 ? mx.chain(recur) : mx;
+}(1));
+
+m.fork(console.error, console.log);
+//> 100001
+```
+
 ### Creating Futures
 
 #### Future
@@ -174,12 +226,6 @@ eventualThing.fork(
 //> "Hello world!"
 ```
 
-#### never
-##### `.never :: Future a a`
-
-A Future that never settles. Can be useful as an initial value when reducing
-with [`race`](#race), for example.
-
 #### reject
 ##### `.reject :: a -> Future a _`
 
@@ -208,8 +254,81 @@ eventualError.fork(err => console.log('Oh no - ' + err.message), console.log);
 //! Oh no - Kaputt!
 ```
 
+#### cache
+##### `.cache :: Future a b -> Future a b`
+
+Returns a Future which caches the resolution value of the given Future so that
+whenever it's forked, it can load the value from cache rather than reexecuting
+the chain.
+
+```js
+const {readFile} = require('fs');
+const eventualPackage = Future.cache(
+  Future.node(done => {
+    console.log('Reading some big data');
+    readFile('package.json', 'utf8', done);
+  })
+);
+
+eventualPackage.fork(console.error, console.log);
+//> "Reading some big data"
+//> "{...}"
+
+eventualPackage.fork(console.error, console.log);
+//> "{...}"
+```
+
+#### do
+##### `.do :: (() -> Iterator) -> Future a b`
+##### `.go :: (() -> Iterator) -> Future a b`
+
+A specialized version of [fantasy-do][4] which works only for Futures, but has
+the advantage of type-checking and not having to pass `Future.of`. Another
+advantage is that the returned Future can be forked multiple times, as opposed
+to with a general `fantasy-do` solution, where forking the Future a second time
+behaves erroneously.
+
+Takes a function which returns an [Iterator](#type-signatures), commonly a
+generator-function, and chains every produced Future over the previous.
+
+This allows for writing sequential asynchronous code without the pyramid of
+doom. It's known as "coroutines" in Promise land, and "do-notation" in Haskell
+land.
+
+```js
+Future.do(function*(){
+  const thing = yield Future.after(300, 'world');
+  const message = yield Future.after(300, 'Hello ' + thing);
+  return message + '!';
+})
+.fork(console.error, console.log);
+//After 600ms:
+//> "Hello world!"
+```
+
+Error handling is slightly different in do-notation, you need to [`fold`](#fold)
+the error into your control domain, I recommend folding into an [`Either`][S:Either]:
+
+```js
+const attempt = Future.fold(S.Left, S.Right);
+const ajaxGet = url => Future.reject('Failed to load ' + url);
+Future.do(function*(){
+  const e = yield attempt(ajaxGet('/message'));
+  return S.either(
+    e => `Oh no! ${e}`,
+    x => `Yippee! ${x}`,
+    e
+  );
+})
+.fork(console.error, console.log);
+//> "Oh no! Failed to load /message"
+```
+
+This function has an alias `go`, for environments in which `do` is a reserved word.
+
 #### try
 ##### `.try :: (() -> !a | b) -> Future a b`
+##### `.attempt :: (() -> !a | b) -> Future a b`
 
 Creates a Future which resolves with the result of calling the given function,
 or rejects with the error thrown by the given function.
@@ -217,11 +336,13 @@ or rejects with the error thrown by the given function.
 Sugar for `Future.encase(f, undefined)`.
 
 ```js
-const data = {foo: 'bar'}
+const data = {foo: 'bar'};
 Future.try(() => data.foo.bar.baz)
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> [TypeError: Cannot read property 'baz' of undefined]
 ```
+
+This function has an alias `attempt`, for environments in which `try` is a reserved word.
 
 #### encase
 ##### `.encase :: (a -> !e | r) -> a -> Future e r`
@@ -233,9 +354,9 @@ function with the value and resolves with the result. If the function throws
 an exception, it is caught and the Future will reject with the exception:
 
 ```js
-const data = '{"foo" = "bar"}'
+const data = '{"foo" = "bar"}';
 Future.encase(JSON.parse, data)
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //! [SyntaxError: Unexpected token =]
 ```
 
@@ -244,9 +365,9 @@ version of `f`. Instead of throwing exceptions, the encased version always
 returns a Future when given the remaining argument(s):
 
 ```js
-const data = '{"foo" = "bar"}'
-const safeJsonParse = Future.encase(JSON.parse)
-safeJsonParse(data).fork(console.error, console.log)
+const data = '{"foo" = "bar"}';
+const safeJsonParse = Future.encase(JSON.parse);
+safeJsonParse(data).fork(console.error, console.log);
 //! [SyntaxError: Unexpected token =]
 ```
 
@@ -289,29 +410,10 @@ a node style callback API. To permanently turn a function into one that returns
 a Future, check out [futurization](#futurization).
 
 ```js
-Future.node(done => fs.readFile('package.json', 'utf8', done))
-.fork(console.error, console.log)
-//> "{...}"
-```
-
-#### chainRec
-##### `.chainRec :: ((b -> Next, c -> Done, b) -> Future a Iteration) -> b -> Future a c`
-
-Stack- and memory-safe asynchronous "recursion" based on [Fantasy Land ChainRec][FL:chainrec].
-
-Calls the given function with the initial value (as third argument), and expects
-a Future of an [Iteration](#type-signatures). If the Iteration is incomplete
-(`{done: false}`), then the function is called again with the Iteration value
-until it returns a Future of a complete (`{done: true}`) Iteration.
-
-For convenience and interoperability, the first two arguments passed to the
-function are functions for creating an incomplete Iteration, and for creating a
-complete Iteration, respectively.
-
-```js
-Future.chainRec((next, done, x) => Future.of(x < 1000000 ? next(x + 1) : done(x)), 0)
+const {readFile} = require('fs');
+Future.node(done => readFile('package.json', 'utf8', done))
 .fork(console.error, console.log);
-//> 1000000
+//> "{...}"
 ```
 
 ### Transforming Futures
@@ -370,31 +472,6 @@ Future.of(1)
 //> 2
 ```
 
-Note that, due to its lazy nature, the stack and/or heap will slowly fill up as
-you chain more over the same structure. It's therefore recommended that you use
-[`chainRec`](#chainrec) in cases where you wish to `chain` recursively or
-traverse a large list (10000+ items).
-
-#### ap
-##### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
-##### `.ap :: Apply m => m (a -> b) -> m a -> m b`
-
-Applies the function contained in the left-hand Future or Apply to the value
-contained in the right-hand Future or Apply. If one of the Futures rejects the
-resulting Future will also be rejected.
-
-```js
-Future.of(x => y => x + y)
-.ap(Future.of(1))
-.ap(Future.of(2))
-.fork(console.error, console.log);
-//> 3
-```
-
-Note that even though `#ap` does *not* conform to the latest [spec][FL:apply],
-the hidden `fantasy-land/ap`-method *does*. Therefore Future remains fully
-compliant to Fantasy Land.
-
 #### swap
 ##### `#swap :: Future a b ~> Future b a`
 ##### `.swap :: Future a b -> Future b a`
@@ -409,56 +486,6 @@ Future.reject('Nothing broke').swap().fork(console.error, console.log);
 //> "Nothing broke"
 ```
 
-### Combining Futures
-
-#### and
-##### `#and :: Future a b ~> Future a b -> Future a b`
-##### `.and :: Future a b -> Future a b -> Future a b`
-
-Logical and for Futures.
-
-Returns a new Future which either rejects with the first rejection reason, or
-resolves with the last resolution value once and if both Futures resolve. This
-behaves analogously to how JavaScript's *and*-operator does.
-
-```js
-//An asynchronous version of:
-//const result = isResolved() && getValue();
-const result = isResolved().and(getValue());
-
-//Asynchronous "all", where the resulting Future will be the leftmost to reject:
-const all = ms => ms.reduce(Future.and, Future.of(true));
-all([Future.after(20, 1), Future.of(2)]).value(console.log);
-//> 2
-```
-
-#### or
-##### `#or :: Future a b ~> Future a b -> Future a b`
-##### `.or :: Future a b -> Future a b -> Future a b`
-
-Logical or for Futures.
-
-Returns a new Future which either resolves with the first resolution value, or
-rejects with the last rejection value once and if both Futures reject. This
-behaves analogously to how JavaScript's *or*-operator does.
-
-```js
-//An asynchronous version of:
-//const result = planA() || planB();
-const result = planA().or(planB());
-
-//Asynchronous "any", where the resulting Future will be the leftmost to resolve:
-const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
-any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
-//> 2
-```
-
-### Error handling
-
-Functions listed under this category allow you to get at or transform the
-rejection reason in Futures, or even coerce Futures back into the resolution
-branch in several different ways.
-
 #### mapRej
 ##### `#mapRej :: Future a b ~> (a -> c) -> Future c b`
 ##### `.mapRej :: (a -> b) -> Future a c -> Future b c`
@@ -467,10 +494,9 @@ Map over the **rejection** reason of the Future. This is like `map`, but for the
 rejection branch.
 
 ```js
-Future.reject(new Error('It broke!')).mapRej(err => {
-  return new Error('Some extra info: ' + err.message);
-})
-.fork(console.error, console.log)
+Future.reject(new Error('It broke!'))
+.mapRej(err => new Error('Some extra info: ' + err.message))
+.fork(console.error, console.log);
 //! [Some extra info: It broke!]
 ```
 
@@ -484,9 +510,9 @@ the rejection branch.
 ```js
 Future.reject(new Error('It broke!')).chainRej(err => {
   console.error(err);
-  return Future.of('All is good')
+  return Future.of('All is good');
 })
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> "All is good"
 ```
 
@@ -513,24 +539,93 @@ Future.reject('it broke')
 //> Left('it broke')
 ```
 
+### Combining Futures
+
+#### ap
+##### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
+##### `.ap :: Apply m => m (a -> b) -> m a -> m b`
+
+Applies the function contained in the left-hand Future or Apply to the value
+contained in the right-hand Future or Apply. If one of the Futures rejects the
+resulting Future will also be rejected.
+
+```js
+Future.of(x => y => x + y)
+.ap(Future.of(1))
+.ap(Future.of(2))
+.fork(console.error, console.log);
+//> 3
+```
+
+Note that even though `#ap` does *not* conform to the latest [spec][FL:apply],
+the hidden `fantasy-land/ap`-method *does*. Therefore Future remains fully
+compliant to Fantasy Land.
+
+#### and
+##### `#and :: Future a b ~> Future a b -> Future a b`
+##### `.and :: Future a b -> Future a b -> Future a b`
+
+Logical and for Futures.
+
+Returns a new Future which either rejects with the first rejection reason, or
+resolves with the last resolution value once and if both Futures resolve. This
+behaves analogously to how JavaScript's *and*-operator does.
+
+<!-- eslint-disable no-undef -->
+```js
+//An asynchronous version of:
+//isResolved() && getValue();
+isResolved().and(getValue());
+```
+
+```js
+//Asynchronous "all", where the resulting Future will be the leftmost to reject:
+const all = ms => ms.reduce(Future.and, Future.of(true));
+all([Future.after(20, 1), Future.of(2)]).value(console.log);
+//> 2
+```
+
+#### or
+##### `#or :: Future a b ~> Future a b -> Future a b`
+##### `.or :: Future a b -> Future a b -> Future a b`
+
+Logical or for Futures.
+
+Returns a new Future which either resolves with the first resolution value, or
+rejects with the last rejection value once and if both Futures reject. This
+behaves analogously to how JavaScript's *or*-operator does.
+
+<!-- eslint-disable no-undef -->
+```js
+//An asynchronous version of:
+//planA() || planB();
+planA().or(planB());
+```
+
+```js
+//Asynchronous "any", where the resulting Future will be the leftmost to resolve:
+const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
+any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
+//> 2
+```
+
 ### Resource management
 
 Functions listed under this category allow for more fine-grained control over
 the flow of acquired values.
 
 #### hook
-##### `#hook :: Future a b ~> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 ##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
 
-Much like [`chain`](#chain), but takes a "dispose" operation first, which runs
-*after* the second settles (successfully or unsuccessfully). So the signature is
-like `hook(acquire, dispose, consume)`, where `acquire` is a Future which might
-create connections, open file handlers, etc. `dispose` is a function that takes
-the result from `acquire` and should be used to clean up (close connections etc)
-and `consume` also takes the result from `acquire`, and may be used to perform
-any arbitrary computations using the resource. The resolution value of `dispose`
-is ignored.
+Allows a Future-returning function to be decorated with resource acquistion
+and disposal. The signature is like `hook(acquire, dispose, consume)`, where
+`acquire` is a Future which might create connections, open file handlers, etc.
+`dispose` is a function that takes the result from `acquire` and should be used
+to clean up (close connections etc) and `consume` also takes the result from
+`acquire`, and may be used to perform any arbitrary computations using the
+resource. The resolution value of `dispose` is ignored.
 
+<!-- eslint-disable no-undef -->
 ```js
 const withConnection = Future.hook(
   openConnection('localhost'),
@@ -540,7 +635,7 @@ const withConnection = Future.hook(
 withConnection(
   conn => query(conn, 'EAT * cakes FROM bakery')
 )
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 ```
 
 In the case that a hooked Future is *cancelled* after the resource was acquired,
@@ -549,6 +644,7 @@ which may happen during this disposal are **silently ignored**. To ensure that
 resources are disposed during cancellation, you might synchronously dispose
 resources in the `cancel` function of the disposal Future:
 
+<!-- eslint-disable no-unused-vars -->
 ```js
 const closeConnection = conn => Future((rej, res) => {
 
@@ -570,7 +666,9 @@ const closeConnection = conn => Future((rej, res) => {
 
 #### finally
 ##### `#finally :: Future a b ~> Future a c -> Future a b`
+##### `#lastly :: Future a b ~> Future a c -> Future a b`
 ##### `.finally :: Future a c -> Future a b -> Future a b`
+##### `.lastly :: Future a c -> Future a b -> Future a b`
 
 Run a second Future after the first settles (successfully or unsuccessfully).
 Rejects with the rejection reason from the first or second Future, or resolves
@@ -579,7 +677,7 @@ with the resolution value from the first Future.
 ```js
 Future.of('Hello')
 .finally(Future.of('All done!').map(console.log))
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> "All done!"
 //> "Hello"
 ```
@@ -591,9 +689,9 @@ const program = S.pipe([
   Future.of,
   Future.finally(Future.of('All done!').map(console.log)),
   Future.fork(console.error, console.log)
-])
+]);
 
-program('Hello')
+program('Hello');
 //> "All done!"
 //> "Hello"
 ```
@@ -601,6 +699,8 @@ program('Hello')
 As with [`hook`](#hook); when the Future is cancelled before the *finally
 computation* is running, the *finally computation* is executed and immediately
 cancelled.
+
+This function has an alias `lastly`, for environments in which `finally` is a reserved word.
 
 ### Consuming Futures
 
@@ -651,7 +751,7 @@ if you are sure the Future is going to be resolved, for example; after using
 ```js
 Future.reject(new Error('It broke'))
 .fold(S.Left, S.Right)
-.value(console.log)
+.value(console.log);
 //> Left([Error: It broke])
 ```
 
@@ -688,7 +788,7 @@ rejects with the resolution or rejection value of the first Future to settle.
 ```js
 Future.after(100, 'hello')
 .race(Future.after(50, 'bye'))
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //> "bye"
 
 const first = futures => futures.reduce(Future.race, Future.never);
@@ -697,7 +797,7 @@ first([
   Future.after(50, 'bye'),
   Future.rejectAfter(25, 'nope')
 ])
-.fork(console.error, console.log)
+.fork(console.error, console.log);
 //! "nope"
 ```
 
@@ -709,11 +809,11 @@ Run two Futures in parallel. Basically like calling
 [`Future.parallel`](#parallel) with exactly two Futures:
 
 ```js
-Future.parallel(2, [a, b])
-===
-Future.both(a, b)
-===
-a.both(b)
+const a = Future.of('a');
+const b = Future.of('b');
+
+Future.both(a, b).fork(console.error, console.log);
+//> ['a', 'b']
 ```
 
 #### parallel
@@ -749,7 +849,7 @@ const instableFutures = Array.from({length: 4}, (_, i) =>
   Future.node(done => done(Math.random() > 0.75 ? 'failed' : null, i))
 );
 
-const stabalizedFutures = instableFutures.map(Future.fold(S.Left, S.Right))
+const stabalizedFutures = instableFutures.map(Future.fold(S.Left, S.Right));
 
 Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
@@ -783,13 +883,16 @@ const parx = of(Par, x);
 const parf = Par(of(Future, f));
 
 //We can make use of parallel apply
-seq(ap(parx, parf)).value(console.log) //> 2
+seq(ap(parx, parf)).value(console.log);
+//> 2
 
 //Or concurrent sequencing
-seq(sequence(Par, [parx, parf])).value(console.log) //> [x, f]
+seq(sequence(Par, [parx, parf])).value(console.log);
+//> [x, f]
 
 //Or racing with alternative
-seq(alt(zero(Par), parx)).value(console.log) //> 1
+seq(alt(zero(Par), parx)).value(console.log);
+//> 1
 ```
 
 ### Utility functions
@@ -798,89 +901,36 @@ seq(alt(zero(Par), parx)).value(console.log) //> 1
 ##### `.isFuture :: a -> Boolean`
 
 Returns true for [Futures](#type-signatures) and false for everything else. This
-function (and [`S.is`][S:is]) also return `true` for instances of Future that were
-created within other contexts. It is therefore recommended to use this over
+function (and [`S.is`][S:is]) also return `true` for instances of Future that
+were created within other contexts. It is therefore recommended to use this over
 `instanceof`, unless your intent is to explicitly check for Futures created
 using the exact `Future` constructor you're testing against.
 
+<!-- eslint-disable no-unused-expressions -->
 ```js
 const Future1 = require('/path/to/fluture');
 const Future2 = require('/other/path/to/fluture');
+const noop = () => {};
 
 const m1 = Future1(noop);
 Future1.isFuture(m1) === (m1 instanceof Future1);
+//> true
 
 const m2 = Future2(noop);
-Future1.isFuture(m2) !== (m2 instanceof Future1);
+Future1.isFuture(m2) === (m2 instanceof Future1);
+//> false
 ```
 
-#### cache
-##### `.cache :: Future a b -> Future a b`
+#### never
+##### `.never :: Future a a`
 
-Returns a Future which caches the resolution value of the given Future so that
-whenever it's forked, it can load the value from cache rather than reexecuting
-the chain.
+A Future that never settles. Can be useful as an initial value when reducing
+with [`race`](#race), for example.
 
-```js
-const eventualPackage = Future.cache(
-  Future.node(done => {
-    console.log('Reading some big data');
-    fs.readFile('package.json', 'utf8', done)
-  })
-);
+#### isNever
+##### `.isNever :: a -> Boolean`
 
-eventualPackage.fork(console.error, console.log);
-//> "Reading some big data"
-//> "{...}"
-
-eventualPackage.fork(console.error, console.log);
-//> "{...}"
-```
-
-#### do
-##### `.do :: (() -> Iterator) -> Future a b`
-
-A specialized version of [fantasy-do][4] which works only for Futures, but has
-the advantage of type-checking and not having to pass `Future.of`. Another
-advantage is that the returned Future can be forked multiple times, as opposed
-to with a general `fantasy-do` solution, where forking the Future a second time
-behaves erroneously.
-
-Takes a function which returns an [Iterator](#type-signatures), commonly a
-generator-function, and chains every produced Future over the previous.
-
-This allows for writing sequential asynchronous code without the pyramid of
-doom. It's known as "coroutines" in Promise land, and "do-notation" in Haskell
-land.
-
-```js
-Future.do(function*(){
-  const thing = yield Future.after(300, 'world');
-  const message = yield Future.after(300, 'Hello ' + thing);
-  return message + '!';
-})
-.fork(console.error, console.log)
-//After 600ms:
-//> "Hello world!"
-```
-
-Error handling is slightly different in do-notation, you need to [`fold`](#fold)
-the error into your control domain, I recommend folding into an [`Either`][S:Either]:
-
-```js
-const attempt = Future.fold(S.Left, S.Right);
-const ajaxGet = url => Future.reject('Failed to load ' + url);
-Future.do(function*(){
-  const e = yield attempt(ajaxGet('/message'));
-  return S.either(
-    e => `Oh no! ${e}`,
-    x => `Yippee! ${x}`,
-    e
-  );
-})
-.fork(console.error, console.log);
-//> "Oh no! Failed to load /message"
-```
+Returns `true` if the given input is a `never`.
 
 ### Sanctuary
 
@@ -966,7 +1016,10 @@ Credits for the logo go to [Erik Fuente][8].
 [FL:apply]:             https://github.com/fantasyland/fantasy-land#apply
 [FL:applicative]:       https://github.com/fantasyland/fantasy-land#applicative
 [FL:bifunctor]:         https://github.com/fantasyland/fantasy-land#bifunctor
-[FL:chainrec]:          https://github.com/fantasyland/fantasy-land#chainrec
+
+[JS:Object.create]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+[JS:Object.assign]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
+[JS:Array.isArray]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
 
 [S]:                    https://sanctuary.js.org/
 [S:Either]:             https://sanctuary.js.org/#either-type
@@ -984,6 +1037,8 @@ Credits for the logo go to [Erik Fuente][8].
 [$:BinaryType]:         https://github.com/sanctuary-js/sanctuary-def#BinaryType
 
 [concurrify]:           https://github.com/fluture-js/concurrify
+
+[Rollup]:               https://rollupjs.org/
 
 [1]:                    https://github.com/futurize/futurize
 [2]:                    https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
