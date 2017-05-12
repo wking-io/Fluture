@@ -1018,9 +1018,10 @@ The name "Fluture" is a conjunction of "FL" (the acronym to [Fantasy Land][FL])
 and "future". Fluture means butterfly in Romanian: A creature you might expect
 to see in Fantasy Land.
 
-Credits for the logo go to [Erik Fuente][8].
-
 ----
+
+Thanks to [Erik Fuente][8] for the logo, and [WEAREREASONABLEPEOPLE][9] for
+sponsoring the project.
 
 [MIT licensed](LICENSE)
 
@@ -1068,3 +1069,4 @@ Credits for the logo go to [Erik Fuente][8].
 [6]:                    https://github.com/rpominov/static-land
 [7]:                    https://promisesaplus.com/
 [8]:                    http://erikfuente.com/
+[9]:                    http://wearereasonablepeople.nl/
