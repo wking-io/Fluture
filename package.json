@@ -53,7 +53,7 @@
     "sequential"
   ],
   "dependencies": {
-    "concurrify": "^0.1.0",
+    "concurrify": "^1.0.0",
     "inspect-f": "^1.2.0",
     "sanctuary-type-classes": "^5.1.0",
     "sanctuary-type-identifiers": "^2.0.0"

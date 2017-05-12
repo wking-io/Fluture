@@ -91,7 +91,7 @@ describe('Par()', () => {
 
     it('shows a reasonable representation when cast to string', () => {
       const m = ap(Par(of(1)), Par(reject(0)));
-      const s = 'ConcurrentFuture@2(new ParallelAp(Future.reject(0), Future.of(1)))';
+      const s = 'ConcurrentFuture(new ParallelAp(Future.reject(0), Future.of(1)))';
       expect(m.toString()).to.equal(s);
     });
 
@@ -111,7 +111,7 @@ describe('Par()', () => {
 
     it('shows a reasonable representation when cast to string', () => {
       const m = map(U.noop, Par(F.resolved));
-      const expected = `ConcurrentFuture@2(Future.of("resolved").map(${U.noop.toString()}))`;
+      const expected = `ConcurrentFuture(Future.of("resolved").map(${U.noop.toString()}))`;
       expect(m.toString()).to.equal(expected);
     });
 
@@ -135,7 +135,7 @@ describe('Par()', () => {
 
     it('shows a reasonable representation when cast to string', () => {
       const m = alt(Par(of(2)), Par(of(1)));
-      const s = 'ConcurrentFuture@2(Future.of(1))';
+      const s = 'ConcurrentFuture(Future.of(1))';
       expect(m.toString()).to.equal(s);
     });
 
