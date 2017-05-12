@@ -1,10 +1,10 @@
 import {isFuture} from '../core';
 import {partial1} from '../internal/fn';
 import {isFunction} from '../internal/is';
-import {invalidArgument} from '../internal/throw';
+import {invalidArgument, invalidFuture} from '../internal/throw';
 
 function chainRej$chainer(chainer, m){
-  if(!isFuture(m)) invalidArgument('Future.chainRej', 1, 'be a Future', m);
+  if(!isFuture(m)) invalidFuture('Future.chainRej', 1, m);
   return m.chainRej(chainer);
 }
 

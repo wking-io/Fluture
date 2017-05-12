@@ -1,6 +1,6 @@
 import {Core, isFuture} from './core';
 import {noop} from './internal/fn';
-import {invalidArgument} from './internal/throw';
+import {invalidFuture} from './internal/throw';
 
 const Cold = Cached.Cold = 0;
 const Pending = Cached.Pending = 1;
@@ -113,6 +113,6 @@ Cached.prototype.toString = function Cached$toString(){
 };
 
 export function cache(m){
-  if(!isFuture(m)) invalidArgument('Future.cache', 0, 'be a Future', m);
+  if(!isFuture(m)) invalidFuture('Future.cache', 0, m);
   return new Cached(m);
 }

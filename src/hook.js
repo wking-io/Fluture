@@ -1,19 +1,23 @@
 import {Core, isFuture} from './core';
 import {noop, show, showf, partial1, partial2} from './internal/fn';
 import {isFunction} from './internal/is';
-import {typeError, invalidArgument} from './internal/throw';
+import {invalidArgument, invalidFuture} from './internal/throw';
 
 function check$dispose(m, f, x){
-  if(!isFuture(m)) typeError(
-    'Future.hook expects the first function its given to return a Future'
-    + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+  if(!isFuture(m)) invalidFuture(
+    'Future.hook',
+    'the first function its given to return a Future',
+    m,
+    `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
   );
 }
 
-function check$consume(m, g, x){
-  if(!isFuture(m)) typeError(
-    'Future.hook expects the second function its given to return a Future'
-    + `\n  Actual: ${show(m)}\n  From calling: ${showf(g)}\n  With: ${show(x)}`
+function check$consume(m, f, x){
+  if(!isFuture(m)) invalidFuture(
+    'Future.hook',
+    'the second function its given to return a Future',
+    m,
+    `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
   );
 }
 
@@ -91,7 +95,7 @@ function hook$acquire(acquire, cleanup, consume){
 }
 
 export function hook(acquire, cleanup, consume){
-  if(!isFuture(acquire)) invalidArgument('Future.hook', 0, 'be a Future', acquire);
+  if(!isFuture(acquire)) invalidFuture('Future.hook', 0, acquire);
   if(arguments.length === 1) return partial1(hook$acquire, acquire);
   if(arguments.length === 2) return hook$acquire(acquire, cleanup);
   return hook$acquire(acquire, cleanup, consume);

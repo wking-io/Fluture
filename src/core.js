@@ -4,11 +4,9 @@ import Denque from 'denque';
 
 import {show, showf, noop, moop} from './internal/fn';
 import {isFunction} from './internal/is';
-import {error, typeError, invalidArgument, invalidContext} from './internal/throw';
-import {FL} from './internal/const';
+import {error, typeError, invalidArgument, invalidContext, invalidFuture} from './internal/throw';
+import {FL, $$type} from './internal/const';
 import type from 'sanctuary-type-identifiers';
-
-const TYPEOF_FUTURE = 'fluture/Future@2';
 
 const throwRejection = x => error(
   `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(x)})`
@@ -20,7 +18,7 @@ export function Future(computation){
 }
 
 export function isFuture(x){
-  return x instanceof Future || type(x) === TYPEOF_FUTURE;
+  return x instanceof Future || type(x) === $$type;
 }
 
 Future.prototype[FL.ap] = function Future$FL$ap(other){
@@ -41,7 +39,7 @@ Future.prototype[FL.chain] = function Future$FL$chain(mapper){
 
 Future.prototype.ap = function Future$ap(other){
   if(!isFuture(this)) invalidContext('Future#ap', this);
-  if(!isFuture(other)) invalidArgument('Future#ap', 0, 'to be a Future', other);
+  if(!isFuture(other)) invalidFuture('Future#ap', 0, other);
   return this._ap(other);
 };
 
@@ -78,25 +76,25 @@ Future.prototype.chainRej = function Future$chainRej(mapper){
 
 Future.prototype.race = function Future$race(other){
   if(!isFuture(this)) invalidContext('Future#race', this);
-  if(!isFuture(other)) invalidArgument('Future#race', 0, 'to be a Future', other);
+  if(!isFuture(other)) invalidFuture('Future#race', 0, other);
   return this._race(other);
 };
 
 Future.prototype.both = function Future$both(other){
   if(!isFuture(this)) invalidContext('Future#both', this);
-  if(!isFuture(other)) invalidArgument('Future#both', 0, 'to be a Future', other);
+  if(!isFuture(other)) invalidFuture('Future#both', 0, other);
   return this._both(other);
 };
 
 Future.prototype.and = function Future$and(other){
   if(!isFuture(this)) invalidContext('Future#and', this);
-  if(!isFuture(other)) invalidArgument('Future#and', 0, 'to be a Future', other);
+  if(!isFuture(other)) invalidFuture('Future#and', 0, other);
   return this._and(other);
 };
 
 Future.prototype.or = function Future$or(other){
   if(!isFuture(this)) invalidContext('Future#or', this);
-  if(!isFuture(other)) invalidArgument('Future#or', 0, 'to be a Future', other);
+  if(!isFuture(other)) invalidFuture('Future#or', 0, other);
   return this._or(other);
 };
 
@@ -114,13 +112,13 @@ Future.prototype.fold = function Future$fold(lmapper, rmapper){
 
 Future.prototype.finally = function Future$finally(other){
   if(!isFuture(this)) invalidContext('Future#finally', this);
-  if(!isFuture(other)) invalidArgument('Future#finally', 0, 'to be a Future', other);
+  if(!isFuture(other)) invalidFuture('Future#finally', 0, other);
   return this._finally(other);
 };
 
 Future.prototype.lastly = function Future$lastly(other){
   if(!isFuture(this)) invalidContext('Future#lastly', this);
-  if(!isFuture(other)) invalidArgument('Future#lastly', 0, 'to be a Future', other);
+  if(!isFuture(other)) invalidFuture('Future#lastly', 0, other);
   return this._finally(other);
 };
 
@@ -429,9 +427,11 @@ export class BimapAction extends Action{
   resolved(x){ return new Resolved(this.rmapper(x)) }
   toString(){ return `bimap(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
 }
-const check$chain = (m, f, x) => isFuture(m) ? m : typeError(
-  'Future#chain expects the function its given to return a Future'
-  + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+const check$chain = (m, f, x) => isFuture(m) ? m : invalidFuture(
+  'Future#chain',
+  'the function its given to return a Future',
+  m,
+  `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
 );
 export class ChainAction extends Action{
   constructor(mapper){ super(); this.mapper = mapper }
@@ -443,9 +443,11 @@ export class MapRejAction extends Action{
   rejected(x){ return new Rejected(this.mapper(x)) }
   toString(){ return `mapRej(${showf(this.mapper)})` }
 }
-const check$chainRej = (m, f, x) => isFuture(m) ? m : typeError(
-  'Future#chainRej expects the function its given to return a Future'
-  + `\n  Actual: ${show(m)}\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+const check$chainRej = (m, f, x) => isFuture(m) ? m : invalidFuture(
+  'Future#chainRej',
+  'the function its given to return a Future',
+  m,
+  `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
 );
 export class ChainRejAction extends Action{
   constructor(mapper){ super(); this.mapper = mapper }
@@ -642,5 +644,5 @@ Sequence.prototype.toString = function Sequence$toString(){
   return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
 };
 
-Future['@@type'] = TYPEOF_FUTURE;
+Future['@@type'] = $$type;
 Future[FL.of] = of;

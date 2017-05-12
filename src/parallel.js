@@ -1,11 +1,13 @@
 import {Core, Resolved, isFuture} from './core';
-import {invalidArgument, typeError} from './internal/throw';
+import {invalidArgument, invalidFuture} from './internal/throw';
 import {show, mapArray, partial1} from './internal/fn';
 import {isUnsigned, isArray} from './internal/is';
 
-const check$parallel = (m, i) => isFuture(m) ? m : typeError(
-  'Future.parallel expects its second argument to be an array of Futures.'
-  + ` The value at position ${i} in the array was not a Future\n  Actual: ${show(m)}`
+const check$parallel = (m, i) => isFuture(m) ? m : invalidFuture(
+  'Future.parallel',
+  'its second argument to be an array of valid Futures. '
++ `The value at position ${i} in the array is not a Future`,
+  m
 );
 
 export function Parallel(max, futures){
