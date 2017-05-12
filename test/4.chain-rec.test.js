@@ -6,16 +6,9 @@ import type from 'sanctuary-type-identifiers';
 
 describe('chainRec()', () => {
 
-  it('is a curried binary function', () => {
+  it('is a binary function', () => {
     expect(chainRec).to.be.a('function');
     expect(chainRec.length).to.equal(2);
-    expect(chainRec(U.noop)).to.be.a('function');
-  });
-
-  it('throws TypeError when not given a function', () => {
-    const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-    const fs = xs.map(x => _ => chainRec(x, 1));
-    fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
   });
 
   it('returns an instance of Future', () => {
@@ -35,32 +28,6 @@ describe('ChainRec', () => {
   });
 
   describe('#fork()', () => {
-
-    it('throws TypeError when the given function does not return a Future', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => _ => chainRec((a, b, c) => (c, x), 1).fork(U.noop, U.noop));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
-    });
-
-    it('throws TypeError when the given function does not always return a Future', () => {
-      const recur = (next, done, i) => i <= 6 ? of(next(i + 1)) : 'hello';
-      const f = _ => chainRec(recur, 1).fork(U.noop, U.noop);
-      expect(f).to.throw(TypeError, /Future.*6/);
-    });
-
-    it('throws TypeError when the returned Future does not contain an iteration', () => {
-      const xs = [null, '', {}, {value: 1, done: 1}];
-      const fs = xs.map(x => _ =>
-        chainRec((a, b, c) => of((c, x)), 1).fork(U.noop, U.noop)
-      );
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future.*first call/));
-    });
-
-    it('throws TypeError when the returned Future does not always contain an iteration', () => {
-      const recur = (a, b, i) => i <= 6 ? of(a(i + 1)) : of('hello');
-      const f = _ => chainRec(recur, 1).fork(U.noop, U.noop);
-      expect(f).to.throw(TypeError, /Future.*6/);
-    });
 
     it('does not break if the iteration does not contain a value key', () => {
       const actual = chainRec((f, g, x) => (x, of({done: true})), 0);
