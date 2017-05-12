@@ -4,7 +4,7 @@ import {Core, isFuture} from './core';
 import {isFunction, isIterator} from './internal/is';
 import {isIteration} from './internal/iteration';
 import {show, showf, noop} from './internal/fn';
-import {invalidArgument, typeError} from './internal/throw';
+import {invalidArgument, typeError, invalidFuture} from './internal/throw';
 import {Undetermined, Synchronous, Asynchronous} from './internal/timing';
 
 const check$iterator = g => isIterator(g) ? g : invalidArgument(
@@ -18,10 +18,11 @@ const check$iteration = o => {
     + `\n  Actual: ${show(o)}`
   );
   if(o.done || isFuture(o.value)) return o;
-  return typeError(
-    'A non-Future was produced by iterator.next() in Future.do.'
-    + ' If you\'re using a generator, make sure you always `yield` a Future'
-    + `\n  Actual: ${o.value}`
+  return invalidFuture(
+    'Future.do',
+    'the iterator to produce only valid Futures',
+    o.value,
+    '\n  Tip: If you\'re using a generator, make sure you always yield a Future'
   );
 };
 

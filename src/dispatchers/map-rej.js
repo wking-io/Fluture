@@ -1,10 +1,10 @@
 import {isFuture} from '../core';
 import {partial1} from '../internal/fn';
 import {isFunction} from '../internal/is';
-import {invalidArgument} from '../internal/throw';
+import {invalidArgument, invalidFuture} from '../internal/throw';
 
 function mapRej$mapper(mapper, m){
-  if(!isFuture(m)) invalidArgument('Future.mapRej', 1, 'be a Future', m);
+  if(!isFuture(m)) invalidFuture('Future.mapRej', 1, m);
   return m.mapRej(mapper);
 }
 

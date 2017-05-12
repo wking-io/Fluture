@@ -121,6 +121,7 @@ getPackageName('package.json')
         * [isNever](#isnever)
     1. [Sanctuary](#sanctuary)
     1. [Futurization](#futurization)
+    1. [Casting Futures](#casting-futures)
 - [Benchmarks](#benchmarks)
 - [Butterfly](#butterfly)
 
@@ -985,6 +986,25 @@ readFile('README.md', 'utf8')
 .map(lines => lines[0])
 .fork(console.error, console.log);
 //> "# [![Fluture](logo.png)](#butterfly)"
+```
+
+### Casting Futures
+
+Sometimes you may need to convert one Future to another, for example when the
+Future was created by another package, or an incompatible version of Fluture.
+
+When [`isFuture`](#isfuture) returns `false`, a conversion is necessary. Usually
+the most concise way of doing this is as follows:
+
+```js
+const NoFuture = require('incompatible-future');
+const incompatible = NoFuture.of('Hello');
+
+//Cast the incompatible Future to our version of Future:
+const compatible = Future(incompatible.fork.bind(incompatible));
+
+compatible.both(Future.of('world')).value(console.log);
+//> ["Hello", "world"]
 ```
 
 ## Benchmarks

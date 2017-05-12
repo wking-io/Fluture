@@ -1,10 +1,10 @@
 import {isFuture} from '../core';
 import {partial1, partial2} from '../internal/fn';
 import {isFunction} from '../internal/is';
-import {invalidArgument} from '../internal/throw';
+import {invalidArgument, invalidFuture} from '../internal/throw';
 
 function fold$f$g(f, g, m){
-  if(!isFuture(m)) invalidArgument('Future.fold', 2, 'be a Future', m);
+  if(!isFuture(m)) invalidFuture('Future.fold', 2, m);
   return m.fold(f, g);
 }
 
