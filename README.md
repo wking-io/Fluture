@@ -122,7 +122,6 @@ getPackageName('package.json')
     1. [Sanctuary](#sanctuary)
     1. [Futurization](#futurization)
     1. [Casting Futures](#casting-futures)
-- [Benchmarks](#benchmarks)
 - [Butterfly](#butterfly)
 
 ## Interoperability
@@ -1006,11 +1005,6 @@ const compatible = Future(incompatible.fork.bind(incompatible));
 compatible.both(Future.of('world')).value(console.log);
 //> ["Hello", "world"]
 ```
-
-## Benchmarks
-
-Simply run `node ./bench/<file>` to see how a specific method compares to
-implementations in `data.task` and `ramda-fantasy.Future`.
 
 ## Butterfly
 
