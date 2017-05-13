@@ -24,12 +24,17 @@ node_modules/
 
 # Code coverage report
 coverage/
+*.lcov
 
 # Test file - who doesn't have a test file?
 test.js
 
-# Transpiled ES5 file - for publishing only
-es5.js
+# Build files
+index.js
+index.test.js
 
 # Heap snapshots
 *.heapsnapshot
+
+# TEMP: Ignore perf directory for now
+perf/

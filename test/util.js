@@ -1,35 +1,34 @@
-'use strict';
+import {expect} from 'chai';
+import Future from '../index.es.js';
+import Z from 'sanctuary-type-classes';
+import {AssertionError} from 'assert';
 
-const expect = require('chai').expect;
-const Future = require('../fluture.js');
-const Z = require('sanctuary-type-classes');
-const AssertionError = require('assert').AssertionError;
+export const STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
+export const noop = () => {};
+export const add = a => b => a + b;
+export const sub = a => b => a - b;
+export const bang = s => `${s}!`;
+export const I = x => x;
+export const B = f => g => x => f(g(x));
+export const error = new Error('Intentional error for unit testing');
 
-exports.STACKSIZE = (function r(){try{return 1 + r()}catch(e){return 1}}());
-exports.noop = () => {};
-exports.add = a => b => a + b;
-exports.sub = a => b => a - b;
-exports.bang = s => `${s}!`;
-exports.B = f => g => x => f(g(x));
-exports.error = new Error('Intentional error for unit testing');
-
-exports.repeat = (n, x) => {
+export const repeat = (n, x) => {
   const out = new Array(n);
   while(n-- > 0){ out[n] = x } //eslint-disable-line
   return out;
 };
 
-exports.failRes = x => {
+export const failRes = x => {
   throw new Error(`Invalidly entered resolution branch with value ${x}`);
 };
 
-exports.failRej = x => {
+export const failRej = x => {
   throw new Error(`Invalidly entered rejection branch with value ${x}`);
 };
 
-exports.assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
+export const assertIsFuture = x => expect(x).to.be.an.instanceof(Future);
 
-exports.assertEqual = (a, b) => {
+export const assertEqual = (a, b) => {
   const states = ['pending', 'rejected', 'resolved'];
   if(!(a instanceof Future && b instanceof Future)) throw new Error('Both values must be Futures');
   let astate = 0, aval;
@@ -46,7 +45,7 @@ exports.assertEqual = (a, b) => {
   `);
 };
 
-exports.forkAndGuard = (m, rej, res) => {
+export const forkAndGuard = (m, rej, res) => {
   let rejected = false, resolved = false;
   m.fork(e => {
     if(rejected) throw new Error(`${m.toString()} rejected twice with: ${Z.toString(e)}`);
@@ -61,9 +60,9 @@ exports.forkAndGuard = (m, rej, res) => {
   });
 };
 
-exports.assertResolved = (m, x) => new Promise((res, rej) => {
-  exports.assertIsFuture(m);
-  exports.forkAndGuard(m,
+export const assertResolved = (m, x) => new Promise((res, rej) => {
+  assertIsFuture(m);
+  forkAndGuard(m,
     e => rej(new Error(`Expected the Future to resolve. Instead rejected with: ${Z.toString(e)}`)),
     y => Z.equals(x, y) ? res() : rej(new AssertionError({
       expected: x,
@@ -73,9 +72,9 @@ exports.assertResolved = (m, x) => new Promise((res, rej) => {
   );
 });
 
-exports.assertRejected = (m, x) => new Promise((res, rej) => {
-  exports.assertIsFuture(m);
-  exports.forkAndGuard(m,
+export const assertRejected = (m, x) => new Promise((res, rej) => {
+  assertIsFuture(m);
+  forkAndGuard(m,
     e => Z.equals(x, e) ? res() : rej(new AssertionError({
       expected: x,
       actual: e,
@@ -85,7 +84,7 @@ exports.assertRejected = (m, x) => new Promise((res, rej) => {
   );
 });
 
-exports.onceOrError = f => {
+export const onceOrError = f => {
   let called = false;
   return function(){
     if(called) throw new Error(`Function ${f} was called twice`);

@@ -1,12 +1,11 @@
-'use strict';
+import * as U from './util';
+import {Future, of, reject, after, rejectAfter} from '../index.es.js';
 
-const U = require('./util');
-const Future = require('../fluture.js');
+export const mock = Object.create(Future.prototype);
+mock._fork = U.noop;
+mock.toString = () => '(util.mock)';
 
-exports.mock = Object.create(Future.prototype);
-exports.mock._f = U.noop;
-exports.mock.toString = () => '(util.mock)';
-exports.resolved = Future.of('resolved');
-exports.rejected = Future.reject('rejected');
-exports.resolvedSlow = Future.after(20, 'resolvedSlow');
-exports.rejectedSlow = Future.rejectAfter(20, 'rejectedSlow');
+export const resolved = of('resolved');
+export const rejected = reject('rejected');
+export const resolvedSlow = after(20, 'resolvedSlow');
+export const rejectedSlow = rejectAfter(20, 'rejectedSlow');

@@ -1,15 +1,18 @@
 {
   "extends": ["warp/es6"],
+  "plugins": ["markdown"],
   "parserOptions": {
-    "sourceType": "script"
+    "sourceType": "module"
   },
   "env": {
     "browser": true
   },
   "globals": {
-    "module": true,
-    "require": true,
-    "global": true
+    "module": false,
+    "require": false,
+    "global": false,
+    "Future": false,
+    "S": false
   },
   "rules": {
     "space-before-blocks": [2, "never"],
@@ -21,6 +24,9 @@
     "prefer-arrow-callback": 0,
     "no-use-before-define": 0,
     "max-statements-per-line": 0,
-    "prefer-rest-params": 0
+    "prefer-rest-params": 0,
+    "class-methods-use-this": 0,
+    "camelcase": 0,
+    "no-console": 0
   }
 }
