@@ -9,7 +9,7 @@ import {
 
 import * as dispatchers from './dispatchers';
 
-import {after} from './after';
+import {after, rejectAfter} from './after';
 import {cache} from './cache';
 import {chainRec} from './chain-rec';
 import {encase, encase2, encase3, attempt} from './encase';
@@ -19,7 +19,6 @@ import {hook} from './hook';
 import {node} from './node';
 import {Par, seq} from './par';
 import {parallel} from './parallel';
-import {rejectAfter} from './reject-after';
 
 import {error} from './internal/throw';
 

@@ -1,8 +1,17 @@
 import {Core, isNever, never} from './core';
-import {RejectAfter} from './reject-after';
 import {show, partial1} from './internal/fn';
 import {isUnsigned} from './internal/is';
 import {invalidArgument} from './internal/throw';
+
+function After$race(other){
+  return other.isSettled()
+       ? other
+       : isNever(other)
+       ? this
+       : (other instanceof After || other instanceof RejectAfter)
+       ? other._time < this._time ? other : this
+       : Core._race.call(this, other);
+}
 
 export function After(time, value){
   this._time = time;
@@ -11,15 +20,7 @@ export function After(time, value){
 
 After.prototype = Object.create(Core);
 
-After.prototype._race = function After$race(other){
-  return other.isSettled()
-       ? other
-       : isNever(other)
-       ? this
-       : (other instanceof After || other instanceof RejectAfter)
-       ? other._time < this._time ? other : this
-       : Core._race.call(this, other);
-};
+After.prototype._race = After$race;
 
 After.prototype._swap = function After$swap(){
   return new RejectAfter(this._time, this._value);
@@ -38,12 +39,49 @@ After.prototype.toString = function After$toString(){
   return `Future.after(${show(this._time)}, ${show(this._value)})`;
 };
 
-function Future$after$n(n, x){
-  return n === Infinity ? never : new After(n, x);
+
+export function RejectAfter(time, value){
+  this._time = time;
+  this._value = value;
 }
 
-export function after(n, x){
-  if(!isUnsigned(n)) invalidArgument('Future.after', 0, 'be a positive integer', n);
-  if(arguments.length === 1) return partial1(Future$after$n, n);
-  return Future$after$n(n, x);
+RejectAfter.prototype = Object.create(Core);
+
+RejectAfter.prototype._race = After$race;
+
+RejectAfter.prototype._swap = function RejectAfter$swap(){
+  return new After(this._time, this._value);
+};
+
+RejectAfter.prototype._fork = function RejectAfter$_fork(rej){
+  const id = setTimeout(rej, this._time, this._value);
+  return () => { clearTimeout(id) };
+};
+
+RejectAfter.prototype.extractLeft = function RejectAfter$extractLeft(){
+  return [this._value];
+};
+
+RejectAfter.prototype.toString = function RejectAfter$toString(){
+  return `Future.rejectAfter(${show(this._time)}, ${show(this._value)})`;
+};
+
+function after$time(time, value){
+  return time === Infinity ? never : new After(time, value);
+}
+
+export function after(time, value){
+  if(!isUnsigned(time)) invalidArgument('Future.after', 0, 'be a positive integer', time);
+  if(arguments.length === 1) return partial1(after$time, time);
+  return after$time(time, value);
+}
+
+function rejectAfter$time(time, reason){
+  return time === Infinity ? never : new RejectAfter(time, reason);
+}
+
+export function rejectAfter(time, reason){
+  if(!isUnsigned(time)) invalidArgument('Future.rejectAfter', 0, 'be a positive integer', time);
+  if(arguments.length === 1) return partial1(rejectAfter$time, time);
+  return rejectAfter$time(time, reason);
 }
