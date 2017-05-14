@@ -574,23 +574,15 @@ Sequence.prototype._finally = function Sequence$finally(other){
 
 Sequence.prototype._fork = function Sequence$_fork(rej, res){
 
-  const actions = new Denque(this._actions);
-  const runners = new Denque(this._actions.length);
-  let action, cancel = noop, future = this._spawn, running, settled, async;
+  const stack = new Denque(this._actions);
+  const queue = new Denque(this._actions.length);
+  let action, cancel = noop, future = this._spawn, it, settled, async;
 
-  function cancelAll(){
-    cancel();
-    action && action.cancel();
-    while(running = runners.shift()) running.cancel();
-    actions.clear();
-    cancel = noop;
-  }
-
-  function absorb(m){
+  function settle(m){
     settled = true;
     future = m;
     if(!(future instanceof Sequence)) return;
-    for(let i = future._actions.length - 1; i >= 0; i--) actions.unshift(future._actions[i]);
+    for(let i = future._actions.length - 1; i >= 0; i--) stack.unshift(future._actions[i]);
     future = future._spawn;
   }
 
@@ -598,34 +590,34 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
     cancel();
     if(action !== terminator){
       action.cancel();
-      while((running = runners.shift()) && running !== terminator) running.cancel();
+      while((it = queue.shift()) && it !== terminator) it.cancel();
     }
-    absorb(m);
+    settle(m);
     if(async) drain();
   }
 
   function rejected(x){
-    absorb(action.rejected(x));
+    settle(action.rejected(x));
     if(async) drain();
   }
 
   function resolved(x){
-    absorb(action.resolved(x));
+    settle(action.resolved(x));
     if(async) drain();
   }
 
   function drain(){
-    while(action = actions.shift() || runners.shift()){
+    async = false;
+    while(action = stack.shift() || queue.shift()){
       settled = false;
-      async = false;
       cancel = future._fork(rejected, resolved);
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
-      while(running = actions.shift()){
-        const tmp = running.run(early);
+      while(it = stack.shift()){
+        const tmp = it.run(early);
         if(settled) break;
-        runners.push(tmp);
+        queue.push(tmp);
       }
       if(settled) continue;
       async = true;
@@ -636,7 +628,13 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
 
   drain();
 
-  return cancelAll;
+  return function Sequence$cancel(){
+    cancel();
+    action && action.cancel();
+    while(it = queue.shift()) it.cancel();
+    stack.clear();
+    cancel = noop;
+  };
 
 };
 
