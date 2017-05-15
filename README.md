@@ -18,7 +18,7 @@ Some of the features provided by Fluture include:
 * [Cancellation](#future).
 * [Resource management utilities](#resource-management).
 * [Stack safe composition and recursion](#stack-safety).
-* Great integration with functional libraries such as [Sanctuary][S].
+* [Integration](#sanctuary) with [Sanctuary][S].
 * A pleasant debugging experience through informative error messages.
 
 For more information:
@@ -945,29 +945,20 @@ S.I(Future.of(1));
 //! the type-variable constraint has been violated.
 ```
 
-This happens because Sanctuary Def needs to know about the Future type in order
-to determine whether the variable types are consistent.
+This happens because Sanctuary Def needs to know about the types created by
+Fluture to determine whether the type-variables are consistent.
 
-To let Sanctuary know about Futures, we can provide it a `FutureType` using
-[`BinaryType`][$:BinaryType] from Sanctuary Def, and pass it to Sanctuary using
-[`S.create`][S:create]:
+To let Sanctuary know about these types, we can obtain the type definitions from
+[`fluture-sanctuary-types`][FST] and pass them to [`S.create`][S:create]:
 
 ```js
-const $ = require('sanctuary-def');
+const {create, env} = require('sanctuary');
+const types = require('fluture-sanctuary-types');
 const Future = require('fluture');
-const {env, create} = require('sanctuary');
 
-const FutureType = $.BinaryType(
-  Future.name,
-  'https://github.com/fluture-js/Fluture#future',
-  Future.isFuture,
-  Future.extractLeft,
-  Future.extractRight
-);
+const S = create({checkTypes: true, env: env.concat(Object.values(types))});
 
-const S = create({checkTypes: true, env: env.concat([FutureType])});
-
-S.I(Future.of(1));
+S.I(Future.of(1))
 //> Future.of(1)
 ```
 
@@ -1042,6 +1033,7 @@ sponsoring the project.
 [S:create]:             https://sanctuary.js.org/#create
 
 [STI]:                  https://github.com/sanctuary-js/sanctuary-type-identifiers
+[FST]:                  https://github.com/fluture-js/fluture-sanctuary-types
 
 [Z:Functor]:            https://github.com/sanctuary-js/sanctuary-type-classes#Functor
 [Z:Bifunctor]:          https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
@@ -1049,7 +1041,6 @@ sponsoring the project.
 [Z:Apply]:              https://github.com/sanctuary-js/sanctuary-type-classes#Apply
 
 [$]:                    https://github.com/sanctuary-js/sanctuary-def
-[$:BinaryType]:         https://github.com/sanctuary-js/sanctuary-def#BinaryType
 
 [concurrify]:           https://github.com/fluture-js/concurrify
 
