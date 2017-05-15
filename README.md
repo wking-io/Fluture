@@ -953,10 +953,17 @@ To let Sanctuary know about these types, we can obtain the type definitions from
 
 ```js
 const {create, env} = require('sanctuary');
-const types = require('fluture-sanctuary-types');
+const {Unknown} = require('sanctuary-def');
+const {FutureType, ConcurrentFutureType} = require('fluture-sanctuary-types');
 const Future = require('fluture');
 
-const S = create({checkTypes: true, env: env.concat(Object.values(types))});
+const S = create({
+  checkTypes: true,
+  env: env.concat([
+    FutureType(Unknown, Unknown),
+    ConcurrentFutureType(Unknown, Unknown)
+  ])
+});
 
 S.I(Future.of(1))
 //> Future.of(1)
