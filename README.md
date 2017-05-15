@@ -965,7 +965,7 @@ const S = create({
   ])
 });
 
-S.I(Future.of(1))
+S.I(Future.of(1));
 //> Future.of(1)
 ```
 
