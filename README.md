@@ -89,6 +89,7 @@ getPackageName('package.json')
         * [do](#do)
         * [try](#try)
         * [encase](#encase)
+        * [tryP](#tryp)
         * [encaseP](#encasep)
         * [node](#node)
         * [encaseN](#encasen)
@@ -375,8 +376,21 @@ safeJsonParse(data).fork(console.error, console.log);
 Furthermore; `encase2` and `encase3` are binary and ternary versions of
 `encase`, applying two or three arguments to the given function respectively.
 
+#### tryP
+##### `.tryP` :: (() -> Promise e r) -> Future e r
+
+Create a Future which when forked spawns a Promise using the given function and
+resolves with its resolution value, or rejects with its rejection reason.
+
+```js
+Future.tryP(() => Promise.resolve('Hello'))
+.fork(console.error, console.log);
+//> "Hello"
+```
+
+Sugar for `Future.encaseP(f, undefined)`.
+
 #### encaseP
-##### `.tryP` :: (a -> Promise e r) -> Future e r
 ##### `.encaseP :: (a -> Promise e r) -> a -> Future e r`
 ##### `.encaseP2 :: (a, b -> Promise e r) -> a -> b -> Future e r`
 ##### `.encaseP3 :: (a, b, c -> Promise e r) -> a -> b -> c -> Future e r`
