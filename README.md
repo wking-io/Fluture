@@ -358,7 +358,7 @@ Future.try(() => data.foo.bar.baz)
 This function has an alias `attempt`, for environments in which `try` is a reserved word.
 
 #### tryP
-##### `.tryP` :: (() -> Promise e r) -> Future e r
+##### `.tryP :: (() -> Promise e r) -> Future e r`
 
 Create a Future which when forked spawns a Promise using the given function and
 resolves with its resolution value, or rejects with its rejection reason.
