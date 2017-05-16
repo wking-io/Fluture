@@ -377,6 +377,10 @@ Future.tryP(() => Promise.resolve('Hello'))
 Creates a Future which rejects with the first argument given to the function,
 or resolves with the second if the first is not present.
 
+This is very similar to the [`Future()`-constructor](#future), except that it
+takes *a single function* with two arguments instead of *two functions* with a
+single argument.
+
 Short for [`Future.encaseN(f, undefined)`](#encasen).
 
 ```js
