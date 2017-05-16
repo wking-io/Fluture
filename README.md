@@ -88,10 +88,10 @@ getPackageName('package.json')
         * [cache](#cache)
         * [do](#do)
         * [try](#try)
-        * [encase](#encase)
         * [tryP](#tryp)
-        * [encaseP](#encasep)
         * [node](#node)
+        * [encase](#encase)
+        * [encaseP](#encasep)
         * [encaseN](#encasen)
     1. [Transforming Futures](#transforming-futures)
         * [map](#map)
@@ -335,7 +335,7 @@ This function has an alias `go`, for environments in which `do` is a reserved wo
 Creates a Future which resolves with the result of calling the given function,
 or rejects with the error thrown by the given function.
 
-Sugar for `Future.encase(f, undefined)`.
+Short for [`Future.encase(f, undefined)`](#encase).
 
 ```js
 const data = {foo: 'bar'};
@@ -345,6 +345,36 @@ Future.try(() => data.foo.bar.baz)
 ```
 
 This function has an alias `attempt`, for environments in which `try` is a reserved word.
+
+#### tryP
+##### `.tryP` :: (() -> Promise e r) -> Future e r
+
+Create a Future which when forked spawns a Promise using the given function and
+resolves with its resolution value, or rejects with its rejection reason.
+
+Short for [`Future.encaseP(f, undefined)`](#encasep).
+
+```js
+Future.tryP(() => Promise.resolve('Hello'))
+.fork(console.error, console.log);
+//> "Hello"
+```
+
+#### node
+##### `.node :: (Nodeback e r -> ()) -> Future e r`
+
+Creates a Future which rejects with the first argument given to the function,
+or resolves with the second if the first is not present.
+
+Short for [`Future.encaseN(f, undefined)`](#encasen).
+
+```js
+Future.node(done => {
+  done(null, 'Hello');
+})
+.fork(console.error, console.log);
+//> "Hello"
+```
 
 #### encase
 ##### `.encase :: (a -> !e | r) -> a -> Future e r`
@@ -376,20 +406,6 @@ safeJsonParse(data).fork(console.error, console.log);
 Furthermore; `encase2` and `encase3` are binary and ternary versions of
 `encase`, applying two or three arguments to the given function respectively.
 
-#### tryP
-##### `.tryP` :: (() -> Promise e r) -> Future e r
-
-Create a Future which when forked spawns a Promise using the given function and
-resolves with its resolution value, or rejects with its rejection reason.
-
-```js
-Future.tryP(() => Promise.resolve('Hello'))
-.fork(console.error, console.log);
-//> "Hello"
-```
-
-Sugar for `Future.encaseP(f, undefined)`.
-
 #### encaseP
 ##### `.encaseP :: (a -> Promise e r) -> a -> Future e r`
 ##### `.encaseP2 :: (a, b -> Promise e r) -> a -> b -> Future e r`
@@ -413,22 +429,6 @@ fetchf('https://api.github.com/users/Avaq')
 
 Furthermore; `encaseP2` and `encaseP3` are binary and ternary versions
 of `encaseP`, applying two or three arguments to the given function respectively.
-
-#### node
-##### `.node :: (Nodeback e r -> ()) -> Future e r`
-
-Creates a Future which rejects with the first argument given to the function,
-or resolves with the second if the first is not present.
-
-Sugar for `Future.encaseN(f, undefined)`.
-
-```js
-Future.node(done => {
-  done(null, 'Hello');
-})
-.fork(console.error, console.log);
-//> "Hello"
-```
 
 #### encaseN
 ##### `.encaseN :: ((a, Nodeback e r) -> ()) -> a -> Future e r`
