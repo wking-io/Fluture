@@ -78,6 +78,8 @@ getPackageName('package.json')
 - [Interoperability](#interoperability)
 - [Documentation](#documentation)
     1. [Type signatures](#type-signatures)
+        * [Types](#types)
+        * [Type classes](#type-classes)
     1. [Stack safety](#stack-safety)
     1. [Creating Futures](#creating-futures)
         * [Future](#future)
@@ -140,28 +142,37 @@ getPackageName('package.json')
 
 ### Type signatures
 
-[Hindley-Milner][2] type signatures are used to document functions. Signatures
-starting with a `.` refer to "static" functions, whereas signatures starting
-with a `#` refer to functions on the prototype.
+[Hindley-Milner][Guide:HM] type signatures are used to document functions, with
+one addition: In order to document *methods* as well as static functions, we
+prefix every signature with `.` or `#`. This indicates whether the function
+lives on the object (`.function`), or its prototype (`#method`). We use `~>` to
+separate the implicit `this` argument from the other, explicit, arguments.
 
-A list of all types used within the signatures follows:
+#### Types
 
-- **Future** - Instances of Future provided by Fluture.
+You'll find that some signatures refer to concrete types, such as `Future`.
+This is reference of the types used throughout the documentation:
+
+- **Future** - Instances of Future provided by [compatible versions](#casting-futures) of Fluture.
 - **Promise** - Values which conform to the [Promises/A+ specification][7].
 - **Nodeback a b** - A Node-style callback; A function of signature `(a | Nil, b) -> ()`.
-- **Functor** - Values which conform to the [Fantasy Land Functor specification][FL:functor]
-  as determined by [Sanctuary Type Classes][Z:Functor].
-- **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][FL:bifunctor]
-  as determined by [Sanctuary Type Classes][Z:Bifunctor].
-- **Chain** - Values which conform to the [Fantasy Land Chain specification][FL:chain]
-  as determined by [Sanctuary Type Classes][Z:Chain].
-- **Apply** - Values which conform to the [Fantasy Land Apply specification][FL:apply]
-  as determined by [Sanctuary Type Classes][Z:Apply].
 - **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][3].
-- **Iteration** - `{done, value}`-Objects as defined by the [Iterator protocol][3].
-- **Next** - An incomplete (`{done: false}`) Iteration.
-- **Done** - A complete (`{done: true}`) Iteration.
-- **Cancel** - The nullary cancellation functions returned from computations.
+- **Cancel** - The nullary [cancellation](#future) functions returned from computations.
+
+#### Type classes
+
+Some signatures contain "constrained type variables". These constraints are
+expressed by means of [type classes][Guide:constraints], specifically those defined by
+[Fantasy Land][FL] and verified by [Sanctuary Type Classes][Z]:
+
+- [**Functor**][Z:Functor] - Values which conform to the
+  [Fantasy Land Functor specification][FL:functor].
+- [**Bifunctor**][Z:Bifunctor] - Values which conform to the
+  [Fantasy Land Bifunctor specification][FL:bifunctor].
+- [**Chain**][Z:Chain] - Values which conform to the
+  [Fantasy Land Chain specification][FL:chain].
+- [**Apply**][Z:Apply] - Values which conform to the
+  [Fantasy Land Apply specification][FL:apply].
 
 ### Stack safety
 
@@ -290,7 +301,7 @@ advantage is that the returned Future can be forked multiple times, as opposed
 to with a general `fantasy-do` solution, where forking the Future a second time
 behaves erroneously.
 
-Takes a function which returns an [Iterator](#type-signatures), commonly a
+Takes a function which returns an [Iterator](#types), commonly a
 generator-function, and chains every produced Future over the previous.
 
 This allows for writing sequential asynchronous code without the pyramid of
@@ -438,7 +449,7 @@ of `encaseP`, applying two or three arguments to the given function respectively
 Allows [continuation-passing-style][1] functions to be turned into Future-returning functions.
 
 Takes a function which accepts as its last parameter a
-[Nodeback](#type-signatures), and a value, and returns a Future.
+[Nodeback](#types), and a value, and returns a Future.
 When forked, the Future calls the function with the value and a Nodeback and
 resolves the second argument passed to the Nodeback, or or rejects with the
 first argument.
@@ -942,9 +953,9 @@ seq(alt(zero(Par), parx)).value(console.log);
 #### isFuture
 ##### `.isFuture :: a -> Boolean`
 
-Returns true for [Futures](#type-signatures) and false for everything else. This
-function (and [`S.is`][S:is]) also return `true` for instances of Future that
-were created within other contexts. It is therefore recommended to use this over
+Returns true for [Futures](#types) and false for everything else. This function
+(and [`S.is`][S:is]) also return `true` for instances of Future that were
+created within other contexts. It is therefore recommended to use this over
 `instanceof`, unless your intent is to explicitly check for Futures created
 using the exact `Future` constructor you're testing against.
 
@@ -1068,6 +1079,7 @@ sponsoring the project.
 [STI]:                  https://github.com/sanctuary-js/sanctuary-type-identifiers
 [FST]:                  https://github.com/fluture-js/fluture-sanctuary-types
 
+[Z]:                    https://github.com/sanctuary-js/sanctuary-type-classes#readme
 [Z:Functor]:            https://github.com/sanctuary-js/sanctuary-type-classes#Functor
 [Z:Bifunctor]:          https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
 [Z:Chain]:              https://github.com/sanctuary-js/sanctuary-type-classes#Chain
@@ -1079,8 +1091,10 @@ sponsoring the project.
 
 [Rollup]:               https://rollupjs.org/
 
+[Guide:HM]:             https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
+[Guide:constraints]:    https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html#constraints
+
 [1]:                    https://en.wikipedia.org/wiki/Continuation-passing_style
-[2]:                    https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
 [3]:                    https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterator
 [4]:                    https://github.com/russellmcc/fantasydo
 [5]:                    https://vimeo.com/106008027
