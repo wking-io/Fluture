@@ -10,9 +10,12 @@ import {
 import * as dispatchers from './dispatchers';
 
 import {after, rejectAfter} from './after';
+import {attempt} from './attempt';
 import {cache} from './cache';
 import {chainRec} from './chain-rec';
-import {encase, encase2, encase3, attempt} from './encase';
+import {encase} from './encase';
+import {encase2} from './encase2';
+import {encase3} from './encase3';
 import {encaseN, encaseN2, encaseN3, node} from './encase-n';
 import {encaseP, encaseP2, encaseP3, tryP} from './encase-p';
 import {go} from './go';
