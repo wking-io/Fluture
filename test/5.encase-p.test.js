@@ -90,7 +90,7 @@ describe('encaseP3()', () => {
 
 });
 
-describe('FromPromise', () => {
+describe('EncaseP', () => {
 
   it('extends Future', () => {
     expect(encaseP(U.noop, 1)).to.be.an.instanceof(Future);
@@ -182,10 +182,14 @@ describe('FromPromise', () => {
 
   describe('#toString()', () => {
 
-    it('returns the code to create the FromPromise', () => {
+    it('returns the code to create the EncaseP', () => {
+      const m0 = tryP(unaryNoop);
       const m1 = encaseP(unaryNoop, null);
       const m2 = encaseP2(binaryNoop, null, null);
       const m3 = encaseP3(ternaryNoop, null, null, null);
+      expect(m0.toString()).to.equal(
+        `Future.tryP(${unaryNoop.toString()})`
+      );
       expect(m1.toString()).to.equal(
         `Future.encaseP(${unaryNoop.toString()}, null)`
       );

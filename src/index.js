@@ -17,11 +17,14 @@ import {encase} from './encase';
 import {encase2} from './encase2';
 import {encase3} from './encase3';
 import {encaseN, encaseN2, encaseN3, node} from './encase-n';
-import {encaseP, encaseP2, encaseP3, tryP} from './encase-p';
+import {encaseP} from './encase-p';
+import {encaseP2} from './encase-p2';
+import {encaseP3} from './encase-p3';
 import {go} from './go';
 import {hook} from './hook';
 import {Par, seq} from './par';
 import {parallel} from './parallel';
+import {tryP} from './try-p';
 
 import {error} from './internal/throw';
 

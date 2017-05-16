@@ -28,3 +28,7 @@ export const partial2 = (f, a, b) => function bound2(c, d){
 export const partial3 = (f, a, b, c) => function bound3(d){
   return f(a, b, c, d);
 };
+
+export const escapeTick = f => function imprisoned(x){
+  setTimeout(function escaped(){ f(x) }, 0);
+};
