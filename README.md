@@ -91,6 +91,7 @@ getPackageName('package.json')
         * [encase](#encase)
         * [encaseP](#encasep)
         * [node](#node)
+        * [encaseN](#encasen)
     1. [Transforming Futures](#transforming-futures)
         * [map](#map)
         * [bimap](#bimap)
@@ -120,7 +121,6 @@ getPackageName('package.json')
         * [never](#never)
         * [isNever](#isnever)
     1. [Sanctuary](#sanctuary)
-    1. [Futurization](#futurization)
     1. [Casting Futures](#casting-futures)
 - [Butterfly](#butterfly)
 
@@ -147,6 +147,7 @@ A list of all types used within the signatures follows:
 
 - **Future** - Instances of Future provided by Fluture.
 - **Promise** - Values which conform to the [Promises/A+ specification][7].
+- **Nodeback a b** - A Node-style callback; A function of signature `(a | Nil, b) -> ()`.
 - **Functor** - Values which conform to the [Fantasy Land Functor specification][FL:functor]
   as determined by [Sanctuary Type Classes][Z:Functor].
 - **Bifunctor** - Values which conform to the [Fantasy Land Bifunctor specification][FL:bifunctor]
@@ -400,21 +401,48 @@ Furthermore; `encaseP2` and `encaseP3` are binary and ternary versions
 of `encaseP`, applying two or three arguments to the given function respectively.
 
 #### node
-##### `.node :: (((a, b) -> ()) -> ()) -> Future a b`
+##### `.node :: (Nodeback e r -> ()) -> Future e r`
 
 Creates a Future which rejects with the first argument given to the function,
 or resolves with the second if the first is not present.
 
-This is a convenience for NodeJS users who wish to easily obtain a Future from
-a node style callback API. To permanently turn a function into one that returns
-a Future, check out [futurization](#futurization).
+Sugar for `Future.encaseN(f, undefined)`.
 
 ```js
-const {readFile} = require('fs');
-Future.node(done => readFile('package.json', 'utf8', done))
+Future.node(done => {
+  done(null, 'Hello');
+})
 .fork(console.error, console.log);
-//> "{...}"
+//> "Hello"
 ```
+
+#### encaseN
+##### `.encaseN :: ((a, Nodeback e r) -> ()) -> a -> Future e r`
+##### `.encaseN2 :: ((a, b, Nodeback e r) -> ()) -> a -> b -> Future e r`
+##### `.encaseN3 :: ((a, b, c, Nodeback e r) -> ()) -> a -> b -> c -> Future e r`
+
+Allows [continuation-passing-style][1] functions to be turned into Future-returning functions.
+
+Takes a function which accepts as its last parameter a
+[Nodeback](#type-signatures), and a value, and returns a Future.
+When forked, the Future calls the function with the value and a Nodeback and
+resolves the second argument passed to the Nodeback, or or rejects with the
+first argument.
+
+```js
+const fs = require('fs');
+
+const read = Future.encaseN2(fs.readFile);
+
+read('README.md', 'utf8')
+.map(text => text.split('\n'))
+.map(lines => lines[0])
+.fork(console.error, console.log);
+//> "# [![Fluture](logo.png)](#butterfly)"
+```
+
+Furthermore; `encaseN2` and `encaseN3` are binary and ternary versions
+of `encaseN`, applying two or three arguments to the given function respectively.
 
 ### Transforming Futures
 
@@ -969,22 +997,6 @@ S.I(Future.of(1));
 //> Future.of(1)
 ```
 
-### Futurization
-
-To reduce the boilerplate of making Node or Promise functions return Futures
-instead, one might use the [Futurize][1] library:
-
-```js
-const Future = require('fluture');
-const futurize = require('futurize').futurize(Future);
-const readFile = futurize(require('fs').readFile);
-readFile('README.md', 'utf8')
-.map(text => text.split('\n'))
-.map(lines => lines[0])
-.fork(console.error, console.log);
-//> "# [![Fluture](logo.png)](#butterfly)"
-```
-
 ### Casting Futures
 
 Sometimes you may need to convert one Future to another, for example when the
@@ -1053,7 +1065,7 @@ sponsoring the project.
 
 [Rollup]:               https://rollupjs.org/
 
-[1]:                    https://github.com/futurize/futurize
+[1]:                    https://en.wikipedia.org/wiki/Continuation-passing_style
 [2]:                    https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch7.html
 [3]:                    https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#iterator
 [4]:                    https://github.com/russellmcc/fantasydo

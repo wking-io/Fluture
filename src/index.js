@@ -13,10 +13,10 @@ import {after, rejectAfter} from './after';
 import {cache} from './cache';
 import {chainRec} from './chain-rec';
 import {encase, encase2, encase3, attempt} from './encase';
+import {encaseN, encaseN2, encaseN3, node} from './encase-n';
 import {encaseP, encaseP2, encaseP3, tryP} from './encase-p';
 import {go} from './go';
 import {hook} from './hook';
-import {node} from './node';
 import {Par, seq} from './par';
 import {parallel} from './parallel';
 
@@ -40,6 +40,9 @@ export default Object.assign(Future, dispatchers, {
   encaseP3,
   tryP,
   hook,
+  encaseN,
+  encaseN2,
+  encaseN3,
   node,
   Par,
   seq,
