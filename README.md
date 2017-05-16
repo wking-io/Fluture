@@ -154,6 +154,7 @@ You'll find that some signatures refer to concrete types, such as `Future`.
 This is reference of the types used throughout the documentation:
 
 - **Future** - Instances of Future provided by [compatible versions](#casting-futures) of Fluture.
+- **ConcurrentFuture** - [Concurrified][concurrify] Futures ([`Future.Par`](#concurrentfuture)).
 - **Promise** - Values which conform to the [Promises/A+ specification][7].
 - **Nodeback a b** - A Node-style callback; A function of signature `(a | Nil, b) -> ()`.
 - **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][3].
