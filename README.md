@@ -95,6 +95,7 @@ getPackageName('package.json')
         * [encase](#encase)
         * [encaseP](#encasep)
         * [encaseN](#encasen)
+        * [chainRec](#chainrec)
     1. [Transforming Futures](#transforming-futures)
         * [map](#map)
         * [bimap](#bimap)
@@ -473,6 +474,13 @@ read('README.md', 'utf8')
 
 Furthermore; `encaseN2` and `encaseN3` are binary and ternary versions
 of `encaseN`, applying two or three arguments to the given function respectively.
+
+#### chainRec
+##### `.chainRec :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b`
+
+Implementation of [Fantasy Land ChainRec][FL:chainrec]. Since Fluture 6.0
+introduced [stack safety](#stack-safety) there should be no need to use this
+function directly. Instead it's recommended to use [`chain(rec)`](#chain).
 
 ### Transforming Futures
 
@@ -1064,6 +1072,7 @@ sponsoring the project.
 [FL:apply]:             https://github.com/fantasyland/fantasy-land#apply
 [FL:applicative]:       https://github.com/fantasyland/fantasy-land#applicative
 [FL:bifunctor]:         https://github.com/fantasyland/fantasy-land#bifunctor
+[FL:chainrec]:          https://github.com/fantasyland/fantasy-land#chainrec
 
 [JS:Object.create]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
 [JS:Object.assign]:     https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
