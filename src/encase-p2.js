@@ -5,7 +5,7 @@ import {invalidArgument, typeError} from './internal/throw';
 
 function check$promise(p, f, a, b){
   return isThenable(p) ? p : typeError(
-    'Future.encaseP2 expects the function its given to return a Promise/Thenable'
+    'Future.encaseP2 expects the function it\'s given to return a Promise/Thenable'
     + `\n  Actual: ${show(p)}\n  From calling: ${showf(f)}`
     + `\n  With 1: ${show(a)}`
     + `\n  With 2: ${show(b)}`
