@@ -6,7 +6,7 @@ import {invalidArgument, invalidFuture} from './internal/throw';
 function check$dispose(m, f, x){
   if(!isFuture(m)) invalidFuture(
     'Future.hook',
-    'the first function its given to return a Future',
+    'the first function it\'s given to return a Future',
     m,
     `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
   );
@@ -15,7 +15,7 @@ function check$dispose(m, f, x){
 function check$consume(m, f, x){
   if(!isFuture(m)) invalidFuture(
     'Future.hook',
-    'the second function its given to return a Future',
+    'the second function it\'s given to return a Future',
     m,
     `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
   );

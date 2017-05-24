@@ -429,7 +429,7 @@ export class BimapAction extends Action{
 }
 const check$chain = (m, f, x) => isFuture(m) ? m : invalidFuture(
   'Future#chain',
-  'the function its given to return a Future',
+  'the function it\'s given to return a Future',
   m,
   `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
 );
@@ -445,7 +445,7 @@ export class MapRejAction extends Action{
 }
 const check$chainRej = (m, f, x) => isFuture(m) ? m : invalidFuture(
   'Future#chainRej',
-  'the function its given to return a Future',
+  'the function it\'s given to return a Future',
   m,
   `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
 );
