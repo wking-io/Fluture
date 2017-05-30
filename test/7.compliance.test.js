@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import FL from 'fantasy-land';
-import {Future, reject, ap, map, bimap, chain, chainRec} from '../index.es.js';
+import Future from '../index.es.js';
 import * as U from './util';
 import jsc from 'jsverify';
 
@@ -11,8 +11,7 @@ describe('Compliance', function(){
 
   const test = (name, f) => jsc.property(name, 'number | nat', o => f(o.value));
   const eq = U.assertEqual;
-  const of = Future[FL.of];
-  const undetermined = x => Math.random() > 0.5 ? of(x) : reject(x);
+  const undetermined = x => Math.random() > 0.5 ? Future.of(x) : Future.reject(x);
 
   const I = x => x;
   const T = x => f => f(x);
@@ -22,6 +21,8 @@ describe('Compliance', function(){
   const mul3 = x => x * 3;
 
   describe('to Fantasy-Land:', () => {
+
+    const of = Future[FL.of];
 
     describe('Functor', () => {
       test('identity', x => {
@@ -118,6 +119,8 @@ describe('Compliance', function(){
   });
 
   describe('to Static-Land:', () => {
+
+    const {of, ap, map, bimap, chain, chainRec} = Future;
 
     describe('Functor', () => {
       test('identity', x => eq(
