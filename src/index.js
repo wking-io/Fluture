@@ -1,11 +1,5 @@
-import {
-  Future,
-  isFuture,
-  isNever,
-  never,
-  of,
-  reject
-} from './core';
+import Future from './future';
+import {isFuture, isNever, never, of, reject} from './core';
 
 import * as dispatchers from './dispatchers';
 

@@ -5,7 +5,7 @@ import Denque from 'denque';
 import {show, showf, noop, moop} from './internal/fn';
 import {isFunction} from './internal/is';
 import {error, typeError, invalidArgument, invalidContext, invalidFuture} from './internal/throw';
-import {FL, $$type} from './internal/const';
+import {$$type} from './internal/const';
 import type from 'sanctuary-type-identifiers';
 
 const throwRejection = x => error(
@@ -20,22 +20,6 @@ export function Future(computation){
 export function isFuture(x){
   return x instanceof Future || type(x) === $$type;
 }
-
-Future.prototype[FL.ap] = function Future$FL$ap(other){
-  return other._ap(this);
-};
-
-Future.prototype[FL.map] = function Future$FL$map(mapper){
-  return this._map(mapper);
-};
-
-Future.prototype[FL.bimap] = function Future$FL$bimap(lmapper, rmapper){
-  return this._bimap(lmapper, rmapper);
-};
-
-Future.prototype[FL.chain] = function Future$FL$chain(mapper){
-  return this._chain(mapper);
-};
 
 Future.prototype.ap = function Future$ap(other){
   if(!isFuture(this)) invalidContext('Future#ap', this);
@@ -641,6 +625,3 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
 Sequence.prototype.toString = function Sequence$toString(){
   return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
 };
-
-Future['@@type'] = $$type;
-Future[FL.of] = of;

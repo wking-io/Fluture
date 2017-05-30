@@ -1,8 +1,7 @@
-import {Future, Core} from './core';
+import {Core} from './core';
 import {Next, Done} from './internal/iteration';
 import {Undetermined, Synchronous, Asynchronous} from './internal/timing';
 import {show, showf, noop} from './internal/fn';
-import {FL} from './internal/const';
 
 export function ChainRec(step, init){
   this._step = step;
@@ -47,5 +46,3 @@ ChainRec.prototype.toString = function ChainRec$toString(){
 export function chainRec(step, init){
   return new ChainRec(step, init);
 }
-
-Future[FL.chainRec] = chainRec;

@@ -1,12 +1,5 @@
-export {
-  Future,
-  Future as default,
-  isFuture,
-  reject,
-  of,
-  never,
-  isNever
-} from './src/core';
+export {default, default as Future} from './src/future';
+export {isFuture, reject, of, never, isNever} from './src/core';
 
 export * from './src/dispatchers';
 
