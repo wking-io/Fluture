@@ -15,6 +15,7 @@ export {race} from './dispatchers/race';
 export {swap} from './dispatchers/swap';
 export {fold} from './dispatchers/fold';
 
+export {done} from './dispatchers/done';
 export {fork} from './dispatchers/fork';
 export {promise} from './dispatchers/promise';
 export {value} from './dispatchers/value';
