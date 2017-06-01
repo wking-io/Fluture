@@ -114,6 +114,7 @@ getPackageName('package.json')
     1. [Consuming Futures](#consuming-futures)
         * [fork](#fork)
         * [value](#value)
+        * [done](#done)
         * [promise](#promise)
     1. [Parallelism](#parallelism)
         * [race](#race)
@@ -825,6 +826,27 @@ Just like [fork](#fork), `value` returns the `Cancel` function:
 
 ```js
 Future.after(300, 'hello').value(console.log)();
+//Nothing will happen. The Future was cancelled before it could settle.
+```
+
+#### done
+##### `#done :: Future a b ~> Nodeback a b -> Cancel`
+##### `.done :: Nodeback a b -> Future a b -> Cancel`
+
+Fork the Future into a [Nodeback](#types).
+
+```js
+Future.of('hello').done((err, val) => console.log(val));
+//> "hello"
+```
+
+This is like [fork](#fork), but instead of taking two unary functions, it takes
+a single binary function. As with `fork()`, `done()` returns [`Cancel`](#types):
+
+```js
+const m = Future.after(300, 'hello');
+const cancel = m.done((err, val) => console.log(val));
+cancel();
 //Nothing will happen. The Future was cancelled before it could settle.
 ```
 

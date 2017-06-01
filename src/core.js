@@ -119,6 +119,13 @@ Future.prototype.value = function Future$value(res){
   return this._fork(throwRejection, res);
 };
 
+Future.prototype.done = function Future$done(callback){
+  if(!isFuture(this)) invalidContext('Future#done', this);
+  if(!isFunction(callback)) invalidArgument('Future#done', 0, 'to be a Function', callback);
+  return this._fork(function Future$done$rej(x){ callback(x) },
+                    function Future$done$res(x){ callback(null, x) });
+};
+
 Future.prototype.promise = function Future$promise(){
   return new Promise((res, rej) => this._fork(rej, res));
 };

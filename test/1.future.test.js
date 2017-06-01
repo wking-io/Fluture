@@ -7,6 +7,7 @@ import {
   isFuture,
   fork,
   value,
+  done,
   promise,
   seq,
   Par,
@@ -99,6 +100,36 @@ describe('Future', () => {
         done();
       };
       value(a, mock);
+    });
+
+  });
+
+  describe('.done()', () => {
+
+    it('is a curried binary function', () => {
+      expect(done).to.be.a('function');
+      expect(done.length).to.equal(2);
+      expect(done(U.noop)).to.be.a('function');
+    });
+
+    it('throws when not given a Function as first argument', () => {
+      const f = () => done(1);
+      expect(f).to.throw(TypeError, /Future.*first/);
+    });
+
+    it('throws when not given a Future as second argument', () => {
+      const f = () => done(U.add(1), 1);
+      expect(f).to.throw(TypeError, /Future.*second/);
+    });
+
+    it('dispatches to #done()', fin => {
+      const a = () => {};
+      const mock = Object.create(F.mock);
+      mock.done = x => {
+        expect(x).to.equal(a);
+        fin();
+      };
+      done(a, mock);
     });
 
   });
@@ -235,6 +266,48 @@ describe('Future', () => {
       const sentinel = {};
       mock._fork = () => sentinel;
       expect(mock.value(U.noop)).to.equal(sentinel);
+    });
+
+  });
+
+  describe('#done()', () => {
+
+    it('throws when invoked out of context', () => {
+      const f = () => F.mock.done.call(null, U.noop);
+      expect(f).to.throw(TypeError, /Future/);
+    });
+
+    it('throws TypeError when not given a function', () => {
+      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      const fs = xs.map(x => () => F.mock.done(x));
+      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    });
+
+    it('passes the rejection value as first parameter', fin => {
+      const mock = Object.create(Future.prototype);
+      mock._fork = l => {l(1)};
+      mock.done((x, y) => {
+        expect(x).to.equal(1);
+        expect(y).to.equal(undefined);
+        fin();
+      });
+    });
+
+    it('passes the resolution value as second parameter', fin => {
+      const mock = Object.create(Future.prototype);
+      mock._fork = (l, r) => {r(1)};
+      mock.done((x, y) => {
+        expect(x).to.equal(null);
+        expect(y).to.equal(1);
+        fin();
+      });
+    });
+
+    it('returns the return done of #_fork()', () => {
+      const mock = Object.create(Future.prototype);
+      const sentinel = {};
+      mock._fork = () => sentinel;
+      expect(mock.done(U.noop)).to.equal(sentinel);
     });
 
   });
