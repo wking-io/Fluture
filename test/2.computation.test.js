@@ -72,18 +72,6 @@ describe('Computation', () => {
       actual.fork(_ => done(), U.failRes);
     });
 
-    it('prevents chains from running twice', done => {
-      const m = Future((rej, res) => {
-        res(1);
-        res(1);
-      });
-      m.map(x => {
-        done();
-        return x;
-      })
-      .fork(U.failRej, U.noop);
-    });
-
     it('stops continuations from being called after cancellation', done => {
       Future((rej, res) => {
         setTimeout(res, 20, 1);

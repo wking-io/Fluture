@@ -565,51 +565,57 @@ Sequence.prototype._finally = function Sequence$finally(other){
 
 Sequence.prototype._fork = function Sequence$_fork(rej, res){
 
-  const stack = new Denque(this._actions);
   const queue = new Denque(this._actions.length);
+  const cold = new Denque(this._actions);
   let action, cancel = noop, future = this._spawn, it, settled, async;
 
   function settle(m){
     settled = true;
     future = m;
-    if(!(future instanceof Sequence)) return;
-    for(let i = future._actions.length - 1; i >= 0; i--) stack.unshift(future._actions[i]);
-    future = future._spawn;
+    if(future instanceof Sequence){
+      for(let i = future._actions.length - 1; i >= 0; i--) cold.unshift(future._actions[i]);
+      future = future._spawn;
+    }
+    if(async) drain();
   }
 
   function early(m, terminator){
     cancel();
     if(action !== terminator){
       action.cancel();
-      while((it = queue.shift()) && it !== terminator) it.cancel();
+      while(async && (it = queue.shift()) && it !== terminator) it.cancel();
     }
     settle(m);
-    if(async) drain();
   }
 
   function rejected(x){
     settle(action.rejected(x));
-    if(async) drain();
   }
 
   function resolved(x){
     settle(action.resolved(x));
-    if(async) drain();
+  }
+
+  function runActions(){
+    let i = 0;
+    const hot = new Array(cold.length);
+    while(it = cold.shift()){
+      const tmp = it.run(early);
+      if(settled) break;
+      hot[i++] = tmp;
+    }
+    while(--i >= 0) if(settled) hot[i].cancel(); else queue.unshift(hot[i]);
   }
 
   function drain(){
     async = false;
-    while(action = stack.shift() || queue.shift()){
+    while(action = cold.shift() || queue.shift()){
       settled = false;
       cancel = future._fork(rejected, resolved);
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
-      while(it = stack.shift()){
-        const tmp = it.run(early);
-        if(settled) break;
-        queue.push(tmp);
-      }
+      runActions();
       if(settled) continue;
       async = true;
       return;
@@ -623,7 +629,7 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
     cancel();
     action && action.cancel();
     while(it = queue.shift()) it.cancel();
-    stack.clear();
+    cold.clear();
     cancel = noop;
   };
 

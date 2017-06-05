@@ -1,8 +1,9 @@
 import {Future, of, never, after} from '../index.es.js';
 import {expect} from 'chai';
 import {add, bang, noop, error, assertResolved, assertRejected} from './util';
-import {resolved, rejected} from './futures';
+import {resolved, rejected, resolvedSlow} from './futures';
 import {Sequence, Core} from '../src/core';
+import {StateT} from 'fantasy-states';
 
 describe('Sequence', () => {
 
@@ -333,6 +334,16 @@ describe('Sequence', () => {
         setTimeout(done, 40, null);
       });
 
+      it('cancels running actions when one early-terminates asynchronously', done => {
+        const slow = new Sequence(Future(() => {
+          const id = setTimeout(done, 50, new Error('Not terminated'));
+          return () => clearTimeout(id);
+        }));
+        const m = slow.race(slow).race(slow).race(slow).race(resolvedSlow);
+        m.fork(noop, noop);
+        setTimeout(done, 100, null);
+      });
+
       it('does not forget about actions to run after early termination', () => {
         const m = new Sequence(after(30, 'a'))
                   .race(new Sequence(after(20, 'b')))
@@ -340,7 +351,7 @@ describe('Sequence', () => {
         return assertResolved(m, 'bc');
       });
 
-      it('does not run early terminating actions twice', done => {
+      it('does not run early terminating actions twice, or cancel them', done => {
         const mock = Object.create(Core);
         mock._fork = (l, r) => r(done()) || (() => done(error));
         const m = new Sequence(after(30, 'a')).map(x => `${x}b`).race(mock);
@@ -358,6 +369,18 @@ describe('Sequence', () => {
         cancel();
       });
 
+    });
+
+  });
+
+  describe('Bug 2017-06-02, reported by @d3vilroot', () => {
+
+    const Middleware = StateT(Future);
+    const slow = Middleware.lift(after(10, null));
+    const program = slow.chain(_ => slow.chain(_ => slow)).evalState(null);
+
+    it('does not occur', done => {
+      program.fork(done, _ => done());
     });
 
   });
