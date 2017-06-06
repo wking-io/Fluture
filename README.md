@@ -23,6 +23,7 @@ Some of the features provided by Fluture include:
 
 For more information:
 
+* [API documentation](#documentation)
 * [Wiki: Compare Futures to Promises][wiki:promises]
 * [Wiki: Compare Fluture to similar libraries][wiki:similar]
 * [Video: Monad a Day by @DrBoolean - Futures][5]
@@ -72,63 +73,6 @@ getPackageName('package.json')
 //> "fluture"
 ```
 
-## Table of contents
-
-- [Usage](#usage)
-- [Interoperability](#interoperability)
-- [Documentation](#documentation)
-    1. [Type signatures](#type-signatures)
-        * [Types](#types)
-        * [Type classes](#type-classes)
-    1. [Stack safety](#stack-safety)
-    1. [Creating Futures](#creating-futures)
-        * [Future](#future)
-        * [of](#of)
-        * [reject](#reject)
-        * [after](#after)
-        * [rejectAfter](#rejectafter)
-        * [cache](#cache)
-        * [do](#do)
-        * [try](#try)
-        * [tryP](#tryp)
-        * [node](#node)
-        * [encase](#encase)
-        * [encaseP](#encasep)
-        * [encaseN](#encasen)
-        * [chainRec](#chainrec)
-    1. [Transforming Futures](#transforming-futures)
-        * [map](#map)
-        * [bimap](#bimap)
-        * [chain](#chain)
-        * [swap](#swap)
-        * [mapRej](#maprej)
-        * [chainRej](#chainrej)
-        * [fold](#fold)
-    1. [Combining Futures](#combining-futures)
-        * [ap](#ap)
-        * [and](#and)
-        * [or](#or)
-    1. [Resource management](#resource-management)
-        * [hook](#hook)
-        * [finally](#finally)
-    1. [Consuming Futures](#consuming-futures)
-        * [fork](#fork)
-        * [value](#value)
-        * [done](#done)
-        * [promise](#promise)
-    1. [Parallelism](#parallelism)
-        * [race](#race)
-        * [both](#both)
-        * [parallel](#parallel)
-        * [ConcurrentFuture](#concurrentfuture)
-    1. [Utility functions](#utility-functions)
-        * [isFuture](#isfuture)
-        * [never](#never)
-        * [isNever](#isnever)
-    1. [Sanctuary](#sanctuary)
-    1. [Casting Futures](#casting-futures)
-- [Butterfly](#butterfly)
-
 ## Interoperability
 
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][FL]
@@ -140,7 +84,103 @@ getPackageName('package.json')
 * `Future.Par` implements [Fantasy Land 3][FL] `Alternative` (`of`, `zero`, `map`, `ap`, `alt`).
 * The Future representative contains a `@@type` property for [Sanctuary Type Identifiers][STI].
 
+## Butterfly
+
+The name "Fluture" is a conjunction of "FL" (the acronym to [Fantasy Land][FL])
+and "future". Fluture means butterfly in Romanian: A creature you might expect
+to see in Fantasy Land.
+
+Thanks to [Erik Fuente][8] for the logo, and [WEAREREASONABLEPEOPLE][9] for
+sponsoring the project.
+
 ## Documentation
+
+### Table of contents
+
+<details open><summary>General</summary>
+
+- [How to read the type signatures](#type-signatures)
+- [On stack safety](#stack-safety)
+- [Usage with Sanctuary](#sanctuary)
+- [Using multiple versions of Fluture](#casting-futures)
+
+</details>
+
+<details><summary>Creating new Futures</summary>
+
+- [`Future`: Create a possibly cancellable Future](#future)
+- [`of`: Create a resolved Future](#of)
+- [`reject`: Create a rejected Future](#reject)
+- [`after`: Create a Future that resolves after a timeout](#after)
+- [`rejectAfter`: Create a Future that rejects after a timeout](#rejectafter)
+- [`do`: Create a "coroutine" using a generator function](#do)
+- [`try`: Create a Future using a possibly throwing function](#try)
+- [`tryP`: Create a Future using a Promise-returning function](#tryp)
+- [`node`: Create a Future using a Node-style callback](#node)
+- [`encase`: Convert a possibly throwing function to a Future function](#encase)
+- [`encaseP`: Convert a Promise-retuning function to a Future function](#encasep)
+- [`encaseN`: Convert a Nodeback function to a Future function](#encasen)
+
+</details>
+
+<details><summary>Converting between Nodeback APIs and Futures</summary>
+
+- [`node`: Create a Future using a Node-style callback](#node)
+- [`encaseN`: Convert a Nodeback function to a Future function](#encasen)
+- [`done`: Consume a Future by providing a Nodeback](#done)
+
+</details>
+
+<details><summary>Converting between Promises and Futures</summary>
+
+- [`tryP`: Create a Future using a Promise-returning function](#tryp)
+- [`encaseP`: Convert a Promise-retuning function to a Future function](#encasep)
+- [`promise`: Convert a Future to a Promise](#promise)
+
+</details>
+
+<details><summary>Transforming and combining Futures</summary>
+
+- [`map`: Synchronously process the success value in a Future](#map)
+- [`bimap`: Synchronously process the success or failure value in a Future](#bimap)
+- [`chain`: Asynchronously process the success value in a Future](#chain)
+- [`swap`: Swap the success with the failure value](#swap)
+- [`mapRej`: Synchronously process the failure value in a Future](#maprej)
+- [`chainRej`: Asynchronously process the failure value in a Future](#chainrej)
+- [`fold`: Coerce success and failure values into the same success value](#fold)
+- [`ap`: Combine the success values of multiple Futures using a function](#ap)
+- [`and`: Logical *and* for Futures](#and)
+- [`or`: Logical *or* for Futures](#or)
+
+</details>
+
+<details><summary>Consuming/forking Futures</summary>
+
+- [`fork`: Standard way to run a Future and get at its result](#fork)
+- [`value`: Shorter variant of `fork` for Futures sure to succeed](#value)
+- [`done`: Nodeback style `fork`](#done)
+- [`promise`: Convert a Future to a Promise](#promise)
+
+</details>
+
+<details><summary>Concurrency related utilities and data structures</summary>
+
+- [`race`: Race two Futures against each other](#race)
+- [`both`: Await both success values from two Futures](#both)
+- [`parallel`: Await all success values from many Futures](#parallel)
+- [`ConcurrentFuture`: A separate data-type for doing algebraic concurrency](#concurrentfuture)
+
+</details>
+
+<details><summary>Resource management and utilities</summary>
+
+- [`hook`: Safely create and dispose resources](#hook)
+- [`finally`: Clean up resources](#finally)
+- [`cache`: Cache a Future so that it can be forked multiple times](#cache)
+- [`isFuture`: Determine whether a value is a Fluture compatible Future](#isfuture)
+- [`never`: A Future that never settles](#never)
+
+</details>
 
 ### Type signatures
 
@@ -201,6 +241,55 @@ const m = (function recur(x){
 
 m.fork(console.error, console.log);
 //> 100001
+```
+
+### Sanctuary
+
+When using this module with [Sanctuary Def][$] (and [Sanctuary][S] by
+extension) you might run into the following issue:
+
+```js
+const S = require('sanctuary');
+const Future = require('fluture');
+S.I(Future.of(1));
+//! Since there is no type of which all the above values are members,
+//! the type-variable constraint has been violated.
+```
+
+This happens because Sanctuary Def needs to know about the types created by
+Fluture to determine whether the type-variables are consistent.
+
+To let Sanctuary know about these types, we can obtain the type definitions from
+[`fluture-sanctuary-types`][FST] and pass them to [`S.create`][S:create]:
+
+```js
+const {create, env} = require('sanctuary');
+const {env: flutureEnv} = require('fluture-sanctuary-types');
+const Future = require('fluture');
+
+const S = create({checkTypes: true, env: env.concat(flutureEnv)});
+
+S.I(Future.of(1));
+//> Future.of(1)
+```
+
+### Casting Futures
+
+Sometimes you may need to convert one Future to another, for example when the
+Future was created by another package, or an incompatible version of Fluture.
+
+When [`isFuture`](#isfuture) returns `false`, a conversion is necessary. Usually
+the most concise way of doing this is as follows:
+
+```js
+const NoFuture = require('incompatible-future');
+const incompatible = NoFuture.of('Hello');
+
+//Cast the incompatible Future to our version of Future:
+const compatible = Future(incompatible.fork.bind(incompatible));
+
+compatible.both(Future.of('world')).value(console.log);
+//> ["Hello", "world"]
 ```
 
 ### Creating Futures
@@ -268,30 +357,6 @@ Creates a Future which rejects with the given reason after n milliseconds.
 const eventualError = Future.rejectAfter(500, new Error('Kaputt!'));
 eventualError.fork(err => console.log('Oh no - ' + err.message), console.log);
 //! Oh no - Kaputt!
-```
-
-#### cache
-##### `.cache :: Future a b -> Future a b`
-
-Returns a Future which caches the resolution value of the given Future so that
-whenever it's forked, it can load the value from cache rather than reexecuting
-the chain.
-
-```js
-const {readFile} = require('fs');
-const eventualPackage = Future.cache(
-  Future.node(done => {
-    console.log('Reading some big data');
-    readFile('package.json', 'utf8', done);
-  })
-);
-
-eventualPackage.fork(console.error, console.log);
-//> "Reading some big data"
-//> "{...}"
-
-eventualPackage.fork(console.error, console.log);
-//> "{...}"
 ```
 
 #### do
@@ -676,99 +741,6 @@ any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
 //> 2
 ```
 
-### Resource management
-
-Functions listed under this category allow for more fine-grained control over
-the flow of acquired values.
-
-#### hook
-##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
-
-Allows a Future-returning function to be decorated with resource acquistion
-and disposal. The signature is like `hook(acquire, dispose, consume)`, where
-`acquire` is a Future which might create connections, open file handlers, etc.
-`dispose` is a function that takes the result from `acquire` and should be used
-to clean up (close connections etc) and `consume` also takes the result from
-`acquire`, and may be used to perform any arbitrary computations using the
-resource. The resolution value of `dispose` is ignored.
-
-<!-- eslint-disable no-undef -->
-```js
-const withConnection = Future.hook(
-  openConnection('localhost'),
-  closeConnection
-);
-
-withConnection(
-  conn => query(conn, 'EAT * cakes FROM bakery')
-)
-.fork(console.error, console.log);
-```
-
-In the case that a hooked Future is *cancelled* after the resource was acquired,
-`dispose` will be executed and immediately cancelled. This means that rejections
-which may happen during this disposal are **silently ignored**. To ensure that
-resources are disposed during cancellation, you might synchronously dispose
-resources in the `cancel` function of the disposal Future:
-
-<!-- eslint-disable no-unused-vars -->
-```js
-const closeConnection = conn => Future((rej, res) => {
-
-  //We try to dispose gracefully.
-  conn.flushGracefully(err => {
-    if(err === null){
-      conn.close();
-      res();
-    }else{
-      rej(err);
-    }
-  });
-
-  //On cancel, we force dispose.
-  return () => conn.close();
-
-});
-```
-
-#### finally
-##### `#finally :: Future a b ~> Future a c -> Future a b`
-##### `#lastly :: Future a b ~> Future a c -> Future a b`
-##### `.finally :: Future a c -> Future a b -> Future a b`
-##### `.lastly :: Future a c -> Future a b -> Future a b`
-
-Run a second Future after the first settles (successfully or unsuccessfully).
-Rejects with the rejection reason from the first or second Future, or resolves
-with the resolution value from the first Future.
-
-```js
-Future.of('Hello')
-.finally(Future.of('All done!').map(console.log))
-.fork(console.error, console.log);
-//> "All done!"
-//> "Hello"
-```
-
-Note that the *first* Future is given as the *last* argument to `Future.finally()`:
-
-```js
-const program = S.pipe([
-  Future.of,
-  Future.finally(Future.of('All done!').map(console.log)),
-  Future.fork(console.error, console.log)
-]);
-
-program('Hello');
-//> "All done!"
-//> "Hello"
-```
-
-As with [`hook`](#hook); when the Future is cancelled before the *finally
-computation* is running, the *finally computation* is executed and immediately
-cancelled.
-
-This function has an alias `lastly`, for environments in which `finally` is a reserved word.
-
 ### Consuming Futures
 
 #### fork
@@ -983,7 +955,124 @@ seq(alt(zero(Par), parx)).value(console.log);
 //> 1
 ```
 
+### Resource management
+
+Functions listed under this category allow for more fine-grained control over
+the flow of acquired values.
+
+#### hook
+##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
+
+Allows a Future-returning function to be decorated with resource acquistion
+and disposal. The signature is like `hook(acquire, dispose, consume)`, where
+`acquire` is a Future which might create connections, open file handlers, etc.
+`dispose` is a function that takes the result from `acquire` and should be used
+to clean up (close connections etc) and `consume` also takes the result from
+`acquire`, and may be used to perform any arbitrary computations using the
+resource. The resolution value of `dispose` is ignored.
+
+<!-- eslint-disable no-undef -->
+```js
+const withConnection = Future.hook(
+  openConnection('localhost'),
+  closeConnection
+);
+
+withConnection(
+  conn => query(conn, 'EAT * cakes FROM bakery')
+)
+.fork(console.error, console.log);
+```
+
+In the case that a hooked Future is *cancelled* after the resource was acquired,
+`dispose` will be executed and immediately cancelled. This means that rejections
+which may happen during this disposal are **silently ignored**. To ensure that
+resources are disposed during cancellation, you might synchronously dispose
+resources in the `cancel` function of the disposal Future:
+
+<!-- eslint-disable no-unused-vars -->
+```js
+const closeConnection = conn => Future((rej, res) => {
+
+  //We try to dispose gracefully.
+  conn.flushGracefully(err => {
+    if(err === null){
+      conn.close();
+      res();
+    }else{
+      rej(err);
+    }
+  });
+
+  //On cancel, we force dispose.
+  return () => conn.close();
+
+});
+```
+
+#### finally
+##### `#finally :: Future a b ~> Future a c -> Future a b`
+##### `#lastly :: Future a b ~> Future a c -> Future a b`
+##### `.finally :: Future a c -> Future a b -> Future a b`
+##### `.lastly :: Future a c -> Future a b -> Future a b`
+
+Run a second Future after the first settles (successfully or unsuccessfully).
+Rejects with the rejection reason from the first or second Future, or resolves
+with the resolution value from the first Future.
+
+```js
+Future.of('Hello')
+.finally(Future.of('All done!').map(console.log))
+.fork(console.error, console.log);
+//> "All done!"
+//> "Hello"
+```
+
+Note that the *first* Future is given as the *last* argument to `Future.finally()`:
+
+```js
+const program = S.pipe([
+  Future.of,
+  Future.finally(Future.of('All done!').map(console.log)),
+  Future.fork(console.error, console.log)
+]);
+
+program('Hello');
+//> "All done!"
+//> "Hello"
+```
+
+As with [`hook`](#hook); when the Future is cancelled before the *finally
+computation* is running, the *finally computation* is executed and immediately
+cancelled.
+
+This function has an alias `lastly`, for environments in which `finally` is a reserved word.
+
 ### Utility functions
+
+#### cache
+##### `.cache :: Future a b -> Future a b`
+
+Returns a Future which caches the resolution value of the given Future so that
+whenever it's forked, it can load the value from cache rather than reexecuting
+the chain.
+
+```js
+const {readFile} = require('fs');
+const eventualPackage = Future.cache(
+  Future.node(done => {
+    console.log('Reading some big data');
+    readFile('package.json', 'utf8', done);
+  })
+);
+
+eventualPackage.fork(console.error, console.log);
+//> "Reading some big data"
+//> "{...}"
+
+eventualPackage.fork(console.error, console.log);
+//> "{...}"
+```
 
 #### isFuture
 ##### `.isFuture :: a -> Boolean`
@@ -1020,65 +1109,7 @@ with [`race`](#race), for example.
 
 Returns `true` if the given input is a `never`.
 
-### Sanctuary
-
-When using this module with [Sanctuary Def][$] (and [Sanctuary][S] by
-extension) you might run into the following issue:
-
-```js
-const S = require('sanctuary');
-const Future = require('fluture');
-S.I(Future.of(1));
-//! Since there is no type of which all the above values are members,
-//! the type-variable constraint has been violated.
-```
-
-This happens because Sanctuary Def needs to know about the types created by
-Fluture to determine whether the type-variables are consistent.
-
-To let Sanctuary know about these types, we can obtain the type definitions from
-[`fluture-sanctuary-types`][FST] and pass them to [`S.create`][S:create]:
-
-```js
-const {create, env} = require('sanctuary');
-const {env: flutureEnv} = require('fluture-sanctuary-types');
-const Future = require('fluture');
-
-const S = create({checkTypes: true, env: env.concat(flutureEnv)});
-
-S.I(Future.of(1));
-//> Future.of(1)
-```
-
-### Casting Futures
-
-Sometimes you may need to convert one Future to another, for example when the
-Future was created by another package, or an incompatible version of Fluture.
-
-When [`isFuture`](#isfuture) returns `false`, a conversion is necessary. Usually
-the most concise way of doing this is as follows:
-
-```js
-const NoFuture = require('incompatible-future');
-const incompatible = NoFuture.of('Hello');
-
-//Cast the incompatible Future to our version of Future:
-const compatible = Future(incompatible.fork.bind(incompatible));
-
-compatible.both(Future.of('world')).value(console.log);
-//> ["Hello", "world"]
-```
-
-## Butterfly
-
-The name "Fluture" is a conjunction of "FL" (the acronym to [Fantasy Land][FL])
-and "future". Fluture means butterfly in Romanian: A creature you might expect
-to see in Fantasy Land.
-
-----
-
-Thanks to [Erik Fuente][8] for the logo, and [WEAREREASONABLEPEOPLE][9] for
-sponsoring the project.
+## License
 
 [MIT licensed](LICENSE)
 
