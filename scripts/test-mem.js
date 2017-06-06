@@ -1,21 +1,13 @@
-/*global process*/
-/*eslint no-console:0, no-sync:0*/
+/* global process setImmediate */
 
-'use strict';
-
-const {after, of} = require('..');
-const log = require('util').log;
-const sync = process.argv[2] === 'sync';
-const id = x => x;
-const spawn = (sync ? x => of(x).map(id) : x => after(1, x).map(id));
-
-log('PID', process.pid);
+const Future = require('..');
+const {log} = require('util');
 
 const start = Date.now();
 let batch = 0;
 let stamp = Date.now();
 
-const recursive = () => {
+const report = () => {
   const memMB = process.memoryUsage().rss / 1048576;
   const now = Date.now();
   const passed = now - stamp;
@@ -28,17 +20,66 @@ const recursive = () => {
     );
     stamp = now;
   }
-  // return spawn('l').chain(recursive).race(spawn('r')); //Runs out of memory in "sync" mode
-  // return spawn('l').race(spawn('r').chain(recursive)); //Immediately exits with "l"
-  return spawn('l').race(spawn('r')).chain(recursive); //Infinite recursion
 };
 
-const cancel = recursive().fork(
+const sync = Future.of;
+const async = x => Future((l, r) => void setImmediate(r, x));
+
+const cases = Object.create(null);
+
+//Should infinitely run until finally running out of memory.
+cases.syncHeadRecursion = function recur(){
+  report();
+  return sync('l').chain(recur).race(sync('r'));
+};
+
+//Should immediately exit with "l".
+cases.syncDeepRecursion = function recur(){
+  report();
+  return sync('l').race(sync('r').chain(recur));
+};
+
+//Should infinitely run without any problems.
+cases.syncTailRecursion = function recur(){
+  report();
+  return sync('l').race(sync('r')).chain(recur);
+};
+
+//Should immediately exit with "r".
+cases.asyncHeadRecursion = function recur(){
+  report();
+  return async('l').chain(recur).race(async('r'));
+};
+
+//Should immediately exit with "l".
+cases.asyncDeepRecursion = function recur(){
+  report();
+  return async('l').race(async('r').chain(recur));
+};
+
+//Should infinitely run without any problems.
+cases.asyncTailRecursion = function recur(){
+  report();
+  return async('l').race(async('r')).chain(recur);
+};
+
+const f = cases[process.argv[2]];
+
+if(typeof f !== 'function'){
+  console.log('Usage: node test-mem.js <case>\n');
+  console.log('Possible cases:');
+  Object.keys(cases).forEach(k => console.log(`  ${k}`));
+  process.exit(1);
+}
+
+log('PID', process.pid);
+
+const cancel = f().fork(
   e => {console.error(e.stack); process.exit(1)},
   v => {log('resolved', v); process.exit(2)}
 );
 
-process.on('SIGINT', () => {
+process.once('SIGINT', () => {
   log('SIGINT caught. Cancelling...');
   cancel();
 });
