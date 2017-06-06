@@ -596,17 +596,6 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
     settle(action.resolved(x));
   }
 
-  function runActions(){
-    let i = 0;
-    const hot = new Array(cold.length);
-    while(it = cold.shift()){
-      const tmp = it.run(early);
-      if(settled) break;
-      hot[i++] = tmp;
-    }
-    while(--i >= 0) if(settled) hot[i].cancel(); else queue.unshift(hot[i]);
-  }
-
   function drain(){
     async = false;
     while(action = cold.shift() || queue.shift()){
@@ -615,7 +604,11 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
       if(settled) continue;
       action = action.run(early);
       if(settled) continue;
-      runActions();
+      while(it = cold.pop()){
+        it = it.run(early);
+        if(settled) break;
+        queue.unshift(it);
+      }
       if(settled) continue;
       async = true;
       return;
