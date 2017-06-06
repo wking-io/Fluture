@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /* global process setImmediate */
 
 const Future = require('..');
@@ -66,8 +68,7 @@ cases.asyncTailRecursion = function recur(){
 const f = cases[process.argv[2]];
 
 if(typeof f !== 'function'){
-  console.log('Usage: node test-mem.js <case>\n');
-  console.log('Possible cases:');
+  console.log('Usage:\n\n  test-mem <case>\n\nPossible cases:\n');
   Object.keys(cases).forEach(k => console.log(`  ${k}`));
   process.exit(1);
 }

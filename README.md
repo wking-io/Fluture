@@ -243,6 +243,9 @@ m.fork(console.error, console.log);
 //> 100001
 ```
 
+To learn more about memory and stack usage under different types of recursion,
+see (or execute) [`scripts/test-mem`](scripts/test-mem).
+
 ### Sanctuary
 
 When using this module with [Sanctuary Def][$] (and [Sanctuary][S] by
