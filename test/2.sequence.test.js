@@ -344,6 +344,17 @@ describe('Sequence', () => {
         setTimeout(done, 100, null);
       });
 
+      it('does not run actions unnecessarily when one early-terminates synchronously', done => {
+        const broken = new Sequence(Future(_ => { console.log('broken'); done(error) }));
+        const m = resolvedSlow.race(broken).race(broken).race(resolved);
+        m.fork(noop, _ => done());
+      });
+
+      it('resolves the left-hand side first when running actions in parallel', () => {
+        const m = new Sequence(of(1)).map(x => x).chain(x => of(x));
+        return assertResolved(m.race(of(2)), 1);
+      });
+
       it('does not forget about actions to run after early termination', () => {
         const m = new Sequence(after(30, 'a'))
                   .race(new Sequence(after(20, 'b')))

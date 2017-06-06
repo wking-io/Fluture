@@ -581,9 +581,10 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
 
   function early(m, terminator){
     cancel();
-    if(action !== terminator){
+    cold.clear();
+    if(async && action !== terminator){
       action.cancel();
-      while(async && (it = queue.shift()) && it !== terminator) it.cancel();
+      while((it = queue.shift()) && it !== terminator) it.cancel();
     }
     settle(m);
   }
@@ -602,13 +603,12 @@ Sequence.prototype._fork = function Sequence$_fork(rej, res){
       settled = false;
       cancel = future._fork(rejected, resolved);
       if(settled) continue;
-      action = action.run(early);
-      if(settled) continue;
       while(it = cold.pop()){
         it = it.run(early);
-        if(settled) break;
-        queue.unshift(it);
+        if(!settled) queue.unshift(it);
       }
+      if(settled) continue;
+      action = action.run(early);
       if(settled) continue;
       async = true;
       return;
