@@ -1,11 +1,8 @@
-/*eslint no-param-reassign:0, no-cond-assign:0, no-unmodified-loop-condition:0 */
-
-import Denque from 'denque';
-
 import {show, showf, noop, moop} from './internal/fn';
 import {isFunction} from './internal/is';
 import {error, typeError, invalidArgument, invalidContext, invalidFuture} from './internal/throw';
 import {$$type} from './internal/const';
+import interpretor from './internal/interpretor';
 import type from 'sanctuary-type-identifiers';
 
 const throwRejection = x => error(
@@ -563,70 +560,7 @@ Sequence.prototype._finally = function Sequence$finally(other){
   return this._transform(new FinallyAction(other));
 };
 
-Sequence.prototype._fork = function Sequence$_fork(rej, res){
-
-  const queue = new Denque(this._actions.length);
-  const cold = new Denque(this._actions);
-  let action, cancel = noop, future = this._spawn, it, settled, async;
-
-  function settle(m){
-    settled = true;
-    future = m;
-    if(future instanceof Sequence){
-      for(let i = future._actions.length - 1; i >= 0; i--) cold.unshift(future._actions[i]);
-      future = future._spawn;
-    }
-    if(async) drain();
-  }
-
-  function early(m, terminator){
-    cancel();
-    cold.clear();
-    if(async && action !== terminator){
-      action.cancel();
-      while((it = queue.shift()) && it !== terminator) it.cancel();
-    }
-    settle(m);
-  }
-
-  function rejected(x){
-    settle(action.rejected(x));
-  }
-
-  function resolved(x){
-    settle(action.resolved(x));
-  }
-
-  function drain(){
-    async = false;
-    while(action = cold.shift() || queue.shift()){
-      settled = false;
-      cancel = future._fork(rejected, resolved);
-      if(settled) continue;
-      while(it = cold.pop()){
-        it = it.run(early);
-        if(!settled) queue.unshift(it);
-      }
-      if(settled) continue;
-      action = action.run(early);
-      if(settled) continue;
-      async = true;
-      return;
-    }
-    cancel = future._fork(rej, res);
-  }
-
-  drain();
-
-  return function Sequence$cancel(){
-    cancel();
-    action && action.cancel();
-    while(it = queue.shift()) it.cancel();
-    cold.clear();
-    cancel = noop;
-  };
-
-};
+Sequence.prototype._fork = interpretor(Sequence);
 
 Sequence.prototype.toString = function Sequence$toString(){
   return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
