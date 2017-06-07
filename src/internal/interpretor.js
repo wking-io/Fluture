@@ -3,7 +3,7 @@
 import Denque from 'denque';
 import {noop} from './fn';
 
-export default Sequence => function interpretor(rej, res){
+export default function interpretor(rej, res){
 
   //This is the primary queue of actions. All actions in here will be "cold",
   //meaning they haven't had the chance yet to run concurrent computations.
@@ -29,7 +29,7 @@ export default Sequence => function interpretor(rej, res){
   function settle(m){
     settled = true;
     future = m;
-    if(future instanceof Sequence){
+    if(future._spawn){
       for(let i = future._actions.length - 1; i >= 0; i--) cold.unshift(future._actions[i]);
       future = future._spawn;
     }
@@ -123,4 +123,4 @@ export default Sequence => function interpretor(rej, res){
     while(it = queue.shift()) it.cancel();
   };
 
-};
+}

@@ -560,7 +560,7 @@ Sequence.prototype._finally = function Sequence$finally(other){
   return this._transform(new FinallyAction(other));
 };
 
-Sequence.prototype._fork = interpretor(Sequence);
+Sequence.prototype._fork = interpretor;
 
 Sequence.prototype.toString = function Sequence$toString(){
   return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
