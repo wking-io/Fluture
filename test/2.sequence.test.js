@@ -369,6 +369,13 @@ describe('Sequence', () => {
         m.fork(noop, noop);
       });
 
+      it('does not run run concurrent computations twice', done => {
+        let ran = false;
+        const mock = Future(_ => { ran ? done(error) : (ran = true) });
+        const m = new Sequence(resolvedSlow).chain(_ => resolvedSlow).race(mock);
+        m.fork(done, _ => done());
+      });
+
       it('returns a cancel function which cancels all running actions', done => {
         let i = 0;
         const started = _ => void i++;
