@@ -359,8 +359,8 @@ export const never = new Never();
 export const isNever = x => x === never;
 
 export class Action{
-  rejected(x){ return new Rejected(x) }
-  resolved(x){ return new Resolved(x) }
+  rejected(x){ this.cancel(); return new Rejected(x) }
+  resolved(x){ this.cancel(); return new Resolved(x) }
   run(){ return this }
   cancel(){}
 }
@@ -450,8 +450,6 @@ export class RaceActionState extends RaceAction{
     super(other);
     this.cancel = other._fork(x => early(new Rejected(x), this), x => early(new Resolved(x), this));
   }
-  rejected(x){ this.cancel(); return new Rejected(x) }
-  resolved(x){ this.cancel(); return new Resolved(x) }
 }
 export class BothAction extends Action{
   constructor(other){ super(); this.other = other }
@@ -464,7 +462,6 @@ export class BothActionState extends BothAction{
     super(other);
     this.cancel = this.other.fork(x => early(new Rejected(x), this), noop);
   }
-  rejected(x){ this.cancel(); return new Rejected(x) }
 }
 
 export function Sequence(spawn, actions = []){
