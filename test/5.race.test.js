@@ -1,6 +1,7 @@
 import {expect} from 'chai';
 import {Future, race, of, after, never} from '../index.es.js';
 import * as U from './util';
+import {resolvedSlow, rejectedSlow} from './futures';
 import type from 'sanctuary-type-identifiers';
 
 const testInstance = race => {
@@ -25,10 +26,24 @@ const testInstance = race => {
       return U.assertResolved(race(m1, m2), 1);
     });
 
-    it('cancels the slower computation', done => {
-      const m1 = Future((rej, res) => void setTimeout(res, 5, 1));
-      const m2 = Future(() => () => done());
-      race(m1, m2).fork(U.noop, U.noop);
+    it('cancels the right if the left resolves', done => {
+      const m = race(resolvedSlow, Future(() => () => done()));
+      m.fork(U.noop, U.noop);
+    });
+
+    it('cancels the left if the right resolves', done => {
+      const m = race(Future(() => () => done()), resolvedSlow);
+      m.fork(U.noop, U.noop);
+    });
+
+    it('cancels the right if the left rejects', done => {
+      const m = race(rejectedSlow, Future(() => () => done()));
+      m.fork(U.noop, U.noop);
+    });
+
+    it('cancels the left if the right rejects', done => {
+      const m = race(Future(() => () => done()), rejectedSlow);
+      m.fork(U.noop, U.noop);
     });
 
     it('creates a cancel function which cancels both Futures', done => {
