@@ -60,6 +60,16 @@ const testInstance = both => {
 
     });
 
+    it('cancels the right if the left rejects', done => {
+      const m = both(F.rejectedSlow, Future(() => () => done()));
+      m.fork(U.noop, U.noop);
+    });
+
+    it('cancels the left if the right rejects', done => {
+      const m = both(Future(() => () => done()), F.rejectedSlow);
+      m.fork(U.noop, U.noop);
+    });
+
     it('creates a cancel function which cancels both Futures', done => {
       let cancelled = false;
       const m = Future(() => () => (cancelled ? done() : (cancelled = true)));

@@ -358,37 +358,6 @@ Never.prototype.toString = function Never$toString(){
 export const never = new Never();
 export const isNever = x => x === never;
 
-function Eager(future){
-  this.rej = noop;
-  this.res = noop;
-  this.rejected = false;
-  this.resolved = false;
-  this.value = null;
-  this.cancel = future._fork(x => {
-    this.value = x;
-    this.rejected = true;
-    this.cancel = noop;
-    this.rej(x);
-  }, x => {
-    this.value = x;
-    this.resolved = true;
-    this.cancel = noop;
-    this.res(x);
-  });
-}
-
-Eager.prototype = Object.create(Core);
-
-Eager.prototype._fork = function Eager$_fork(rej, res){
-  if(this.rejected) rej(this.value);
-  else if(this.resolved) res(this.value);
-  else{
-    this.rej = rej;
-    this.res = res;
-  }
-  return this.cancel;
-};
-
 export class Action{
   rejected(x){ return new Rejected(x) }
   resolved(x){ return new Resolved(x) }
@@ -492,9 +461,10 @@ export class BothAction extends Action{
 }
 export class BothActionState extends BothAction{
   constructor(early, other){
-    super(new Eager(other));
+    super(other);
     this.cancel = this.other.fork(x => early(new Rejected(x), this), noop);
   }
+  rejected(x){ this.cancel(); return new Rejected(x) }
 }
 
 export function Sequence(spawn, actions = []){
