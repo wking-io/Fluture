@@ -2,7 +2,7 @@ import {show, showf, noop, moop} from './internal/fn';
 import {isFunction} from './internal/is';
 import {error, typeError, invalidArgument, invalidContext, invalidFuture} from './internal/throw';
 import {$$type} from './internal/const';
-import interpretor from './internal/interpretor';
+import interpreter from './internal/interpreter';
 import type from 'sanctuary-type-identifiers';
 
 const throwRejection = x => error(
@@ -527,7 +527,7 @@ Sequence.prototype._finally = function Sequence$finally(other){
   return this._transform(new FinallyAction(other));
 };
 
-Sequence.prototype._fork = interpretor;
+Sequence.prototype._fork = interpreter;
 
 Sequence.prototype.toString = function Sequence$toString(){
   return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;

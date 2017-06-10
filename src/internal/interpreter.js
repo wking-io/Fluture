@@ -3,7 +3,7 @@
 import Denque from 'denque';
 import {noop} from './fn';
 
-export default function interpretor(rej, res){
+export default function interpreter(rej, res){
 
   //This is the primary queue of actions. All actions in here will be "cold",
   //meaning they haven't had the chance yet to run concurrent computations.
