@@ -185,11 +185,53 @@ sponsoring the project.
 
 ### Type signatures
 
-[Hindley-Milner][Guide:HM] type signatures are used to document functions, with
-one addition: In order to document *methods* as well as static functions, we
-prefix every signature with `.` or `#`. This indicates whether the function
-lives on the object (`.function`), or its prototype (`#method`). We use `~>` to
-separate the implicit `this` argument from the other, explicit, arguments.
+[Hindley-Milner][Guide:HM] type signatures are used to document functions. You
+might encounter some additional syntax that we use to describe JavaScript
+specific stuff, like [methods](#squiggly-arrows) or functions that take
+[multiple arguments at once](#brackets).
+
+#### Squiggly Arrows
+
+In order to document *methods*, we use the squiggly arrow (`~>`). This separates
+the implicit `this` argument from the other, explicit, arguments. For example,
+the following line signifies a *function*, because it doesn't have a squiggly
+arrow in its signature:
+
+```hs
+map :: (b -> c) -> Future a b -> Future a c
+```
+
+Whereas the next example is a *method*. It needs a `this` as indicated by the
+use of the squiggly arrow.
+
+```hs
+Future.prototype.map :: Future a b ~> (b -> c) -> Future a c
+```
+
+#### Brackets
+
+Most functions exposed by Fluture are curried. This is reflected in their type
+signatures by using an arrow at each step where partial application is possible.
+For example, the following line signifies a *curried* function, because it has
+an arrow after each function argument:
+
+```hs
+add :: Number -> Number -> Number
+```
+
+We could have chosen to write the above line with "groups of one argument", but
+we usually leave the grouping brackets out for brevity:
+
+```hs
+add :: (Number) -> (Number) -> Number
+```
+
+In order to document functions and methods that are *not* curried, we use
+grouping to show which arguments have to be provided at the same time:
+
+```hs
+add :: (Number, Number) -> Number
+```
 
 #### Types
 
@@ -199,9 +241,11 @@ This is reference of the types used throughout the documentation:
 - **Future** - Instances of Future provided by [compatible versions](#casting-futures) of Fluture.
 - **ConcurrentFuture** - [Concurrified][concurrify] Futures ([`Future.Par`](#concurrentfuture)).
 - **Promise** - Values which conform to the [Promises/A+ specification][7].
-- **Nodeback a b** - A Node-style callback; A function of signature `(a | Nil, b) -> ()`.
+- **Nodeback a b** - A Node-style callback; A function of signature `(a | Nil, b) -> x`.
+- **Pair a b** - An array with exactly two elements: `[a, b]`.
 - **Iterator** - Objects with `next`-methods which conform to the [Iterator protocol][3].
 - **Cancel** - The nullary [cancellation](#future) functions returned from computations.
+- **Catchable e f** - A function `f` which may throw an exception `e`.
 
 #### Type classes
 
@@ -300,7 +344,14 @@ compatible.both(Future.of('world')).value(console.log);
 ### Creating Futures
 
 #### Future
-##### `Future :: ((a -> (), b -> ()) -> Cancel) -> Future a b`
+
+<details><summary><code>Future :: ((a -> x, b -> x) -> Cancel) -> Future a b</code></summary>
+
+```hs
+Future :: ((a -> x, b -> x) -> Cancel) -> Future a b
+```
+
+</details>
 
 Creates a Future with the given computation. A computation is a function which
 takes two callbacks. Both are continuations for the computation. The first is
@@ -322,7 +373,15 @@ cancellation logic. This function is executed when the Future is cancelled
 after it's [forked](#fork).
 
 #### of
-##### `.of :: a -> Future _ a`
+
+<details><summary><code>of :: b -> Future a b</code></summary>
+
+```hs
+of        :: b -> Future a b
+Future.of :: b -> Future a b
+```
+
+</details>
 
 Creates a Future which immediately resolves with the given value. This function
 is compliant with the [Fantasy Land Applicative specification][FL:applicative].
@@ -337,13 +396,28 @@ eventualThing.fork(
 ```
 
 #### reject
-##### `.reject :: a -> Future a _`
+
+<details><summary><code>reject :: a -> Future a b</code></summary>
+
+```hs
+reject        :: a -> Future a b
+Future.reject :: a -> Future a b
+```
+
+</details>
 
 Creates a Future which immediately rejects with the given value. Just like `of`
 but for the rejection branch.
 
 #### after
-##### `.after :: Number -> b -> Future a b`
+
+<details><summary><code>after :: Number -> b -> Future a b</code></summary>
+
+```hs
+after :: Number -> b -> Future a b
+```
+
+</details>
 
 Creates a Future which resolves with the given value after n milliseconds.
 
@@ -354,7 +428,14 @@ eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 ```
 
 #### rejectAfter
-##### `.rejectAfter :: Number -> a -> Future a b`
+
+<details><summary><code>rejectAfter :: Number -> a -> Future a b</code></summary>
+
+```hs
+rejectAfter :: Number -> a -> Future a b
+```
+
+</details>
 
 Creates a Future which rejects with the given reason after n milliseconds.
 
@@ -365,8 +446,15 @@ eventualError.fork(err => console.log('Oh no - ' + err.message), console.log);
 ```
 
 #### do
-##### `.do :: (() -> Iterator) -> Future a b`
-##### `.go :: (() -> Iterator) -> Future a b`
+
+<details><summary><code>do :: (() -> Iterator) -> Future a b</code></summary>
+
+```hs
+do :: (() -> Iterator) -> Future a b
+go :: (() -> Iterator) -> Future a b
+```
+
+</details>
 
 A specialized version of [fantasy-do][4] which works only for Futures, but has
 the advantage of type-checking and not having to pass `Future.of`. Another
@@ -413,8 +501,15 @@ Future.do(function*(){
 This function has an alias `go`, for environments in which `do` is a reserved word.
 
 #### try
-##### `.try :: (() -> !a | b) -> Future a b`
-##### `.attempt :: (() -> !a | b) -> Future a b`
+
+<details><summary><code>try :: Catchable e (() -> r) -> Future e r</code></summary>
+
+```hs
+try     :: Catchable e (() -> r) -> Future e r
+attempt :: Catchable e (() -> r) -> Future e r
+```
+
+</details>
 
 Creates a Future which resolves with the result of calling the given function,
 or rejects with the error thrown by the given function.
@@ -431,7 +526,14 @@ Future.try(() => data.foo.bar.baz)
 This function has an alias `attempt`, for environments in which `try` is a reserved word.
 
 #### tryP
-##### `.tryP :: (() -> Promise e r) -> Future e r`
+
+<details><summary><code>tryP :: (() -> Promise e r) -> Future e r</code></summary>
+
+```hs
+tryP :: (() -> Promise e r) -> Future e r
+```
+
+</details>
 
 Create a Future which when forked spawns a Promise using the given function and
 resolves with its resolution value, or rejects with its rejection reason.
@@ -445,7 +547,14 @@ Future.tryP(() => Promise.resolve('Hello'))
 ```
 
 #### node
-##### `.node :: (Nodeback e r -> ()) -> Future e r`
+
+<details><summary><code>node :: (Nodeback e r -> x) -> Future e r</code></summary>
+
+```hs
+node :: (Nodeback e r -> x) -> Future e r
+```
+
+</details>
 
 Creates a Future which rejects with the first argument given to the function,
 or resolves with the second if the first is not present.
@@ -465,9 +574,16 @@ Future.node(done => {
 ```
 
 #### encase
-##### `.encase :: (a -> !e | r) -> a -> Future e r`
-##### `.encase2 :: (a, b -> !e | r) -> a -> b -> Future e r`
-##### `.encase3 :: (a, b, c -> !e | r) -> a -> b -> c -> Future e r`
+
+<details><summary><code>encase :: (Catchable e (a -> r)) -> a -> Future e r</code></summary>
+
+```hs
+encase  :: (Catchable e ((a      ) -> r)) -> a ->           Future e r
+encase2 :: (Catchable e ((a, b   ) -> r)) -> a -> b ->      Future e r
+encase3 :: (Catchable e ((a, b, c) -> r)) -> a -> b -> c -> Future e r
+```
+
+</details>
 
 Takes a function and a value, and returns a Future which when forked calls the
 function with the value and resolves with the result. If the function throws
@@ -495,9 +611,16 @@ Furthermore; `encase2` and `encase3` are binary and ternary versions of
 `encase`, applying two or three arguments to the given function respectively.
 
 #### encaseP
-##### `.encaseP :: (a -> Promise e r) -> a -> Future e r`
-##### `.encaseP2 :: (a, b -> Promise e r) -> a -> b -> Future e r`
-##### `.encaseP3 :: (a, b, c -> Promise e r) -> a -> b -> c -> Future e r`
+
+<details><summary><code>encaseP  :: ((a) -> Promise e r) -> a -> Future e r</code></summary>
+
+```hs
+encaseP  :: ((a) ->       Promise e r) -> a ->           Future e r
+encaseP2 :: ((a, b) ->    Promise e r) -> a -> b ->      Future e r
+encaseP3 :: ((a, b, c) -> Promise e r) -> a -> b -> c -> Future e r
+```
+
+</details>
 
 Allows Promise-returning functions to be turned into Future-returning functions.
 
@@ -519,9 +642,16 @@ Furthermore; `encaseP2` and `encaseP3` are binary and ternary versions
 of `encaseP`, applying two or three arguments to the given function respectively.
 
 #### encaseN
-##### `.encaseN :: ((a, Nodeback e r) -> ()) -> a -> Future e r`
-##### `.encaseN2 :: ((a, b, Nodeback e r) -> ()) -> a -> b -> Future e r`
-##### `.encaseN3 :: ((a, b, c, Nodeback e r) -> ()) -> a -> b -> c -> Future e r`
+
+<details><summary><code>encaseN  :: ((a, Nodeback e r) -> x) -> a -> Future e r</code></summary>
+
+```hs
+encaseN  :: ((a,       Nodeback e r) -> x) -> a ->           Future e r
+encaseN2 :: ((a, b,    Nodeback e r) -> x) -> a -> b ->      Future e r
+encaseN3 :: ((a, b, c, Nodeback e r) -> x) -> a -> b -> c -> Future e r
+```
+
+</details>
 
 Allows [continuation-passing-style][1] functions to be turned into Future-returning functions.
 
@@ -547,7 +677,15 @@ Furthermore; `encaseN2` and `encaseN3` are binary and ternary versions
 of `encaseN`, applying two or three arguments to the given function respectively.
 
 #### chainRec
-##### `.chainRec :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b`
+
+<details><summary><code>chainRec :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b</code></summary>
+
+```hs
+chainRec        :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b
+Future.chainRec :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b
+```
+
+</details>
 
 Implementation of [Fantasy Land ChainRec][FL:chainrec]. Since Fluture 6.0
 introduced [stack safety](#stack-safety) there should be no need to use this
@@ -556,8 +694,16 @@ function directly. Instead it's recommended to use [`chain(rec)`](#chain).
 ### Transforming Futures
 
 #### map
-##### `#map :: Future a b ~> (b -> c) -> Future a c`
-##### `.map :: Functor m => (a -> b) -> m a -> m b`
+
+<details><summary><code>map :: Functor m => (a -> b) -> m a -> m b</code></summary>
+
+```hs
+map                  :: Functor m  => (a -> b) -> m a -> m        b
+Future.map           :: Functor m  => (a -> b) -> m a -> m        b
+Future.prototype.map :: Future e a ~> (a -> b)        -> Future e b
+```
+
+</details>
 
 Transforms the resolution value inside the Future, and returns a new Future with
 the transformed value. This is like doing `promise.then(x => x + 1)`, except
@@ -574,8 +720,16 @@ Future.of(1)
 ```
 
 #### bimap
-##### `#bimap :: Future a b ~> (a -> c) -> (b -> d) -> Future c d`
-##### `.bimap :: Bifunctor m => (a -> b) -> (c -> d) -> m a c -> m b d`
+
+<details><summary><code>bimap :: Bifunctor m => (a -> c) -> (b -> d) -> m a b -> m c d</code></summary>
+
+```hs
+bimap                  :: Bifunctor m => (a -> c) -> (b -> d) -> m a b -> m      c d
+Future.bimap           :: Bifunctor m => (a -> c) -> (b -> d) -> m a b -> m      c d
+Future.prototype.bimap :: Future a b  ~> (a -> c) -> (b -> d)          -> Future c d
+```
+
+</details>
 
 Maps the left function over the rejection value, or the right function over the
 resolution value, depending on which is present.
@@ -593,8 +747,16 @@ Future.reject('error')
 ```
 
 #### chain
-##### `#chain :: Future a b ~> (b -> Future a c) -> Future a c`
-##### `.chain :: Chain m => (a -> m b) -> m a -> m b`
+
+<details><summary><code>chain :: Chain m => (a -> m b) -> m a -> m b</code></summary>
+
+```hs
+chain                  :: Chain m    => (a -> m        b) -> m a -> m        b
+Future.chain           :: Chain m    => (a -> m        b) -> m a -> m        b
+Future.prototype.chain :: Future e a ~> (a -> Future e b) ->        Future e b
+```
+
+</details>
 
 Allows the creation of a new Future based on the resolution value. This is like
 doing `promise.then(x => Promise.resolve(x + 1))`, except that it's lazy, so the
@@ -610,8 +772,15 @@ Future.of(1)
 ```
 
 #### swap
-##### `#swap :: Future a b ~> Future b a`
-##### `.swap :: Future a b -> Future b a`
+
+<details><summary><code>swap :: Future a b -> Future b a</code></summary>
+
+```hs
+swap                  :: Future a b -> Future b a
+Future.prototype.swap :: Future a b ~> Future b a
+```
+
+</details>
 
 Resolve with the rejection reason, or reject with the resolution value.
 
@@ -624,8 +793,15 @@ Future.reject('Nothing broke').swap().fork(console.error, console.log);
 ```
 
 #### mapRej
-##### `#mapRej :: Future a b ~> (a -> c) -> Future c b`
-##### `.mapRej :: (a -> b) -> Future a c -> Future b c`
+
+<details><summary><code>mapRej :: (a -> c) -> Future a b -> Future c b</code></summary>
+
+```hs
+mapRej                  ::               (a -> c) -> Future a b -> Future c b
+Future.prototype.mapRej :: Future a b ~> (a -> c)               -> Future c b
+```
+
+</details>
 
 Map over the **rejection** reason of the Future. This is like `map`, but for the
 rejection branch.
@@ -638,8 +814,15 @@ Future.reject(new Error('It broke!'))
 ```
 
 #### chainRej
-##### `#chainRej :: Future a b ~> (a -> Future a c) -> Future a c`
-##### `.chainRej :: (a -> Future a c) -> Future a b -> Future a c`
+
+<details><summary><code>chainRej :: (a -> Future a c) -> Future a b -> Future a c</code></summary>
+
+```hs
+chainRej                  ::               (a -> Future a c) -> Future a b -> Future a c
+Future.prototype.chainRej :: Future a b ~> (a -> Future a c)               -> Future a c
+```
+
+</details>
 
 Chain over the **rejection** reason of the Future. This is like `chain`, but for
 the rejection branch.
@@ -654,8 +837,15 @@ Future.reject(new Error('It broke!')).chainRej(err => {
 ```
 
 #### fold
-##### `#fold :: Future a b ~> (a -> c, b -> c) -> Future _ c`
-##### `.fold :: (a -> c) -> (b -> c) -> Future a b -> Future _ c`
+
+<details><summary><code>fold :: (a -> c) -> (b -> c) -> Future a b -> Future d c</code></summary>
+
+```hs
+fold                  ::               (a -> c) -> (b -> c) -> Future a b -> Future d c
+Future.prototype.fold :: Future a b ~> (a -> c,     b -> c)               -> Future d c
+```
+
+</details>
 
 Applies the left function to the rejection value, or the right function to the
 resolution value, depending on which is present, and resolves with the result.
@@ -679,8 +869,16 @@ Future.reject('it broke')
 ### Combining Futures
 
 #### ap
-##### `#ap :: Future a (b -> c) ~> Future a b -> Future a c`
-##### `.ap :: Apply m => m (a -> b) -> m a -> m b`
+
+<details><summary><code>ap :: Apply m => m (a -> b) -> m a -> m b</code></summary>
+
+```hs
+ap                  :: Apply m => m        (a -> b) -> m        a -> m        b
+Future.ap           :: Apply m => m        (a -> b) -> m        a -> m        b
+Future.prototype.ap ::            Future e (a -> b) ~> Future e a -> Future e b
+```
+
+</details>
 
 Applies the function contained in the left-hand Future or Apply to the value
 contained in the right-hand Future or Apply. If one of the Futures rejects the
@@ -699,10 +897,17 @@ the hidden `fantasy-land/ap`-method *does*. Therefore Future remains fully
 compliant to Fantasy Land.
 
 #### and
-##### `#and :: Future a b ~> Future a b -> Future a b`
-##### `.and :: Future a b -> Future a b -> Future a b`
 
-Logical and for Futures.
+<details><summary><code>and :: Future a b -> Future a c -> Future a c</code></summary>
+
+```hs
+and                  :: Future a b -> Future a c -> Future a c
+Future.prototype.and :: Future a b ~> Future a c -> Future a c
+```
+
+</details>
+
+Logical *and* for Futures.
 
 Returns a new Future which either rejects with the first rejection reason, or
 resolves with the last resolution value once and if both Futures resolve. This
@@ -723,10 +928,17 @@ all([Future.after(20, 1), Future.of(2)]).value(console.log);
 ```
 
 #### or
-##### `#or :: Future a b ~> Future a b -> Future a b`
-##### `.or :: Future a b -> Future a b -> Future a b`
 
-Logical or for Futures.
+<details><summary><code>or :: Future a b -> Future a b -> Future a b</code></summary>
+
+```hs
+or                  :: Future a b -> Future a b -> Future a b
+Future.prototype.or :: Future a b ~> Future a b -> Future a b
+```
+
+</details>
+
+Logical *or* for Futures.
 
 Returns a new Future which either resolves with the first resolution value, or
 rejects with the last rejection value once and if both Futures reject. This
@@ -749,8 +961,15 @@ any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
 ### Consuming Futures
 
 #### fork
-##### `#fork :: Future a b ~> (a -> (), b -> ()) -> Cancel`
-##### `.fork :: (a -> ()) -> (b -> ()) -> Future a b -> Cancel`
+
+<details><summary><code>fork :: (a -> x) -> (b -> x) -> Future a b -> Cancel</code></summary>
+
+```hs
+fork                  ::               (a -> x) -> (b -> x) -> Future a b -> Cancel
+Future.prototype.fork :: Future a b ~> (a -> x,     b -> x)               -> Cancel
+```
+
+</details>
 
 Execute the computation that was passed to the Future at [construction](#future)
 using the given `reject` and `resolve` callbacks.
@@ -784,8 +1003,15 @@ cancel();
 ```
 
 #### value
-##### `#value :: Future a b ~> (b -> ()) -> Cancel`
-##### `.value :: (b -> ()) -> Future a b -> Cancel`
+
+<details><summary><code>value :: (b -> x) -> Future a b -> Cancel</code></summary>
+
+```hs
+value                  ::               (b -> x) -> Future a b -> Cancel
+Future.prototype.value :: Future a b ~> (b -> x)               -> Cancel
+```
+
+</details>
 
 Extracts the value from a resolved Future by forking it. Only use this function
 if you are sure the Future is going to be resolved, for example; after using
@@ -807,8 +1033,15 @@ Future.after(300, 'hello').value(console.log)();
 ```
 
 #### done
-##### `#done :: Future a b ~> Nodeback a b -> Cancel`
-##### `.done :: Nodeback a b -> Future a b -> Cancel`
+
+<details><summary><code>done :: Nodeback a b -> Future a b -> Cancel</code></summary>
+
+```hs
+done                  ::               Nodeback a b -> Future a b -> Cancel
+Future.prototype.done :: Future a b ~> Nodeback a b               -> Cancel
+```
+
+</details>
 
 Fork the Future into a [Nodeback](#types).
 
@@ -828,8 +1061,15 @@ cancel();
 ```
 
 #### promise
-##### `#promise :: Future a b ~> Promise b a`
-##### `.promise :: Future a b -> Promise b a`
+
+<details><summary><code>promise :: Future a b -> Promise b a</code></summary>
+
+```hs
+promise                  :: Future a b -> Promise b a
+Future.prototype.promise :: Future a b ~> Promise b a
+```
+
+</details>
 
 An alternative way to `fork` the Future. This eagerly forks the Future and
 returns a Promise of the result. This is useful if some API wants you to give it
@@ -844,8 +1084,15 @@ Future.of('Hello').promise().then(console.log);
 ### Parallelism
 
 #### race
-##### `#race :: Future a b ~> Future a b -> Future a b`
-##### `.race :: Future a b -> Future a b -> Future a b`
+
+<details><summary><code>race :: Future a b -> Future a b -> Future a b</code></summary>
+
+```hs
+race                  :: Future a b -> Future a b -> Future a b
+Future.prototype.race :: Future a b ~> Future a b -> Future a b
+```
+
+</details>
 
 Race two Futures against each other. Creates a new Future which resolves or
 rejects with the resolution or rejection value of the first Future to settle.
@@ -867,8 +1114,15 @@ first([
 ```
 
 #### both
-##### `#both :: Future a b ~> Future a b -> Future a b`
-##### `.both :: Future a b -> Future a b -> Future a b`
+
+<details><summary><code>both :: Future a b -> Future a c -> Future a (Pair b c)</code></summary>
+
+```hs
+both                  :: Future a b -> Future a c -> Future a (Pair b c)
+Future.prototype.both :: Future a b ~> Future a c -> Future a (Pair b c)
+```
+
+</details>
 
 Run two Futures in parallel. Basically like calling
 [`Future.parallel`](#parallel) with exactly two Futures:
@@ -882,7 +1136,14 @@ Future.both(a, b).fork(console.error, console.log);
 ```
 
 #### parallel
-##### `.parallel :: PositiveInteger -> Array (Future a b) -> Future a (Array b)`
+
+<details><summary><code>parallel :: PositiveInteger -> Array (Future a b) -> Future a (Array b)</code></summary>
+
+```hs
+parallel :: PositiveInteger -> Array (Future a b) -> Future a (Array b)
+```
+
+</details>
 
 Creates a Future which when forked runs all Futures in the given `array` in
 parallel, ensuring no more than `limit` Futures are running at once.
@@ -921,8 +1182,15 @@ Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 ```
 
 #### ConcurrentFuture
-##### `.Par :: Future a b -> ConcurrentFuture a b`
-##### `.seq :: ConcurrentFuture a b -> Future a b`
+
+<details><summary><code>Par :: Future a b -> ConcurrentFuture a b</code></summary>
+
+```hs
+Par :: Future a b -> ConcurrentFuture a b
+seq :: ConcurrentFuture a b -> Future a b
+```
+
+</details>
 
 ConcurrentFuture (or `Par` for short) is the result of applying
 [`concurrify`][concurrify] to `Future`. It provides a mechanism for constructing
@@ -966,7 +1234,14 @@ Functions listed under this category allow for more fine-grained control over
 the flow of acquired values.
 
 #### hook
-##### `.hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d`
+
+<details><summary><code>hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d</code></summary>
+
+```hs
+hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d
+```
+
+</details>
 
 Allows a Future-returning function to be decorated with resource acquistion
 and disposal. The signature is like `hook(acquire, dispose, consume)`, where
@@ -1016,10 +1291,17 @@ const closeConnection = conn => Future((rej, res) => {
 ```
 
 #### finally
-##### `#finally :: Future a b ~> Future a c -> Future a b`
-##### `#lastly :: Future a b ~> Future a c -> Future a b`
-##### `.finally :: Future a c -> Future a b -> Future a b`
-##### `.lastly :: Future a c -> Future a b -> Future a b`
+
+<details><summary><code>finally :: Future a c -> Future a b -> Future a b</code></summary>
+
+```hs
+finally                  ::               Future a c -> Future a b -> Future a b
+lastly                   ::               Future a c -> Future a b -> Future a b
+Future.prototype.finally :: Future a b ~> Future a c               -> Future a b
+Future.prototype.lastly  :: Future a b ~> Future a c               -> Future a b
+```
+
+</details>
 
 Run a second Future after the first settles (successfully or unsuccessfully).
 Rejects with the rejection reason from the first or second Future, or resolves
@@ -1056,7 +1338,14 @@ This function has an alias `lastly`, for environments in which `finally` is a re
 ### Utility functions
 
 #### cache
-##### `.cache :: Future a b -> Future a b`
+
+<details><summary><code>cache :: Future a b -> Future a b</code></summary>
+
+```hs
+cache :: Future a b -> Future a b
+```
+
+</details>
 
 Returns a Future which caches the resolution value of the given Future so that
 whenever it's forked, it can load the value from cache rather than reexecuting
@@ -1080,7 +1369,14 @@ eventualPackage.fork(console.error, console.log);
 ```
 
 #### isFuture
-##### `.isFuture :: a -> Boolean`
+
+<details><summary><code>isFuture :: a -> Boolean</code></summary>
+
+```hs
+isFuture :: a -> Boolean
+```
+
+</details>
 
 Returns true for [Futures](#types) and false for everything else. This function
 (and [`S.is`][S:is]) also return `true` for instances of Future that were
@@ -1104,13 +1400,27 @@ Future1.isFuture(m2) === (m2 instanceof Future1);
 ```
 
 #### never
-##### `.never :: Future a a`
+
+<details><summary><code>never :: Future a a</code></summary>
+
+```hs
+never :: Future a a
+```
+
+</details>
 
 A Future that never settles. Can be useful as an initial value when reducing
 with [`race`](#race), for example.
 
 #### isNever
-##### `.isNever :: a -> Boolean`
+
+<details><summary><code>isNever :: a -> Boolean</code></summary>
+
+```hs
+isNever :: a -> Boolean
+```
+
+</details>
 
 Returns `true` if the given input is a `never`.
 
