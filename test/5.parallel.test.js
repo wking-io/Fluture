@@ -49,10 +49,15 @@ describe('Parallel', () => {
     });
 
     it('parallelizes execution', function(){
-      this.slow(80);
-      this.timeout(50);
-      const actual = parallel(2, [after(35, 'a'), after(35, 'b')]);
-      return U.assertResolved(actual, ['a', 'b']);
+      this.timeout(70);
+      const actual = parallel(2, [
+        after(20, 'a'),
+        after(20, 'b'),
+        after(20, 'c'),
+        after(20, 'd'),
+        after(20, 'e')
+      ]);
+      return U.assertResolved(actual, ['a', 'b', 'c', 'd', 'e']);
     });
 
     it('limits parallelism to the given number', () => {
