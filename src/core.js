@@ -358,6 +358,37 @@ Never.prototype.toString = function Never$toString(){
 export const never = new Never();
 export const isNever = x => x === never;
 
+function Eager(future){
+  this.rej = noop;
+  this.res = noop;
+  this.rejected = false;
+  this.resolved = false;
+  this.value = null;
+  this.cancel = future._fork(x => {
+    this.value = x;
+    this.rejected = true;
+    this.cancel = noop;
+    this.rej(x);
+  }, x => {
+    this.value = x;
+    this.resolved = true;
+    this.cancel = noop;
+    this.res(x);
+  });
+}
+
+Eager.prototype = Object.create(Core);
+
+Eager.prototype._fork = function Eager$_fork(rej, res){
+  if(this.rejected) rej(this.value);
+  else if(this.resolved) res(this.value);
+  else{
+    this.rej = rej;
+    this.res = res;
+  }
+  return this.cancel;
+};
+
 export class Action{
   rejected(x){ this.cancel(); return new Rejected(x) }
   resolved(x){ this.cancel(); return new Resolved(x) }
@@ -442,7 +473,7 @@ export class OrAction extends Action{
 }
 export class RaceAction extends Action{
   constructor(other){ super(); this.other = other }
-  run(early){ return new RaceActionState(early, this.other) }
+  run(early){ return new RaceActionState(early, new Eager(this.other)) }
   toString(){ return `race(${this.other.toString()})` }
 }
 export class RaceActionState extends RaceAction{
@@ -453,7 +484,7 @@ export class RaceActionState extends RaceAction{
 }
 export class BothAction extends Action{
   constructor(other){ super(); this.other = other }
-  run(early){ return new BothActionState(early, this.other) }
+  run(early){ return new BothActionState(early, new Eager(this.other)) }
   resolved(x){ return this.other._map(y => [x, y]) }
   toString(){ return `both(${this.other.toString()})` }
 }

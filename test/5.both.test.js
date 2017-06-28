@@ -1,5 +1,5 @@
 import {expect} from 'chai';
-import {Future, both, of} from '../index.es.js';
+import {Future, both, of, node} from '../index.es.js';
 import * as U from './util';
 import * as F from './futures';
 import type from 'sanctuary-type-identifiers';
@@ -58,6 +58,18 @@ const testInstance = both => {
         return U.assertRejected(both(F.resolvedSlow, F.rejected), 'rejected');
       });
 
+    });
+
+    it('[GH #118] does not call the left computation twice', done => {
+      let called = false;
+      const left = node(f => called ? done(U.error) : setTimeout(f, 20, null, called = true));
+      return both(left, F.resolvedSlow).done(done);
+    });
+
+    it('[GH #118] does not call the right computation twice', done => {
+      let called = false;
+      const right = node(f => called ? done(U.error) : setTimeout(f, 20, null, called = true));
+      return both(F.resolvedSlow, right).done(done);
     });
 
     it('cancels the right if the left rejects', done => {
