@@ -29,10 +29,12 @@ export default function interpreter(rej, res){
   function settle(m){
     settled = true;
     future = m;
+
     if(future._spawn){
       for(let i = future._actions.length - 1; i >= 0; i--) cold.unshift(future._actions[i]);
       future = future._spawn;
     }
+
     if(async) drain();
   }
 
@@ -60,10 +62,12 @@ export default function interpreter(rej, res){
   function early(m, terminator){
     cancel();
     cold.clear();
+
     if(async && action !== terminator){
       action.cancel();
       while((it = queue.shift()) && it !== terminator) it.cancel();
     }
+
     settle(m);
   }
 
@@ -78,6 +82,7 @@ export default function interpreter(rej, res){
       if(settled) return;
       queue.unshift(it);
     }
+
     action = action.run(early);
   }
 
@@ -97,6 +102,7 @@ export default function interpreter(rej, res){
   //    to settle and start the next tick, so we return from the function.
   function drain(){
     async = false;
+
     while(true){
       settled = false;
       if(action = cold.shift()){
@@ -109,6 +115,7 @@ export default function interpreter(rej, res){
       async = true;
       return;
     }
+
     cancel = future._fork(rej, res);
   }
 

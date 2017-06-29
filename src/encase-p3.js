@@ -35,6 +35,7 @@ EncaseP3.prototype.toString = function EncaseP3$toString(){
 
 export function encaseP3(f, x, y, z){
   if(!isFunction(f)) invalidArgument('Future.encaseP3', 0, 'be a function', f);
+
   switch(arguments.length){
     case 1: return partial1(encaseP3, f);
     case 2: return partial2(encaseP3, f, x);

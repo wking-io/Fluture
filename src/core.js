@@ -228,6 +228,7 @@ Computation.prototype._fork = function Computation$_fork(rej, res){
     }
   });
   check$fork(f, this._computation);
+
   return function Computation$cancel(){
     open && f && f();
     open = false;
@@ -386,6 +387,7 @@ Eager.prototype._fork = function Eager$_fork(rej, res){
     this.rej = rej;
     this.res = res;
   }
+
   return this.cancel;
 };
 

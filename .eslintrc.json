@@ -1,9 +1,6 @@
 {
-  "extends": ["warp/es6"],
+  "extends": ["warp/module"],
   "plugins": ["markdown"],
-  "parserOptions": {
-    "sourceType": "module"
-  },
   "env": {
     "browser": true
   },
@@ -28,6 +25,7 @@
     "class-methods-use-this": 0,
     "camelcase": 0,
     "no-console": 0,
-    "indent": 0
+    "indent": 0,
+    "func-name-matching": 0
   }
 }

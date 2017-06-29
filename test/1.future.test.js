@@ -64,11 +64,13 @@ describe('Future', () => {
       const a = () => {};
       const b = () => {};
       const mock = Object.create(F.mock);
+
       mock._fork = (x, y) => {
         expect(x).to.equal(a);
         expect(y).to.equal(b);
         done();
       };
+
       fork(a, b, mock);
     });
 
@@ -95,10 +97,12 @@ describe('Future', () => {
     it('dispatches to #value()', done => {
       const a = () => {};
       const mock = Object.create(F.mock);
+
       mock.value = x => {
         expect(x).to.equal(a);
         done();
       };
+
       value(a, mock);
     });
 
@@ -125,10 +129,12 @@ describe('Future', () => {
     it('dispatches to #done()', fin => {
       const a = () => {};
       const mock = Object.create(F.mock);
+
       mock.done = x => {
         expect(x).to.equal(a);
         fin();
       };
+
       done(a, mock);
     });
 
@@ -222,11 +228,13 @@ describe('Future', () => {
       const mock = Object.create(Future.prototype);
       const a = () => {};
       const b = () => {};
+
       mock._fork = (x, y) => {
         expect(x).to.equal(a);
         expect(y).to.equal(b);
         done();
       };
+
       mock.fork(a, b);
     });
 
@@ -248,10 +256,12 @@ describe('Future', () => {
     it('dispatches to #_fork(), using the input as resolution callback', done => {
       const mock = Object.create(Future.prototype);
       const res = () => {};
+
       mock._fork = (l, r) => {
         expect(r).to.equal(res);
         done();
       };
+
       mock.value(res);
     });
 

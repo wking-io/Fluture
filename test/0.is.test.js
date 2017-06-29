@@ -61,6 +61,7 @@ describe('is', () => {
   describe('.isObject()', () => {
 
     function O(){}
+
     const os = [{}, {foo: 1}, Object.create(null), new O, []];
     const xs = [1, true, NaN, null, undefined, ''];
 

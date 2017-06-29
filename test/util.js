@@ -86,6 +86,7 @@ export const assertRejected = (m, x) => new Promise((res, rej) => {
 
 export const onceOrError = f => {
   let called = false;
+
   return function(){
     if(called) throw new Error(`Function ${f} was called twice`);
     called = true;

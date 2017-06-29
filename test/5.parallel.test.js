@@ -112,6 +112,7 @@ describe('Parallel', () => {
       let i = 0, j = 0;
       const m = Future((rej, res) => {
         const x = setTimeout(x => {j += 1; res(x)}, 20, 1);
+
         return () => {
           i += 1;
           clearTimeout(x);

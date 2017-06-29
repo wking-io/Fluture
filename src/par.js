@@ -22,12 +22,14 @@ ParallelAp.prototype = Object.create(Core);
 
 ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
   let func, val, okval = false, okfunc = false, rejected = false, c1, c2;
+
   function ParallelAp$rej(x){
     if(!rejected){
       rejected = true;
       rej(x);
     }
   }
+
   c1 = this._mval._fork(ParallelAp$rej, function ParallelAp$fork$resVal(x){
     c1 = noop;
     if(!okval) return void (okfunc = true, val = x);
@@ -39,6 +41,7 @@ ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
     if(!okfunc) return void (okval = true, func = f);
     res(f(val));
   });
+
   return function ParallelAp$fork$cancel(){
     c1();
     c2();

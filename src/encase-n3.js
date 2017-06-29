@@ -30,6 +30,7 @@ EncaseN.prototype.toString = function EncaseN$3$toString(){
 
 export function encaseN3(f, x, y, z){
   if(!isFunction(f)) invalidArgument('Future.encaseN3', 0, 'be a function', f);
+
   switch(arguments.length){
     case 1: return partial1(encaseN3, f);
     case 2: return partial2(encaseN3, f, x);
