@@ -70,6 +70,7 @@ describe('Go', () => {
         while(i < U.STACKSIZE + 1) yield of(i++);
         return i;
       };
+
       const m = go(gen);
       return U.assertResolved(m, U.STACKSIZE + 1);
     });

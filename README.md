@@ -40,6 +40,7 @@ Fluture depends on these functions being present:
 You may need to polyfill one or more.
 
 <!-- eslint-disable no-var -->
+<!-- eslint-disable padding-line-between-statements -->
 ```js
 var fs = require('fs');
 var Future = require('fluture');
@@ -225,6 +226,7 @@ none of the following operations raise `RangeError: Maximum call stack size exce
 ```js
 const add1 = x => x + 1;
 let m = Future.of(1);
+
 for(let i = 0; i < 100000; i++){
   m = m.map(add1);
 }

@@ -25,11 +25,13 @@ ChainRec.prototype._fork = function ChainRec$_fork(rej, res){
       timing = Undetermined;
       const m = _step(Next, Done, state.value);
       cancel = m._fork(rej, resolved);
+
       if(timing !== Synchronous){
         timing = Asynchronous;
         return;
       }
     }
+
     res(state.value);
   }
 

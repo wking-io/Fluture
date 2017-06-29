@@ -47,14 +47,17 @@ Go.prototype._fork = function Go$_fork(rej, res){
 
   function drain(){
     state = check$iteration(iterator.next(value));
+
     while(!state.done){
       timing = Undetermined;
       cancel = state.value._fork(rej, resolved);
+
       if(timing !== Synchronous){
         timing = Asynchronous;
         return;
       }
     }
+
     res(state.value);
   }
 

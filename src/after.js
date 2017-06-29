@@ -39,7 +39,6 @@ After.prototype.toString = function After$toString(){
   return `Future.after(${show(this._time)}, ${show(this._value)})`;
 };
 
-
 export function RejectAfter(time, value){
   this._time = time;
   this._value = value;

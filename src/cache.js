@@ -40,6 +40,7 @@ Cached.prototype._addToQueue = function Cached$addToQueue(rej, res){
   if(_this._state > Pending) return noop;
   const i = _this._queue.push(new Queued(rej, res)) - 1;
   _this._queued = _this._queued + 1;
+
   return function Cached$removeFromQueue(){
     if(_this._state > Pending) return;
     _this._queue[i] = undefined;
@@ -55,10 +56,12 @@ Cached.prototype._drainQueue = function Cached$drainQueue(){
   const length = queue.length;
   const state = this._state;
   const value = this._value;
+
   for(let i = 0; i < length; i++){
     queue[i] && queue[i][state](value);
     queue[i] = undefined;
   }
+
   this._queue = undefined;
   this._queued = 0;
 };
@@ -99,12 +102,14 @@ Cached.prototype.reset = function Cached$reset(){
 
 Cached.prototype._fork = function Cached$_fork(rej, res){
   let cancel = noop;
+
   switch(this._state){
     case Pending: cancel = this._addToQueue(rej, res); break;
     case Rejected: rej(this._value); break;
     case Resolved: res(this._value); break;
     default: cancel = this._addToQueue(rej, res); this.run();
   }
+
   return cancel;
 };
 

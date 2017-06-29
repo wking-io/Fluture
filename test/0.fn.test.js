@@ -9,6 +9,7 @@ describe('fn', () => {
       const f = () => {
         return 42;
       };
+
       const input = f.toString();
       const inputLines = input.split('\n');
       const actualLines = fn.padf('--', input).split('\n');
@@ -23,16 +24,19 @@ describe('fn', () => {
 
     it('can partially apply binary functions', () => {
       function binary(a, b){ return a + b }
+
       expect(fn.partial1(binary, 1)(1)).to.equal(2);
     });
 
     it('can partially apply ternary functions', () => {
       function ternary(a, b, c){ return a + b + c }
+
       expect(fn.partial1(ternary, 1)(1, 1)).to.equal(3);
     });
 
     it('can partially apply quaternary functions', () => {
       function quaternary(a, b, c, d){ return a + b + c + d }
+
       expect(fn.partial1(quaternary, 1)(1, 1, 1)).to.equal(4);
     });
 
@@ -42,11 +46,13 @@ describe('fn', () => {
 
     it('can partially apply ternary functions', () => {
       function ternary(a, b, c){ return a + b + c }
+
       expect(fn.partial2(ternary, 1, 1)(1)).to.equal(3);
     });
 
     it('can partially apply quaternary functions', () => {
       function quaternary(a, b, c, d){ return a + b + c + d }
+
       expect(fn.partial2(quaternary, 1, 1)(1, 1)).to.equal(4);
     });
 
@@ -56,6 +62,7 @@ describe('fn', () => {
 
     it('can partially apply quaternary functions', () => {
       function quaternary(a, b, c, d){ return a + b + c + d }
+
       expect(fn.partial3(quaternary, 1, 1, 1)(1)).to.equal(4);
     });
 
