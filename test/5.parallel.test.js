@@ -127,6 +127,24 @@ describe('Parallel', () => {
       }, 30);
     });
 
+    it('[GH #123] does not cancel settled computations', done => {
+      const m1 = Object.create(F.mock);
+      const m2 = Object.create(F.mock);
+
+      m1._fork = (rej, res) => {
+        setTimeout(res, 10, 1);
+        return () => done(U.error);
+      };
+
+      m2._fork = rej => {
+        setTimeout(rej, 20, 2);
+        return () => done(U.error);
+      };
+
+      parallel(2, [m1, m2]).fork(U.noop, U.noop);
+      setTimeout(done, 50, null);
+    });
+
     it('does not resolve after being cancelled', done => {
       const cancel = parallel(1, [F.resolvedSlow, F.resolvedSlow])
       .fork(U.failRej, U.failRes);
