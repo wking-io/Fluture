@@ -1,6 +1,6 @@
 import {Core, Resolved, isFuture} from './core';
 import {invalidArgument, invalidFuture} from './internal/throw';
-import {show, mapArray, partial1} from './internal/fn';
+import {noop, show, mapArray, partial1} from './internal/fn';
 import {isUnsigned, isArray} from './internal/is';
 
 const check$parallel = (m, i) => isFuture(m) ? m : invalidFuture(
@@ -28,20 +28,24 @@ Parallel.prototype._fork = function Parallel$_fork(rej, res){
     for(let n = 0; n < _max; n++) cancels[n] && cancels[n]();
   }
 
-  function Parallel$fork$rej(reason){
-    Parallel$fork$cancelAll();
-    rej(reason);
-  }
-
-  function Parallel$fork$run(future, idx, cancelSlot){
-    cancels[cancelSlot] = future._fork(Parallel$fork$rej, function Parallel$fork$res(value){
+  function Parallel$fork$run(idx, cancelSlot){
+    cancels[cancelSlot] = _futures[idx]._fork(function Parallel$fork$rej(reason){
+      cancels[cancelSlot] = noop;
+      Parallel$fork$cancelAll();
+      rej(reason);
+    }, function Parallel$fork$res(value){
       out[idx] = value;
-      if(i < _length) Parallel$fork$run(_futures[i], i++, cancelSlot);
-      else if(++i - _max === _length) res(out);
+
+      if(i < _length){
+        Parallel$fork$run(i++, cancelSlot);
+      } else {
+        cancels[cancelSlot] = noop;
+        if(++i - _max === _length) res(out);
+      }
     });
   }
 
-  for(let n = 0; n < _max; n++) Parallel$fork$run(_futures[n], n, n);
+  for(let n = 0; n < _max; n++) Parallel$fork$run(n, n);
 
   return Parallel$fork$cancelAll;
 
