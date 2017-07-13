@@ -3,6 +3,7 @@ import {isFunction} from './internal/is';
 import {error, typeError, invalidArgument, invalidContext, invalidFuture} from './internal/throw';
 import {$$type} from './internal/const';
 import interpreter from './internal/interpreter';
+import {empty as emptyList, cons} from './internal/list';
 import type from 'sanctuary-type-identifiers';
 
 const throwRejection = x => error(
@@ -150,55 +151,55 @@ Future.prototype.extractRight = function Future$extractRight(){
 export const Core = Object.create(Future.prototype);
 
 Core._ap = function Core$ap(other){
-  return new Sequence(this, [new ApAction(other)]);
+  return new Sequence(this)._ap(other);
 };
 
 Core._map = function Core$map(mapper){
-  return new Sequence(this, [new MapAction(mapper)]);
+  return new Sequence(this)._map(mapper);
 };
 
 Core._bimap = function Core$bimap(lmapper, rmapper){
-  return new Sequence(this, [new BimapAction(lmapper, rmapper)]);
+  return new Sequence(this)._bimap(lmapper, rmapper);
 };
 
 Core._chain = function Core$chain(mapper){
-  return new Sequence(this, [new ChainAction(mapper)]);
+  return new Sequence(this)._chain(mapper);
 };
 
 Core._mapRej = function Core$mapRej(mapper){
-  return new Sequence(this, [new MapRejAction(mapper)]);
+  return new Sequence(this)._mapRej(mapper);
 };
 
 Core._chainRej = function Core$chainRej(mapper){
-  return new Sequence(this, [new ChainRejAction(mapper)]);
+  return new Sequence(this)._chainRej(mapper);
 };
 
 Core._race = function Core$race(other){
-  return new Sequence(this, [new RaceAction(other)]);
+  return new Sequence(this)._race(other);
 };
 
 Core._both = function Core$both(other){
-  return new Sequence(this, [new BothAction(other)]);
+  return new Sequence(this)._both(other);
 };
 
 Core._and = function Core$and(other){
-  return new Sequence(this, [new AndAction(other)]);
+  return new Sequence(this)._and(other);
 };
 
 Core._or = function Core$or(other){
-  return new Sequence(this, [new OrAction(other)]);
+  return new Sequence(this)._or(other);
 };
 
 Core._swap = function Core$swap(){
-  return new Sequence(this, [new SwapAction]);
+  return new Sequence(this)._swap();
 };
 
 Core._fold = function Core$fold(lmapper, rmapper){
-  return new Sequence(this, [new FoldAction(lmapper, rmapper)]);
+  return new Sequence(this)._fold(lmapper, rmapper);
 };
 
 Core._finally = function Core$finally(other){
-  return new Sequence(this, [new FinallyAction(other)]);
+  return new Sequence(this)._finally(other);
 };
 
 function check$fork(f, c){
@@ -497,7 +498,7 @@ export class BothActionState extends BothAction{
   }
 }
 
-export function Sequence(spawn, actions = []){
+export function Sequence(spawn, actions = emptyList){
   this._spawn = spawn;
   this._actions = actions;
 }
@@ -505,7 +506,7 @@ export function Sequence(spawn, actions = []){
 Sequence.prototype = Object.create(Future.prototype);
 
 Sequence.prototype._transform = function Sequence$_transform(action){
-  return new Sequence(this._spawn, this._actions.concat([action]));
+  return new Sequence(this._spawn, cons(action, this._actions));
 };
 
 Sequence.prototype._ap = function Sequence$ap(other){
@@ -563,5 +564,12 @@ Sequence.prototype._finally = function Sequence$finally(other){
 Sequence.prototype._fork = interpreter;
 
 Sequence.prototype.toString = function Sequence$toString(){
-  return `${this._spawn.toString()}${this._actions.map(x => `.${x.toString()}`).join('')}`;
+  let str = this._spawn.toString(), tail = this._actions;
+
+  while(!tail.isEmpty){
+    str = `${str}.${tail.head.toString()}`;
+    tail = tail.tail;
+  }
+
+  return str;
 };
