@@ -236,7 +236,7 @@ describe('Sequence', () => {
   describe('swap', () => {
 
     const seq = dummy.swap();
-    const nseq = new Sequence(rejected, []).swap();
+    const nseq = new Sequence(rejected).swap();
 
     describe('#fork()', () => {
 
@@ -294,7 +294,7 @@ describe('Sequence', () => {
 
       it('runs the other if the left rejects', done => {
         const other = Future(() => {done()});
-        const m = new Sequence(rejected, []).finally(other);
+        const m = new Sequence(rejected).finally(other);
         m.fork(noop, noop);
       });
 

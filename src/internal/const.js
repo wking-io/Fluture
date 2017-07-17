@@ -11,6 +11,6 @@ export const ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
 
 export const namespace = 'fluture';
 export const name = 'Future';
-export const version = 2;
+export const version = 3;
 
 export const $$type = `${namespace}/${name}@${version}`;

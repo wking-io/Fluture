@@ -7,11 +7,11 @@ export default function interpreter(rej, res){
 
   //This is the primary queue of actions. All actions in here will be "cold",
   //meaning they haven't had the chance yet to run concurrent computations.
-  const cold = new Denque(this._actions);
+  const cold = new Denque(this._actions.size);
 
   //This is the secondary queue of actions. All actions in here will be "hot",
   //meaning they have already had a chance to run a concurrent computation.
-  const queue = new Denque(this._actions.length);
+  const queue = new Denque(this._actions.size);
 
   //These combined variables define our current state.
   // future  = the future we are currently forking
@@ -19,7 +19,7 @@ export default function interpreter(rej, res){
   // cancel  = the cancel function of the current future
   // settled = a boolean indicating whether a new tick should start
   // async   = a boolean indicating whether we are awaiting a result asynchronously
-  let future = this._spawn, action, cancel = noop, settled, async, it;
+  let future, action, cancel = noop, settled, async = true, it;
 
   //This function is called with a future to use in the next tick.
   //Here we "flatten" the actions of another Sequence into our own actions,
@@ -31,7 +31,13 @@ export default function interpreter(rej, res){
     future = m;
 
     if(future._spawn){
-      for(let i = future._actions.length - 1; i >= 0; i--) cold.unshift(future._actions[i]);
+      let tail = future._actions;
+
+      while(!tail.isEmpty){
+        cold.unshift(tail.head);
+        tail = tail.tail;
+      }
+
       future = future._spawn;
     }
 
@@ -120,7 +126,7 @@ export default function interpreter(rej, res){
   }
 
   //Start the execution loop.
-  drain();
+  settle(this);
 
   //Return a cancellation function. It will cancel the current Future, the
   //current action, and all queued hot actions.
