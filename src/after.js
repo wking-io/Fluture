@@ -8,7 +8,7 @@ function After$race(other){
        ? other
        : isNever(other)
        ? this
-       : (other instanceof After || other instanceof RejectAfter)
+       : typeof other._time === 'number'
        ? other._time < this._time ? other : this
        : Core._race.call(this, other);
 }

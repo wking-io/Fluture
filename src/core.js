@@ -329,7 +329,9 @@ Resolved.prototype.toString = function Resolved$toString(){
 
 export const of = x => new Resolved(x);
 
-function Never(){}
+function Never(){
+  this._isNever = true;
+}
 
 Never.prototype = Object.create(Future.prototype);
 
@@ -358,7 +360,7 @@ Never.prototype.toString = function Never$toString(){
 };
 
 export const never = new Never();
-export const isNever = x => x === never;
+export const isNever = x => isFuture(x) && x._isNever === true;
 
 function Eager(future){
   this.rej = noop;
