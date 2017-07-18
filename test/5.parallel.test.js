@@ -50,7 +50,7 @@ describe('Parallel', () => {
 
     it('parallelizes execution', function(){
       this.timeout(70);
-      const actual = parallel(2, [
+      const actual = parallel(5, [
         after(20, 'a'),
         after(20, 'b'),
         after(20, 'c'),
@@ -79,6 +79,41 @@ describe('Parallel', () => {
       this.timeout(50);
       const actual = parallel(10, [after(35, 'a'), after(35, 'b')]);
       return U.assertResolved(actual, ['a', 'b']);
+    });
+
+    it('can deal with synchronously resolving futures', done => {
+      parallel(5, U.repeat(10, of(1))).fork(U.failRej, xs => {
+        expect(xs).to.have.length(10);
+        done();
+      });
+    });
+
+    it('forks the synchronous futures in the provided sequence', done => {
+      const ns = Array.from({length: 10}, (_, i) => i);
+      const xs = [];
+      const ms = ns.map(i => Future((rej, res) => {
+        xs.push(i);
+        res(i);
+      }));
+      parallel(5, ms).fork(U.noop, out => {
+        expect(out).to.deep.equal(ns);
+        expect(xs).to.deep.equal(ns);
+        done();
+      });
+    });
+
+    it('forks the asynchronous futures in the provided sequence', done => {
+      const ns = Array.from({length: 10}, (_, i) => i);
+      const xs = [];
+      const ms = ns.map(i => Future((rej, res) => {
+        xs.push(i);
+        setTimeout(res, 10, i);
+      }));
+      parallel(5, ms).fork(U.noop, out => {
+        expect(out).to.deep.equal(ns);
+        expect(xs).to.deep.equal(ns);
+        done();
+      });
     });
 
     it('resolves to an empty array when given an empty array', () => {
@@ -157,6 +192,14 @@ describe('Parallel', () => {
       .fork(U.failRej, U.failRes);
       setTimeout(cancel, 10);
       setTimeout(done, 50);
+    });
+
+    it('[GH #130] is stack safe', done => {
+      const ms = Array.from({length: U.STACKSIZE}, (_, i) => of(i));
+      parallel(1, ms).fork(U.failRej, xs => {
+        expect(xs).to.have.length(U.STACKSIZE);
+        done();
+      });
     });
 
   });
