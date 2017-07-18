@@ -21,33 +21,37 @@ Parallel.prototype = Object.create(Core);
 Parallel.prototype._fork = function Parallel$_fork(rej, res){
 
   const {_futures, _length, _max} = this;
-  const cancels = new Array(_max), out = new Array(_length);
-  let i = _max;
+  const cancels = new Array(_length), out = new Array(_length);
+  let cursor = 0, running = 0, blocked = false;
 
-  function Parallel$fork$cancelAll(){
-    for(let n = 0; n < _max; n++) cancels[n] && cancels[n]();
+  function Parallel$cancel(){
+    for(let n = 0; n < _length; n++) cancels[n] && cancels[n]();
   }
 
-  function Parallel$fork$run(idx, cancelSlot){
-    cancels[cancelSlot] = _futures[idx]._fork(function Parallel$fork$rej(reason){
-      cancels[cancelSlot] = noop;
-      Parallel$fork$cancelAll();
+  function Parallel$run(idx){
+    running++;
+    cancels[idx] = _futures[idx]._fork(function Parallel$rej(reason){
+      cancels[idx] = noop;
+      Parallel$cancel();
       rej(reason);
-    }, function Parallel$fork$res(value){
+    }, function Parallel$res(value){
+      cancels[idx] = noop;
       out[idx] = value;
-
-      if(i < _length){
-        Parallel$fork$run(i++, cancelSlot);
-      } else {
-        cancels[cancelSlot] = noop;
-        if(++i - _max === _length) res(out);
-      }
+      running--;
+      if(cursor === _length && running === 0) res(out);
+      else if(blocked) Parallel$drain();
     });
   }
 
-  for(let n = 0; n < _max; n++) Parallel$fork$run(n, n);
+  function Parallel$drain(){
+    blocked = false;
+    while(cursor < _length && running < _max) Parallel$run(cursor++);
+    blocked = true;
+  }
 
-  return Parallel$fork$cancelAll;
+  Parallel$drain();
+
+  return Parallel$cancel;
 
 };
 

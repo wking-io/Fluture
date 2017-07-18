@@ -1,7 +1,8 @@
 import * as U from './util';
-import {Future, of, reject, after, rejectAfter} from '../index.es.js';
+import {of, reject, after, rejectAfter} from '../index.es.js';
+import {Core} from '../src/core';
 
-export const mock = Object.create(Future.prototype);
+export const mock = Object.create(Core);
 mock._fork = U.noop;
 mock.toString = () => '(util.mock)';
 
