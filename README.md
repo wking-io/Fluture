@@ -815,11 +815,11 @@ Future.reject(new Error('It broke!'))
 
 #### chainRej
 
-<details><summary><code>chainRej :: (a -> Future a c) -> Future a b -> Future a c</code></summary>
+<details><summary><code>chainRej :: (a -> Future c b) -> Future a b -> Future c b</code></summary>
 
 ```hs
-chainRej                  ::               (a -> Future a c) -> Future a b -> Future a c
-Future.prototype.chainRej :: Future a b ~> (a -> Future a c)               -> Future a c
+chainRej                  ::               (a -> Future c b) -> Future a b -> Future c b
+Future.prototype.chainRej :: Future a b ~> (a -> Future c b)               -> Future c b
 ```
 
 </details>
