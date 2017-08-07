@@ -63,7 +63,7 @@ Go.prototype._fork = function Go$_fork(rej, res){
 
   drain();
 
-  return function Future$chainRec$cancel(){ cancel() };
+  return function Go$cancel(){ cancel() };
 
 };
 
