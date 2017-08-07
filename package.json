@@ -3,10 +3,12 @@
   "version": "6.3.0",
   "description": "FantasyLand compliant (monadic) alternative to Promises",
   "main": "index.js",
+  "types": "index.d.ts",
   "module": "index.es.js",
   "files": [
     "src",
-    "index.es.js"
+    "index.es.js",
+    "index.d.ts"
   ],
   "repository": "https://github.com/fluture-js/Fluture.git",
   "scripts": {

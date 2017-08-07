@@ -58,7 +58,8 @@ getPackageName('package.json')
 
 ### In ES6 or newer environments
 
-The `package.json` sets a `module`-field for build-tools like [Rollup][].
+The `package.json` sets a `module`-field for build-tools like [Rollup][]. The
+module version also has TypeScript definitions.
 
 ```js
 import {readFile} from 'fs';
