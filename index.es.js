@@ -6,7 +6,6 @@ export * from './src/dispatchers';
 export {after, rejectAfter} from './src/after';
 export {attempt, attempt as try} from './src/attempt';
 export {cache} from './src/cache';
-export {chainRec} from './src/chain-rec';
 export {encase} from './src/encase';
 export {encase2} from './src/encase2';
 export {encase3} from './src/encase3';

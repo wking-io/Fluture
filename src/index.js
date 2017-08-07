@@ -6,7 +6,6 @@ import * as dispatchers from './dispatchers';
 import {after, rejectAfter} from './after';
 import {attempt} from './attempt';
 import {cache} from './cache';
-import {chainRec} from './chain-rec';
 import {encase} from './encase';
 import {encase2} from './encase2';
 import {encase3} from './encase3';
@@ -34,7 +33,6 @@ export default Object.assign(Future, dispatchers, {
   after,
   attempt,
   cache,
-  chainRec,
   do: go,
   encase,
   encase2,

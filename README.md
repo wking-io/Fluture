@@ -679,11 +679,10 @@ of `encaseN`, applying two or three arguments to the given function respectively
 
 #### chainRec
 
-<details><summary><code>chainRec :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b</code></summary>
+<details><summary><code>Future.chainRec :: ((a -> Next a, b -> Done b, a) -> Future e (Next a | Done b), a) -> Future e b</code></summary>
 
 ```hs
-chainRec        :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b
-Future.chainRec :: ((a -> c, b -> c, a) -> Future e c, a) -> Future e b
+Future.chainRec :: ((a -> Next a, b -> Done b, a) -> Future e (Next a | Done b), a) -> Future e b
 ```
 
 </details>
