@@ -16,8 +16,7 @@
     "clean": "rimraf npm-debug.log coverage index.js index.test.js",
     "lint": "eslint src test index.es.js README.md",
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
-    "prepublish": "npm run build",
-    "release": "npm outdated --long; xyz --edit --repo git@github.com:fluture-js/Fluture.git --tag 'X.Y.Z' --increment",
+    "release": "npm outdated --long; npm run build && xyz --edit --repo git@github.com:fluture-js/Fluture.git --tag 'X.Y.Z' --increment",
     "test": "npm run lint && npm run lint:readme && npm run test:unit",
     "test:unit": "rollup -c rollup.config.test.js && mocha --require source-map-support/register --reporter test/reporter.js index.test.js",
     "test:coverage": "codecov"
