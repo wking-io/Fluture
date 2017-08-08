@@ -7,7 +7,7 @@ import type from 'sanctuary-type-identifiers';
 const testInstance = race => {
 
   it('is considered a member of fluture/Fluture', () => {
-    const m1 = Future((rej, res) => void setTimeout(res, 15, 1));
+    const m1 = Future((rej, res) => void setTimeout(res, 50, 1));
     const m2 = Future(rej => void setTimeout(rej, 5, U.error));
     expect(type(race(m1, m2))).to.equal(Future['@@type']);
   });
@@ -15,14 +15,14 @@ const testInstance = race => {
   describe('#fork()', () => {
 
     it('rejects when the first one rejects', () => {
-      const m1 = Future((rej, res) => void setTimeout(res, 15, 1));
+      const m1 = Future((rej, res) => void setTimeout(res, 50, 1));
       const m2 = Future(rej => void setTimeout(rej, 5, U.error));
       return U.assertRejected(race(m1, m2), U.error);
     });
 
     it('resolves when the first one resolves', () => {
       const m1 = Future((rej, res) => void setTimeout(res, 5, 1));
-      const m2 = Future(rej => void setTimeout(rej, 15, U.error));
+      const m2 = Future(rej => void setTimeout(rej, 50, U.error));
       return U.assertResolved(race(m1, m2), 1);
     });
 
