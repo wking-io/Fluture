@@ -1424,6 +1424,38 @@ isNever :: a -> Boolean
 
 Returns `true` if the given input is a `never`.
 
+#### extractLeft
+
+<details><summary><code>extractLeft :: Future a b -> Array a</code></summary>
+
+```hs
+extractLeft                  :: Future a b       -> Array a
+Future.prototype.extractLeft :: Future a b ~> () -> Array a
+```
+
+</details>
+
+Returns an array whose only element is the rejection reason of the Future.
+In many cases it will be impossible to extract this value; In those cases, the
+array will be empty. This function is meant to be used for type introspection:
+it is **not** the correct way to [consume a Future](#consuming-futures).
+
+#### extractRight
+
+<details><summary><code>extractRight :: Future a b -> Array b</code></summary>
+
+```hs
+extractRight                  :: Future a b       -> Array b
+Future.prototype.extractRight :: Future a b ~> () -> Array b
+```
+
+</details>
+
+Returns an array whose only element is the resolution value of the Future.
+In many cases it will be impossible to extract this value; In those cases, the
+array will be empty. This function is meant to be used for type introspection:
+it is **not** the correct way to [consume a Future](#consuming-futures).
+
 ## License
 
 [MIT licensed](LICENSE)
