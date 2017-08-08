@@ -77,6 +77,12 @@ declare module 'fluture' {
     /** Fork the Future into a Node-style callback. See https://github.com/fluture-js/Fluture#done */
     done(callback: Nodeback<L, R>): Cancel
 
+    /** Attempt to extract the rejection reason. See https://github.com/fluture-js/Fluture#extractleft */
+    extractLeft(): Array<L>
+
+    /** Attempt to extract the resolution value. See https://github.com/fluture-js/Fluture#extractright */
+    extractRight(): Array<R>
+
     /** Set up a cleanup Future to run after this one is done. See https://github.com/fluture-js/Fluture#finally */
     finally(cleanup: Future<L, any>): Future<L, R>
 
@@ -197,10 +203,10 @@ declare module 'fluture' {
   export function encaseP3<L, R, A, B, C>(fn: (a: A, b: B, c: C) => Promise<R>, a: A): AwaitingTwo<B, C, Future<L, R>>
   export function encaseP3<L, R, A, B, C>(fn: (a: A, b: B, c: C) => Promise<R>): AwaitingThree<A, B, C, Future<L, R>>
 
-  /** Extract the rejection reason into an Array if it's present. See https://github.com/fluture-js/Fluture#extractleft */
+  /** Attempt to extract the rejection reason. See https://github.com/fluture-js/Fluture#extractleft */
   export function extractLeft<L, R>(source: Future<L, R>): Array<L>
 
-  /** Extract the resolution value into an Array if it's present. See https://github.com/fluture-js/Fluture#extractright */
+  /** Attempt to extract the resolution value. See https://github.com/fluture-js/Fluture#extractright */
   export function extractRight<L, R>(source: Future<L, R>): Array<R>
 
   /** Fold both branches into the resolution branch. See https://github.com/fluture-js/Fluture#fold */
