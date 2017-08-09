@@ -1,10 +1,11 @@
 import concurrify from 'concurrify';
 import type from 'sanctuary-type-identifiers';
 import {Core, Future, never} from './core';
-import {race} from './dispatchers';
+import {race, ap, map, alt} from './dispatchers';
 import {noop, show} from './internal/fn';
 import {isFunction} from './internal/is';
 import {typeError, invalidArgument} from './internal/throw';
+import {FL} from './internal/const';
 
 function check$ap$f(f){
   if(!isFunction(f)) typeError(
@@ -55,6 +56,12 @@ ParallelAp.prototype.toString = function ParallelAp$toString(){
 export const Par = concurrify(Future, never, race, function pap(mval, mfunc){
   return new ParallelAp(mval, mfunc);
 });
+
+Par.of = Par[FL.of];
+Par.zero = Par[FL.zero];
+Par.map = map;
+Par.ap = ap;
+Par.alt = alt;
 
 export function isParallel(x){
   return x instanceof Par || type(x) === Par['@@type'];
