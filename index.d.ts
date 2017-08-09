@@ -1,47 +1,47 @@
 declare module 'fluture' {
 
-  interface RejectFunction<L> {
+  export interface RejectFunction<L> {
     (error: L): void
   }
 
-  interface ResolveFunction<R> {
+  export interface ResolveFunction<R> {
     (value: R): void
   }
 
-  interface Cancel {
+  export interface Cancel {
     (): void
   }
 
-  interface Nodeback<E, R> {
+  export interface Nodeback<E, R> {
     (err: E | null, value?: R): void
   }
 
-  interface Next<T> {
+  export interface Next<T> {
     done: false
     value: T
   }
 
-  interface Done<T> {
+  export interface Done<T> {
     done: true
     value: T
   }
 
-  interface Iterator<N, D> {
+  export interface Iterator<N, D> {
     next(value?: N): Next<N> | Done<D>
   }
 
-  interface Generator<Y, R> {
+  export interface Generator<Y, R> {
     (): Iterator<Y, R>
   }
 
   /** The function is waiting for two more arguments. */
-  interface AwaitingTwo<A, B, R> {
+  export interface AwaitingTwo<A, B, R> {
     (a: A, b: B): R
     (a: A): (b: B) => R
   }
 
   /** The function is waiting for three more arguments. */
-  interface AwaitingThree<A, B, C, R> {
+  export interface AwaitingThree<A, B, C, R> {
     (a: A, b: B, c: C): R
     (a: A, b: B): (c: C) => R
     (a: A): AwaitingTwo<B, C, R>
