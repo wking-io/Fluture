@@ -83,8 +83,10 @@ getPackageName('package.json')
 * `Future` implements [Fantasy Land][FL] and [Static Land][6] -compatible
   `Bifunctor`, `Monad` and `ChainRec` (`of`, `ap`, `map`, `bimap`, `chain`, `chainRec`).
   All versions of Fantasy Land are supported.
-* `Future.Par` implements [Fantasy Land 3][FL] `Alternative` (`of`, `zero`, `map`, `ap`, `alt`).
-* The Future representative contains a `@@type` property for [Sanctuary Type Identifiers][STI].
+* `Future.Par` implements [Fantasy Land 3][FL] and [Static Land][6] -compatible
+  `Alternative` (`of`, `zero`, `map`, `ap`, `alt`).
+* The Future and ConcurrentFuture representatives contain `@@type` properties
+  for [Sanctuary Type Identifiers][STI].
 
 ## Butterfly
 
@@ -262,6 +264,8 @@ expressed by means of [type classes][Guide:constraints], specifically those defi
   [Fantasy Land Chain specification][FL:chain].
 - [**Apply**][Z:Apply] - Values which conform to the
   [Fantasy Land Apply specification][FL:apply].
+- [**Alt**][Z:Alt] - Values which conform to the
+  [Fantasy Land Alt specification][FL:alt].
 
 ### Stack safety
 
@@ -700,6 +704,7 @@ function directly. Instead it's recommended to use [`chain(rec)`](#chain).
 ```hs
 map                  :: Functor m  => (a -> b) -> m a -> m        b
 Future.map           :: Functor m  => (a -> b) -> m a -> m        b
+Par.map              :: Functor m  => (a -> b) -> m a -> m        b
 Future.prototype.map :: Future e a ~> (a -> b)        -> Future e b
 ```
 
@@ -875,6 +880,7 @@ Future.reject('it broke')
 ```hs
 ap                  :: Apply m => m        (a -> b) -> m        a -> m        b
 Future.ap           :: Apply m => m        (a -> b) -> m        a -> m        b
+Par.ap              :: Apply m => m        (a -> b) -> m        a -> m        b
 Future.prototype.ap ::            Future e (a -> b) ~> Future e a -> Future e b
 ```
 
@@ -1183,28 +1189,20 @@ Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 
 #### ConcurrentFuture
 
-<details><summary><code>Par :: Future a b -> ConcurrentFuture a b</code></summary>
-
-```hs
-Par :: Future a b -> ConcurrentFuture a b
-seq :: ConcurrentFuture a b -> Future a b
-```
-
-</details>
-
-ConcurrentFuture (or `Par` for short) is the result of applying
-[`concurrify`][concurrify] to `Future`. It provides a mechanism for constructing
-a [Fantasy Land `Alternative`][FL:alternative] from a member of `Future`. This
+The `ConcurrentFuture` type is the result of applying [`concurrify`][concurrify]
+to `Future`. It provides a mechanism for constructing a
+[Fantasy Land `Alternative`][FL:alternative] from a member of `Future`. This
 allows Futures to benefit from the Alternative Interface, which includes
 parallel `ap`, `zero` and `alt`.
 
 The idea is that you can switch back and forth between `Future` and
-`ConcurrentFuture`, using `Par` and `seq`, to get sequential or concurrent
-behaviour respectively. It's useful if you want a purely algebraic alternative
-to [`parallel`](#parallel) and [`race`](#race).
+`ConcurrentFuture`, using [`Par`](#par) and [`seq`](#seq), to get sequential or
+concurrent behaviour respectively. It's a useful type to pass to abstractions
+that don't know about Future-specific functions like [`parallel`](#parallel) or
+[`race`](#race), but *do* know how to operate on Apply and Alternative.
 
 ```js
-const {of, ap, zero, alt, sequence} = require('sanctuary');
+const {of, ap, sequence} = require('sanctuary');
 const {Future, Par, seq} = require('fluture');
 
 //Some dummy values
@@ -1222,10 +1220,79 @@ seq(ap(parx, parf)).value(console.log);
 //Or concurrent sequencing
 seq(sequence(Par, [parx, parf])).value(console.log);
 //> [x, f]
+```
 
-//Or racing with alternative
-seq(alt(zero(Par), parx)).value(console.log);
+##### Par
+
+Converts a Future to a ConcurrentFuture.
+
+<details><summary><code>Par :: Future a b -> ConcurrentFuture a b</code></summary>
+
+```hs
+Par :: Future a b -> ConcurrentFuture a b
+```
+
+</details>
+
+##### Par.of
+
+Constructs a ConcurrentFuture with the given resolution value.
+
+<details><summary><code>Par.of :: b -> ConcurrentFuture a b</code></summary>
+
+```hs
+Par.of :: b -> ConcurrentFuture a b
+```
+
+</details>
+
+##### Par.zero
+
+Constructs a ConcurrentFuture which will never resolve or reject with anything.
+
+<details><summary><code>Par.zero :: () -> ConcurrentFuture a a</code></summary>
+
+```hs
+Par.zero :: () -> ConcurrentFuture a a
+```
+
+</details>
+
+##### seq
+
+Converts a ConcurrentFuture to a Future.
+
+<details><summary><code>seq :: ConcurrentFuture a b -> Future a b</code></summary>
+
+```hs
+seq :: ConcurrentFuture a b -> Future a b
+```
+
+</details>
+
+##### alt
+
+Select one of two [Alts](#types). In terms of the `ConcurrentFuture`
+type, this means racing the two against one another with the same
+semantics as [`race`](#race).
+
+<details><summary><code>alt :: Alt f => f a -> f a -> f a</code></summary>
+
+```hs
+alt     :: Alt f => f a -> f a -> f a
+Par.alt :: Alt f => f a -> f a -> f a
+```
+
+</details>
+
+```js
+import {Future, Par, seq, alt} from 'fluture';
+
+seq(alt(Par.zero, Par.of(1))).value(console.log);
 //> 1
+
+seq(alt(Par(Future.after(20, 1)), Future.after(10, 2))).value(console.log);
+//> 2
 ```
 
 ### Resource management
@@ -1466,6 +1533,7 @@ it is **not** the correct way to [consume a Future](#consuming-futures).
 [wiki:promises]:        https://github.com/fluture-js/Fluture/wiki/Comparison-to-Promises
 
 [FL]:                   https://github.com/fantasyland/fantasy-land
+[FL:alt]:               https://github.com/fantasyland/fantasy-land#alt
 [FL:alternative]:       https://github.com/fantasyland/fantasy-land#alternative
 [FL:functor]:           https://github.com/fantasyland/fantasy-land#functor
 [FL:chain]:             https://github.com/fantasyland/fantasy-land#chain
@@ -1491,6 +1559,7 @@ it is **not** the correct way to [consume a Future](#consuming-futures).
 [Z:Bifunctor]:          https://github.com/sanctuary-js/sanctuary-type-classes#Bifunctor
 [Z:Chain]:              https://github.com/sanctuary-js/sanctuary-type-classes#Chain
 [Z:Apply]:              https://github.com/sanctuary-js/sanctuary-type-classes#Apply
+[Z:Alt]:                https://github.com/sanctuary-js/sanctuary-type-classes#Alt
 
 [$]:                    https://github.com/sanctuary-js/sanctuary-def
 

@@ -1,47 +1,47 @@
 declare module 'fluture' {
 
-  interface RejectFunction<L> {
+  export interface RejectFunction<L> {
     (error: L): void
   }
 
-  interface ResolveFunction<R> {
+  export interface ResolveFunction<R> {
     (value: R): void
   }
 
-  interface Cancel {
+  export interface Cancel {
     (): void
   }
 
-  interface Nodeback<E, R> {
+  export interface Nodeback<E, R> {
     (err: E | null, value?: R): void
   }
 
-  interface Next<T> {
+  export interface Next<T> {
     done: false
     value: T
   }
 
-  interface Done<T> {
+  export interface Done<T> {
     done: true
     value: T
   }
 
-  interface Iterator<N, D> {
+  export interface Iterator<N, D> {
     next(value?: N): Next<N> | Done<D>
   }
 
-  interface Generator<Y, R> {
+  export interface Generator<Y, R> {
     (): Iterator<Y, R>
   }
 
   /** The function is waiting for two more arguments. */
-  interface AwaitingTwo<A, B, R> {
+  export interface AwaitingTwo<A, B, R> {
     (a: A, b: B): R
     (a: A): (b: B) => R
   }
 
   /** The function is waiting for three more arguments. */
-  interface AwaitingThree<A, B, C, R> {
+  export interface AwaitingThree<A, B, C, R> {
     (a: A, b: B, c: C): R
     (a: A, b: B): (c: C) => R
     (a: A): AwaitingTwo<B, C, R>
@@ -126,9 +126,17 @@ declare module 'fluture' {
   export function and<L, R>(left: Future<L, any>, right: Future<L, R>): Future<L, R>
   export function and<L, R>(left: Future<L, any>): (right: Future<L, R>) => Future<L, R>
 
+  /** Race two ConcurrentFutures. See https://github.com/fluture-js/Fluture#alt */
+  export function alt<L, R>(left: ConcurrentFuture<L, R>, right: ConcurrentFuture<L, R>): ConcurrentFuture<L, R>
+  export function alt<L, R>(left: ConcurrentFuture<L, R>): (right: ConcurrentFuture<L, R>) => ConcurrentFuture<L, R>
+
   /** Apply the function in the left Future to the value in the right Future. See https://github.com/fluture-js/Fluture#ap */
   export function ap<L, RA, RB>(apply: Future<L, (value: RA) => RB>, value: Future<L, RA>): Future<L, RB>
   export function ap<L, RA, RB>(apply: Future<L, (value: RA) => RB>): (value: Future<L, RA>) => Future<L, RB>
+
+  /** Apply the function in the left ConcurrentFuture to the value in the right ConcurrentFuture. See https://github.com/fluture-js/Fluture#ap */
+  export function ap<L, RA, RB>(apply: ConcurrentFuture<L, (value: RA) => RB>, value: ConcurrentFuture<L, RA>): ConcurrentFuture<L, RB>
+  export function ap<L, RA, RB>(apply: ConcurrentFuture<L, (value: RA) => RB>): (value: ConcurrentFuture<L, RA>) => ConcurrentFuture<L, RB>
 
   /** Create a Future which resolves with the return value of the given function, or rejects with the error it throws. See https://github.com/fluture-js/Fluture#try */
   export function attempt<L, R>(fn: () => R): Future<L, R>
@@ -241,6 +249,10 @@ declare module 'fluture' {
   export function map<L, RA, RB>(mapper: (value: RA) => RB, source: Future<L, RA>): Future<L, RB>
   export function map<L, RA, RB>(mapper: (value: RA) => RB): (source: Future<L, RA>) => Future<L, RB>
 
+  /** Map over the resolution value of the given ConcurrentFuture. See https://github.com/fluture-js/Fluture#map */
+  export function map<L, RA, RB>(mapper: (value: RA) => RB, source: ConcurrentFuture<L, RA>): ConcurrentFuture<L, RB>
+  export function map<L, RA, RB>(mapper: (value: RA) => RB): (source: ConcurrentFuture<L, RA>) => ConcurrentFuture<L, RB>
+
   /** Map over the rejection reason of the given Future. See https://github.com/fluture-js/Fluture#maprej */
   export function mapRej<LA, LB, R>(mapper: (reason: LA) => LB, source: Future<LA, R>): Future<LB, R>
   export function mapRej<LA, LB, R>(mapper: (reason: LA) => LB): (source: Future<LA, R>) => Future<LB, R>
@@ -320,7 +332,22 @@ declare module 'fluture' {
   export const Future: Fluture
   export default Fluture
 
-  /** Create a ConcurrentFuture using a Future. See https://github.com/fluture-js/Fluture#concurrentfuture */
-  export function Par<L, R>(source: Future<L, R>): ConcurrentFuture<L, R>
+  export interface Par {
+
+    /** Create a ConcurrentFuture using a Future. See https://github.com/fluture-js/Fluture#concurrentfuture */
+    <L, R>(source: Future<L, R>): ConcurrentFuture<L, R>
+
+    of<R>(value: R): ConcurrentFuture<never, R>
+    zero(): ConcurrentFuture<never, never>
+
+    ap: typeof ap
+    map: typeof map
+    alt: typeof alt
+
+    '@@type': string
+
+  }
+
+  export const Par: Par
 
 }

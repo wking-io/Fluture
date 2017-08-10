@@ -1,4 +1,5 @@
 export {ap} from './dispatchers/ap';
+export {alt} from './dispatchers/alt';
 export {map} from './dispatchers/map';
 export {bimap} from './dispatchers/bimap';
 export {chain} from './dispatchers/chain';

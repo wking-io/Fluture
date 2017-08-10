@@ -1,8 +1,28 @@
 import {expect} from 'chai';
-import {Future, Par, seq, of, reject, never, ap, map} from '../index.es.js';
+import {Future, Par, seq, of, reject, never, ap, map, alt} from '../index.es.js';
 import * as U from './util';
 import * as F from './futures';
 import Z from 'sanctuary-type-classes';
+
+describe('alt()', () => {
+
+  it('is a curried binary function', () => {
+    expect(alt).to.be.a('function');
+    expect(alt.length).to.equal(2);
+    expect(alt(Par.of(1))).to.be.a('function');
+  });
+
+  it('throws when not given a Function as first argument', () => {
+    const f = () => alt(1);
+    expect(f).to.throw(TypeError, /alt.*first/);
+  });
+
+  it('throws when not given a Future as second argument', () => {
+    const f = () => alt(Par.of(1), 1);
+    expect(f).to.throw(TypeError, /alt.*second/);
+  });
+
+});
 
 describe('Par()', () => {
 
@@ -118,8 +138,6 @@ describe('Par()', () => {
   });
 
   describe('#alt', () => {
-
-    const alt = Z.alt;
 
     it('rejects when the first one rejects', () => {
       const m1 = Par(Future((rej, res) => void setTimeout(res, 15, 1)));
