@@ -566,12 +566,12 @@ Sequence.prototype._finally = function Sequence$finally(other){
 Sequence.prototype._fork = interpreter;
 
 Sequence.prototype.toString = function Sequence$toString(){
-  let str = this._spawn.toString(), tail = this._actions;
+  let str = '', tail = this._actions;
 
   while(!tail.isEmpty){
-    str = `${str}.${tail.head.toString()}`;
+    str = `.${tail.head.toString()}${str}`;
     tail = tail.tail;
   }
 
-  return str;
+  return `${this._spawn.toString()}${str}`;
 };

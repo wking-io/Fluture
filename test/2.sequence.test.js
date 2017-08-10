@@ -24,7 +24,8 @@ describe('Sequence', () => {
     describe('#toString()', () => {
 
       it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of(s => `${s}!`).ap(Future.of("resolved"))');
+        const expected = 'Future.of(s => `${s}!`).ap(Future.of("resolved")).map(s => `${s}!`)';
+        expect(seq.map(bang).toString()).to.equal(expected);
       });
 
     });
