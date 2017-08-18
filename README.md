@@ -75,6 +75,13 @@ getPackageName('package.json')
 //> "fluture"
 ```
 
+### From a CDN
+
+Fluture is hosted in full with all of its dependencies at
+https://rawgit.com/fluture-js/Fluture/master/dist/bundle.js.
+
+This script will add `Fluture` to the global scope.
+
 ## Interoperability
 
 [<img src="https://raw.github.com/fantasyland/fantasy-land/master/logo.png" align="right" width="82" height="82" alt="Fantasy Land" />][FL]
