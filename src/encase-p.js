@@ -1,5 +1,5 @@
 import {Core} from './core';
-import {noop, show, showf, escapeTick, partial1} from './internal/fn';
+import {noop, show, showf, immediately, partial1} from './internal/fn';
 import {isThenable, isFunction} from './internal/is';
 import {invalidArgument, typeError} from './internal/throw';
 
@@ -20,7 +20,7 @@ EncaseP.prototype = Object.create(Core);
 
 EncaseP.prototype._fork = function EncaseP$fork(rej, res){
   const {_fn, _a} = this;
-  check$promise(_fn(_a), _fn, _a).then(escapeTick(res), escapeTick(rej));
+  check$promise(_fn(_a), _fn, _a).then(immediately(res), immediately(rej));
   return noop;
 };
 
