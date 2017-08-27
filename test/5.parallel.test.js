@@ -75,10 +75,15 @@ describe('Parallel', () => {
     });
 
     it('runs all in parallel when given number larger than the array length', function(){
-      this.slow(80);
-      this.timeout(50);
-      const actual = parallel(10, [after(35, 'a'), after(35, 'b')]);
-      return U.assertResolved(actual, ['a', 'b']);
+      this.timeout(70);
+      const actual = parallel(10, [
+        after(20, 'a'),
+        after(20, 'b'),
+        after(20, 'c'),
+        after(20, 'd'),
+        after(20, 'e')
+      ]);
+      return U.assertResolved(actual, ['a', 'b', 'c', 'd', 'e']);
     });
 
     it('can deal with synchronously resolving futures', done => {
@@ -121,10 +126,15 @@ describe('Parallel', () => {
     });
 
     it('runs all in parallel when given Infinity', function(){
-      this.slow(80);
-      this.timeout(50);
-      const actual = parallel(Infinity, [after(35, 'a'), after(35, 'b')]);
-      return U.assertResolved(actual, ['a', 'b']);
+      this.timeout(70);
+      const actual = parallel(Infinity, [
+        after(20, 'a'),
+        after(20, 'b'),
+        after(20, 'c'),
+        after(20, 'd'),
+        after(20, 'e')
+      ]);
+      return U.assertResolved(actual, ['a', 'b', 'c', 'd', 'e']);
     });
 
     it('rejects if one of the input rejects', () => {
