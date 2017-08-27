@@ -1,5 +1,5 @@
 /**
- * Fluture bundled; version 7.1.1 (dirty)
+ * Fluture bundled; version 7.1.2
  */
 
 var Fluture = (function () {
@@ -15,7 +15,7 @@ function createCommonjsModule(fn, module) {
 	return module = { exports: {} }, fn(module, module.exports), module.exports;
 }
 
-var index$3 = createCommonjsModule(function (module) {
+var sanctuaryTypeIdentifiers = createCommonjsModule(function (module) {
 /*
         @@@@@@@            @@@@@@@         @@
       @@       @@        @@       @@      @@@
@@ -148,7 +148,7 @@ var index$3 = createCommonjsModule(function (module) {
 }));
 });
 
-var index$2 = createCommonjsModule(function (module) {
+var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 /*
              ############                  #
             ############                  ###
@@ -223,7 +223,7 @@ var index$2 = createCommonjsModule(function (module) {
 
   /* istanbul ignore else */
   {
-    module.exports = f(index$3);
+    module.exports = f(sanctuaryTypeIdentifiers);
   }
 
 }(function(type) {
@@ -2185,9 +2185,15 @@ var inspectF = createCommonjsModule(function (module) {
 }));
 });
 
+var setImmediate$1 = function (f, x) { return setTimeout(f, 0, x); };
+
+var setImmediate = typeof global.setImmediate === 'function'
+  ? global.setImmediate
+  : /* istanbul ignore next: environment-specific */ setImmediate$1;
+
 var noop = function noop(){};
 var moop = function moop(){ return this };
-var show = index$2.toString;
+var show = sanctuaryTypeClasses.toString;
 var padf = function (sf, s) { return s.replace(/^/gm, sf).replace(sf, ''); };
 var showf = function (f) { return padf('  ', inspectF(2, f)); };
 
@@ -2213,9 +2219,7 @@ var partial3 = function (f, a, b, c) { return function bound3(d){
   return f(a, b, c, d);
 }; };
 
-var escapeTick = function (f) { return function imprisoned(x){
-  setTimeout(function escaped(){ f(x); }, 0);
-}; };
+var immediately = function (f) { return function (x) { return setImmediate(f, x); }; };
 
 var isFunction = function (f) { return typeof f === 'function'; };
 var isThenable = function (m) { return m instanceof Promise || Boolean(m) && isFunction(m.then); };
@@ -2244,7 +2248,7 @@ var version = 3;
 
 var $$type = namespace + "/" + name + "@" + version;
 
-var index$5 = createCommonjsModule(function (module) {
+var sanctuaryTypeIdentifiers$2 = createCommonjsModule(function (module) {
 /*
         @@@@@@@            @@@@@@@         @@
       @@       @@        @@       @@      @@@
@@ -2471,7 +2475,7 @@ var invalidVersion = function (m, x) { return (
 var invalidFuture = function (it, at, m, s) {
   if ( s === void 0 ) s = '';
 
-  var id = index$5.parse(index$5(m));
+  var id = sanctuaryTypeIdentifiers$2.parse(sanctuaryTypeIdentifiers$2(m));
   var info = id.name === name ? '\n' + (
     id.namespace !== namespace ? invalidNamespace(m, id.namespace)
   : id.version !== version ? invalidVersion(m, id.version)
@@ -2709,7 +2713,11 @@ Denque.prototype.remove = function remove(index, count) {
     removed[0] = this.removeOne(i);
     return removed;
   }
-  if (i === 0 && i + count >= size) { return this.clear(); }
+  if (i === 0 && i + count >= size) {
+    removed = this.toArray();
+    this.clear();
+    return removed;
+  }
   if (i + count > size) { count = size - i; }
   var k;
   removed = new Array(count);
@@ -2927,7 +2935,7 @@ Denque.prototype._shrinkArray = function _shrinkArray() {
 };
 
 
-var index$6 = Denque;
+var denque = Denque;
 
 /*eslint no-cond-assign:0, no-constant-condition:0 */
 
@@ -2935,11 +2943,11 @@ function interpreter(rej, res){
 
   //This is the primary queue of actions. All actions in here will be "cold",
   //meaning they haven't had the chance yet to run concurrent computations.
-  var cold = new index$6(this._actions.size);
+  var cold = new denque(this._actions.size);
 
   //This is the secondary queue of actions. All actions in here will be "hot",
   //meaning they have already had a chance to run a concurrent computation.
-  var queue = new index$6(this._actions.size);
+  var queue = new denque(this._actions.size);
 
   //These combined variables define our current state.
   // future  = the future we are currently forking
@@ -3079,7 +3087,7 @@ function Future$1(computation){
 }
 
 function isFuture(x){
-  return x instanceof Future$1 || index$5(x) === $$type;
+  return x instanceof Future$1 || sanctuaryTypeIdentifiers$2(x) === $$type;
 }
 
 Future$1.prototype.ap = function Future$ap(other){
@@ -3800,30 +3808,30 @@ function chainRec(step, init){
 }
 
 function ap$mval(mval, mfunc){
-  if(!index$2.Apply.test(mfunc)) { invalidArgument('Future.ap', 1, 'be an Apply', mfunc); }
-  return index$2.ap(mval, mfunc);
+  if(!sanctuaryTypeClasses.Apply.test(mfunc)) { invalidArgument('Future.ap', 1, 'be an Apply', mfunc); }
+  return sanctuaryTypeClasses.ap(mval, mfunc);
 }
 
 function ap(mval, mfunc){
-  if(!index$2.Apply.test(mval)) { invalidArgument('Future.ap', 0, 'be an Apply', mval); }
+  if(!sanctuaryTypeClasses.Apply.test(mval)) { invalidArgument('Future.ap', 0, 'be an Apply', mval); }
   if(arguments.length === 1) { return partial1(ap$mval, mval); }
   return ap$mval(mval, mfunc);
 }
 
 function alt$left(left, right){
-  if(!index$2.Alt.test(right)) { invalidArgument('alt', 1, 'be an Alt', right); }
-  return index$2.alt(left, right);
+  if(!sanctuaryTypeClasses.Alt.test(right)) { invalidArgument('alt', 1, 'be an Alt', right); }
+  return sanctuaryTypeClasses.alt(left, right);
 }
 
 function alt(left, right){
-  if(!index$2.Alt.test(left)) { invalidArgument('alt', 0, 'be an Alt', left); }
+  if(!sanctuaryTypeClasses.Alt.test(left)) { invalidArgument('alt', 0, 'be an Alt', left); }
   if(arguments.length === 1) { return partial1(alt$left, left); }
   return alt$left(left, right);
 }
 
 function map$mapper(mapper, m){
-  if(!index$2.Functor.test(m)) { invalidArgument('Future.map', 1, 'be a Functor', m); }
-  return index$2.map(mapper, m);
+  if(!sanctuaryTypeClasses.Functor.test(m)) { invalidArgument('Future.map', 1, 'be a Functor', m); }
+  return sanctuaryTypeClasses.map(mapper, m);
 }
 
 function map(mapper, m){
@@ -3833,8 +3841,8 @@ function map(mapper, m){
 }
 
 function bimap$lmapper$rmapper(lmapper, rmapper, m){
-  if(!index$2.Bifunctor.test(m)) { invalidArgument('Future.bimap', 2, 'be a Bifunctor', m); }
-  return index$2.bimap(lmapper, rmapper, m);
+  if(!sanctuaryTypeClasses.Bifunctor.test(m)) { invalidArgument('Future.bimap', 2, 'be a Bifunctor', m); }
+  return sanctuaryTypeClasses.bimap(lmapper, rmapper, m);
 }
 
 function bimap$lmapper(lmapper, rmapper, m){
@@ -3851,8 +3859,8 @@ function bimap(lmapper, rmapper, m){
 }
 
 function chain$chainer(chainer, m){
-  if(!index$2.Chain.test(m)) { invalidArgument('Future.chain', 1, 'be a Chain', m); }
-  return index$2.chain(chainer, m);
+  if(!sanctuaryTypeClasses.Chain.test(m)) { invalidArgument('Future.chain', 1, 'be a Chain', m); }
+  return sanctuaryTypeClasses.chain(chainer, m);
 }
 
 function chain(chainer, m){
@@ -4518,7 +4526,7 @@ EncaseP.prototype._fork = function EncaseP$fork(rej, res){
   var ref = this;
   var _fn = ref._fn;
   var _a = ref._a;
-  check$promise(_fn(_a), _fn, _a).then(escapeTick(res), escapeTick(rej));
+  check$promise(_fn(_a), _fn, _a).then(immediately(res), immediately(rej));
   return noop;
 };
 
@@ -4557,7 +4565,7 @@ EncaseP2.prototype._fork = function EncaseP2$fork(rej, res){
   var _fn = ref._fn;
   var _a = ref._a;
   var _b = ref._b;
-  check$promise$1(_fn(_a, _b), _fn, _a, _b).then(escapeTick(res), escapeTick(rej));
+  check$promise$1(_fn(_a, _b), _fn, _a, _b).then(immediately(res), immediately(rej));
   return noop;
 };
 
@@ -4604,7 +4612,7 @@ EncaseP3.prototype._fork = function EncaseP3$fork(rej, res){
   var _a = ref._a;
   var _b = ref._b;
   var _c = ref._c;
-  check$promise$2(_fn(_a, _b, _c), _fn, _a, _b, _c).then(escapeTick(res), escapeTick(rej));
+  check$promise$2(_fn(_a, _b, _c), _fn, _a, _b, _c).then(immediately(res), immediately(rej));
   return noop;
 };
 
@@ -4831,14 +4839,14 @@ function node(f){
   return new Node(f);
 }
 
-var index$7 = createCommonjsModule(function (module) {
+var concurrify = createCommonjsModule(function (module) {
 (function(global, f){
 
   'use strict';
 
   /*istanbul ignore next*/
   if(module && 'object' !== 'undefined'){
-    module.exports = f(index$2, index$5);
+    module.exports = f(sanctuaryTypeClasses, sanctuaryTypeIdentifiers$2);
   }else{
     global.concurrify = f(global.sanctuaryTypeClasses, global.sanctuaryTypeIdentifiers);
   }
@@ -5029,7 +5037,7 @@ ParallelAp.prototype.toString = function ParallelAp$toString(){
   return ("new ParallelAp(" + (this._mval.toString()) + ", " + (this._mfunc.toString()) + ")");
 };
 
-var Par = index$7(Future$1, never, race, function pap(mval, mfunc){
+var Par = concurrify(Future$1, never, race, function pap(mval, mfunc){
   return new ParallelAp(mval, mfunc);
 });
 
@@ -5040,7 +5048,7 @@ Par.ap = ap;
 Par.alt = alt;
 
 function isParallel(x){
-  return x instanceof Par || index$5(x) === Par['@@type'];
+  return x instanceof Par || sanctuaryTypeIdentifiers$2(x) === Par['@@type'];
 }
 
 function seq(par){
@@ -5137,7 +5145,7 @@ TryP.prototype = Object.create(Core);
 TryP.prototype._fork = function TryP$fork(rej, res){
   var ref = this;
   var _fn = ref._fn;
-  check$promise$3(_fn(), _fn).then(escapeTick(res), escapeTick(rej));
+  check$promise$3(_fn(), _fn).then(immediately(res), immediately(rej));
   return noop;
 };
 
@@ -5156,7 +5164,7 @@ if(typeof Object.create !== 'function') { error('Please polyfill Object.create t
 if(typeof Object.assign !== 'function') { error('Please polyfill Object.assign to use Fluture'); }
 if(typeof Array.isArray !== 'function') { error('Please polyfill Array.isArray to use Fluture'); }
 
-var index$1 = Object.assign(Future$1, dispatchers, {
+var index = Object.assign(Future$1, dispatchers, {
   Future: Future$1,
   after: after,
   attempt: attempt,
@@ -5187,6 +5195,6 @@ var index$1 = Object.assign(Future$1, dispatchers, {
   tryP: tryP,
 });
 
-return index$1;
+return index;
 
 }());
