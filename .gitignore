@@ -1,40 +1,10 @@
-# Numerous always-ignore extensions
-*.diff
-*.err
-*.orig
-*.log
-*.rej
-*.swo
-*.swp
-*.vi
-*~
+/coverage/
+/node_modules/
+/perf/
 
-# OS or Editor files
-.DS_Store
-.cache
-.project
-.settings
-.tmproj
-nbproject
-Thumbs.db
-.idea/
+/index.js
+/index.test.js
+/package-lock.json
 
-# NPM packages folder
-node_modules/
-
-# Code coverage report
-coverage/
-*.lcov
-
-# Test file - who doesn't have a test file?
-test.js
-
-# Build files
-index.js
-index.test.js
-
-# Heap snapshots
 *.heapsnapshot
-
-# TEMP: Ignore perf directory for now
-perf/
+*.lcov
