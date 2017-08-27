@@ -1,5 +1,10 @@
 import Z from 'sanctuary-type-classes';
 import inspectf from 'inspect-f';
+import * as bc from './bc';
+
+const setImmediate = typeof global.setImmediate === 'function'
+  ? global.setImmediate
+  : /* istanbul ignore next: environment-specific */ bc.setImmediate;
 
 export const noop = function noop(){};
 export const moop = function moop(){ return this };
@@ -29,6 +34,4 @@ export const partial3 = (f, a, b, c) => function bound3(d){
   return f(a, b, c, d);
 };
 
-export const escapeTick = f => function imprisoned(x){
-  setTimeout(function escaped(){ f(x) }, 0);
-};
+export const immediately = f => x => setImmediate(f, x);
