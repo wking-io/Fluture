@@ -25,6 +25,7 @@ For more information:
 
 * [API documentation](#documentation)
 * [Wiki: Compare Futures to Promises][wiki:promises]
+* [Article: Why Promises shouldn't be used][10]
 * [Wiki: Compare Fluture to similar libraries][wiki:similar]
 * [Video: Monad a Day by @DrBoolean - Futures][5]
 
@@ -1585,3 +1586,4 @@ it is **not** the correct way to [consume a Future](#consuming-futures).
 [7]:                    https://promisesaplus.com/
 [8]:                    http://erikfuente.com/
 [9]:                    http://wearereasonablepeople.nl/
+[10]:                   https://medium.com/@avaq/broken-promises-2ae92780f33
