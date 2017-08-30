@@ -1318,7 +1318,7 @@ hook :: Future a b -> (b -> Future a c) -> (b -> Future a d) -> Future a d
 
 </details>
 
-Allows a Future-returning function to be decorated with resource acquistion
+Allows a Future-returning function to be decorated with resource acquisition
 and disposal. The signature is like `hook(acquire, dispose, consume)`, where
 `acquire` is a Future which might create connections, open file handlers, etc.
 `dispose` is a function that takes the result from `acquire` and should be used
