@@ -1185,11 +1185,11 @@ If you want to settle all Futures, even if some may fail, you can use this in
 combination with [fold](#fold):
 
 ```js
-const instableFutures = Array.from({length: 4}, (_, i) =>
+const unstableFutures = Array.from({length: 4}, (_, i) =>
   Future.node(done => done(Math.random() > 0.75 ? 'failed' : null, i))
 );
 
-const stabalizedFutures = instableFutures.map(Future.fold(S.Left, S.Right));
+const stabalizedFutures = unstableFutures.map(Future.fold(S.Left, S.Right));
 
 Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
