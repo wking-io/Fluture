@@ -1,5 +1,5 @@
 /**
- * Fluture bundled; version 7.1.2
+ * Fluture bundled; version 7.1.3
  */
 
 var Fluture = (function () {
@@ -4526,8 +4526,19 @@ EncaseP.prototype._fork = function EncaseP$fork(rej, res){
   var ref = this;
   var _fn = ref._fn;
   var _a = ref._a;
-  check$promise(_fn(_a), _fn, _a).then(immediately(res), immediately(rej));
-  return noop;
+  var open = true;
+  check$promise(_fn(_a), _fn, _a).then(immediately(function EncaseP$res(x){
+    if(open){
+      open = false;
+      res(x);
+    }
+  }), immediately(function EncaseP$rej(x){
+    if(open){
+      open = false;
+      rej(x);
+    }
+  }));
+  return function EncaseP$cancel(){ open = false; };
 };
 
 EncaseP.prototype.toString = function EncaseP$toString(){
@@ -4565,8 +4576,19 @@ EncaseP2.prototype._fork = function EncaseP2$fork(rej, res){
   var _fn = ref._fn;
   var _a = ref._a;
   var _b = ref._b;
-  check$promise$1(_fn(_a, _b), _fn, _a, _b).then(immediately(res), immediately(rej));
-  return noop;
+  var open = true;
+  check$promise$1(_fn(_a, _b), _fn, _a, _b).then(immediately(function EncaseP2$res(x){
+    if(open){
+      open = false;
+      res(x);
+    }
+  }), immediately(function EncaseP2$rej(x){
+    if(open){
+      open = false;
+      rej(x);
+    }
+  }));
+  return function EncaseP2$cancel(){ open = false; };
 };
 
 EncaseP2.prototype.toString = function EncaseP2$toString(){
@@ -4612,8 +4634,19 @@ EncaseP3.prototype._fork = function EncaseP3$fork(rej, res){
   var _a = ref._a;
   var _b = ref._b;
   var _c = ref._c;
-  check$promise$2(_fn(_a, _b, _c), _fn, _a, _b, _c).then(immediately(res), immediately(rej));
-  return noop;
+  var open = true;
+  check$promise$2(_fn(_a, _b, _c), _fn, _a, _b, _c).then(immediately(function EncaseP3$res(x){
+    if(open){
+      open = false;
+      res(x);
+    }
+  }), immediately(function EncaseP3$rej(x){
+    if(open){
+      open = false;
+      rej(x);
+    }
+  }));
+  return function EncaseP3$cancel(){ open = false; };
 };
 
 EncaseP3.prototype.toString = function EncaseP3$toString(){
@@ -5145,8 +5178,19 @@ TryP.prototype = Object.create(Core);
 TryP.prototype._fork = function TryP$fork(rej, res){
   var ref = this;
   var _fn = ref._fn;
-  check$promise$3(_fn(), _fn).then(immediately(res), immediately(rej));
-  return noop;
+  var open = true;
+  check$promise$3(_fn(), _fn).then(immediately(function TryP$res(x){
+    if(open){
+      open = false;
+      res(x);
+    }
+  }), immediately(function TryP$rej(x){
+    if(open){
+      open = false;
+      rej(x);
+    }
+  }));
+  return function TryP$cancel(){ open = false; };
 };
 
 TryP.prototype.toString = function TryP$toString(){
