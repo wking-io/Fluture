@@ -1,5 +1,5 @@
 import {Core} from './core';
-import {noop, show, showf, immediately} from './internal/fn';
+import {show, showf, immediately} from './internal/fn';
 import {isThenable, isFunction} from './internal/is';
 import {invalidArgument, typeError} from './internal/throw';
 
@@ -18,8 +18,19 @@ TryP.prototype = Object.create(Core);
 
 TryP.prototype._fork = function TryP$fork(rej, res){
   const {_fn} = this;
-  check$promise(_fn(), _fn).then(immediately(res), immediately(rej));
-  return noop;
+  let open = true;
+  check$promise(_fn(), _fn).then(immediately(function TryP$res(x){
+    if(open){
+      open = false;
+      res(x);
+    }
+  }), immediately(function TryP$rej(x){
+    if(open){
+      open = false;
+      rej(x);
+    }
+  }));
+  return function TryP$cancel(){ open = false };
 };
 
 TryP.prototype.toString = function TryP$toString(){

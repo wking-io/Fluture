@@ -1,5 +1,5 @@
 import {Core} from './core';
-import {noop, show, showf, immediately, partial1, partial2, partial3} from './internal/fn';
+import {show, showf, immediately, partial1, partial2, partial3} from './internal/fn';
 import {isThenable, isFunction} from './internal/is';
 import {invalidArgument, typeError} from './internal/throw';
 
@@ -24,8 +24,19 @@ EncaseP3.prototype = Object.create(Core);
 
 EncaseP3.prototype._fork = function EncaseP3$fork(rej, res){
   const {_fn, _a, _b, _c} = this;
-  check$promise(_fn(_a, _b, _c), _fn, _a, _b, _c).then(immediately(res), immediately(rej));
-  return noop;
+  let open = true;
+  check$promise(_fn(_a, _b, _c), _fn, _a, _b, _c).then(immediately(function EncaseP3$res(x){
+    if(open){
+      open = false;
+      res(x);
+    }
+  }), immediately(function EncaseP3$rej(x){
+    if(open){
+      open = false;
+      rej(x);
+    }
+  }));
+  return function EncaseP3$cancel(){ open = false };
 };
 
 EncaseP3.prototype.toString = function EncaseP3$toString(){

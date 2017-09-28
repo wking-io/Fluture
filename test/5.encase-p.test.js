@@ -1,3 +1,5 @@
+/* eslint prefer-promise-reject-errors: 0 */
+
 import {expect} from 'chai';
 import {Future, encaseP, encaseP2, encaseP3, tryP} from '../index.es.js';
 import * as U from './util';
@@ -119,6 +121,18 @@ describe('EncaseP', () => {
         return U.assertRejected(actual, U.error);
       });
 
+      it('ensures no resolution happens after cancel', done => {
+        const actual = tryP(_ => Promise.resolve(1));
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
+      });
+
+      it('ensures no rejection happens after cancel', done => {
+        const actual = tryP(_ => Promise.reject(1));
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
+      });
+
     });
 
     describe('(unary)', () => {
@@ -136,6 +150,18 @@ describe('EncaseP', () => {
       it('rejects with rejection reason of the returned Promise', () => {
         const actual = encaseP(_ => Promise.reject(U.error), 1);
         return U.assertRejected(actual, U.error);
+      });
+
+      it('ensures no resolution happens after cancel', done => {
+        const actual = encaseP(x => Promise.resolve(x + 1), 1);
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
+      });
+
+      it('ensures no rejection happens after cancel', done => {
+        const actual = encaseP(x => Promise.reject(x + 1), 1);
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
       });
 
     });
@@ -157,6 +183,18 @@ describe('EncaseP', () => {
         return U.assertRejected(actual, U.error);
       });
 
+      it('ensures no resolution happens after cancel', done => {
+        const actual = encaseP2((x, y) => Promise.resolve(y + 1), 1, 1);
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
+      });
+
+      it('ensures no rejection happens after cancel', done => {
+        const actual = encaseP2((x, y) => Promise.reject(y + 1), 1, 1);
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
+      });
+
     });
 
     describe('(ternary)', () => {
@@ -174,6 +212,18 @@ describe('EncaseP', () => {
       it('rejects with rejection reason of the returned Promise', () => {
         const actual = encaseP3(_ => Promise.reject(U.error), 1, 1, 1);
         return U.assertRejected(actual, U.error);
+      });
+
+      it('ensures no resolution happens after cancel', done => {
+        const actual = encaseP3((x, y, z) => Promise.resolve(z + 1), 1, 1, 1);
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
+      });
+
+      it('ensures no rejection happens after cancel', done => {
+        const actual = encaseP3((x, y, z) => Promise.reject(z + 1), 1, 1, 1);
+        actual.fork(U.failRej, U.failRes)();
+        setTimeout(done, 20);
       });
 
     });
