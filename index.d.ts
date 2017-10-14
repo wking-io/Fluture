@@ -17,12 +17,12 @@ declare module 'fluture' {
   }
 
   export interface Next<T> {
-    done: false
+    done: boolean | false
     value: T
   }
 
   export interface Done<T> {
-    done: true
+    done: boolean | true
     value: T
   }
 
