@@ -17,12 +17,12 @@ declare module 'fluture' {
   }
 
   export interface Next<T> {
-    done: false
+    done: boolean
     value: T
   }
 
   export interface Done<T> {
-    done: true
+    done: boolean
     value: T
   }
 
@@ -330,7 +330,7 @@ declare module 'fluture' {
   }
 
   export const Future: Fluture
-  export default Fluture
+  export default {} as Fluture
 
   export interface Par {
 
