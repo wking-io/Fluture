@@ -1,6 +1,8 @@
 /coverage/
 /node_modules/
 /perf/
+/.esm-cache/
+/.nyc_output/
 
 /index.js
 /index.test.js

@@ -1,8 +1,6 @@
-import buble from 'rollup-plugin-buble';
+var pkg = require('./package.json');
 
-const pkg = require('./package.json');
-
-const dependencies = {
+var dependencies = {
   'concurrify': 'concurrify',
   'denque': 'Denque',
   'inspect-f': 'inspectf',
@@ -11,8 +9,7 @@ const dependencies = {
 };
 
 export default {
-  entry: 'src/index.js',
-  plugins: [buble()],
+  entry: 'index.cjs.js',
   external: Object.keys(dependencies),
   globals: dependencies,
   format: 'umd',

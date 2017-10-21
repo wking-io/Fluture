@@ -1,52 +1,52 @@
 import {expect} from 'chai';
 import FL from 'fantasy-land';
-import {Future, of} from '../index.es.js';
+import {Future, of} from '../index.mjs.js';
 import * as U from './util';
 import type from 'sanctuary-type-identifiers';
 
-describe('of()', () => {
+describe('of()', function(){
 
-  it('is also available as fantasy-land function', () => {
+  it('is also available as fantasy-land function', function(){
     expect(of).to.equal(Future[FL.of]);
   });
 
-  it('returns an instance of Future', () => {
+  it('returns an instance of Future', function(){
     expect(of(1)).to.be.an.instanceof(Future);
   });
 
 });
 
-describe('Resolved', () => {
+describe('Resolved', function(){
 
-  const m = of(1);
+  var m = of(1);
 
-  it('extends Future', () => {
+  it('extends Future', function(){
     expect(m).to.be.an.instanceof(Future);
   });
 
-  it('is considered a member of fluture/Fluture', () => {
+  it('is considered a member of fluture/Fluture', function(){
     expect(type(m)).to.equal(Future['@@type']);
   });
 
-  describe('#fork()', () => {
+  describe('#fork()', function(){
 
-    it('calls success callback with the value', () => {
+    it('calls success callback with the value', function(){
       return U.assertResolved(m, 1);
     });
 
   });
 
-  describe('#extractRight()', () => {
+  describe('#extractRight()', function(){
 
-    it('returns array with the value', () => {
+    it('returns array with the value', function(){
       expect(m.extractRight()).to.deep.equal([1]);
     });
 
   });
 
-  describe('#toString()', () => {
+  describe('#toString()', function(){
 
-    it('returns the code to create the Resolved', () => {
+    it('returns the code to create the Resolved', function(){
       expect(m.toString()).to.equal('Future.of(1)');
     });
 

@@ -10,14 +10,14 @@ export function Attempt(fn){
 Attempt.prototype = Object.create(Core);
 
 Attempt.prototype._fork = function Attempt$fork(rej, res){
-  let r;
+  var r;
   try{ r = this._fn() }catch(e){ rej(e); return noop }
   res(r);
   return noop;
 };
 
 Attempt.prototype.toString = function Attempt$toString(){
-  return `Future.try(${showf(this._fn)})`;
+  return 'Future.try(' + showf(this._fn) + ')';
 };
 
 export function attempt(f){

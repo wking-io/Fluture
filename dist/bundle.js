@@ -287,10 +287,10 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //.
   //. ```javascript
   //. //    hasMethod :: String -> a -> Boolean
-  //. const hasMethod = name => x => x != null && typeof x[name] == 'function';
+  //. var hasMethod = name => x => x != null && typeof x[name] == 'function';
   //.
   //. //    Foo :: TypeClass
-  //. const Foo = Z.TypeClass(
+  //. var Foo = Z.TypeClass(
   //.   'my-package/Foo',
   //.   'http://example.com/my-package#Foo',
   //.   [],
@@ -298,7 +298,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //. );
   //.
   //. //    Bar :: TypeClass
-  //. const Bar = Z.TypeClass(
+  //. var Bar = Z.TypeClass(
   //.   'my-package/Bar',
   //.   'http://example.com/my-package#Bar',
   //.   [Foo],
@@ -2366,7 +2366,7 @@ var sanctuaryTypeIdentifiers$2 = createCommonjsModule(function (module) {
   //. ### Usage
   //.
   //. ```javascript
-  //. const type = require('sanctuary-type-identifiers');
+  //. var type = require('sanctuary-type-identifiers');
   //. ```
   //.
   //. ```javascript

@@ -6,7 +6,7 @@ import {invalidArgument, typeError} from './internal/throw';
 function check$promise(p, f){
   return isThenable(p) ? p : typeError(
     'Future.tryP expects the function it\'s given to return a Promise/Thenable'
-    + `\n  Actual: ${show(p)}\n  From calling: ${showf(f)}`
+    + '\n  Actual: ' + show(p) + '\n  From calling: ' + showf(f)
   );
 }
 
@@ -17,9 +17,8 @@ export function TryP(fn){
 TryP.prototype = Object.create(Core);
 
 TryP.prototype._fork = function TryP$fork(rej, res){
-  const {_fn} = this;
-  let open = true;
-  check$promise(_fn(), _fn).then(immediately(function TryP$res(x){
+  var open = true;
+  check$promise(this._fn(), this._fn).then(immediately(function TryP$res(x){
     if(open){
       open = false;
       res(x);
@@ -34,8 +33,7 @@ TryP.prototype._fork = function TryP$fork(rej, res){
 };
 
 TryP.prototype.toString = function TryP$toString(){
-  const {_fn} = this;
-  return `Future.tryP(${show(_fn)})`;
+  return `Future.tryP(${show(this._fn)})`;
 };
 
 export function tryP(f){

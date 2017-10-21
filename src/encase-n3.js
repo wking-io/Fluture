@@ -13,7 +13,7 @@ export function EncaseN(fn, a, b, c){
 EncaseN.prototype = Object.create(Core);
 
 EncaseN.prototype._fork = function EncaseN$3$fork(rej, res){
-  let open = true;
+  var open = true;
   this._fn(this._a, this._b, this._c, function EncaseN$3$done(err, val){
     if(open){
       open = false;
@@ -24,8 +24,15 @@ EncaseN.prototype._fork = function EncaseN$3$fork(rej, res){
 };
 
 EncaseN.prototype.toString = function EncaseN$3$toString(){
-  const {_fn, _a, _b, _c} = this;
-  return `Future.encaseN3(${showf(_fn)}, ${show(_a)}, ${show(_b)}, ${show(_c)})`;
+  return 'Future.encaseN3('
+       + showf(this._fn)
+       + ', '
+       + show(this._a)
+       + ', '
+       + show(this._b)
+       + ', '
+       + show(this._c)
+       + ')';
 };
 
 export function encaseN3(f, x, y, z){

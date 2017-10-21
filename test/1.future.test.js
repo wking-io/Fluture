@@ -13,59 +13,59 @@ import {
   Par,
   extractLeft,
   extractRight
-} from '../index.es.js';
+} from '../index.mjs.js';
 
-describe('Future', () => {
+describe('Future', function(){
 
-  it('instances are considered members of fluture/Future by sanctuary-type-identifiers', () => {
+  it('instances are considered members of fluture/Future by sanctuary-type-identifiers', function(){
     expect(type(F.mock)).to.equal(Future['@@type']);
   });
 
-  describe('.isFuture()', () => {
+  describe('.isFuture()', function(){
 
-    const ms = [F.mock];
-    const xs = [NaN, 1, true, undefined, null, [], {}, {fork: (a, b) => ({a, b})}];
+    var ms = [F.mock];
+    var xs = [NaN, 1, true, undefined, null, [], {}, {fork: function(a, b){ return ({a: a, b: b}) }}];
 
-    it('returns true when given a Future', () => {
-      ms.forEach(m => expect(isFuture(m)).to.equal(true));
+    it('returns true when given a Future', function(){
+      ms.forEach(function(m){ return expect(isFuture(m)).to.equal(true) });
     });
 
-    it('returns false when not given a Future', () => {
-      xs.forEach(x => expect(isFuture(x)).to.equal(false));
+    it('returns false when not given a Future', function(){
+      xs.forEach(function(x){ return expect(isFuture(x)).to.equal(false) });
     });
 
   });
 
-  describe('.fork()', () => {
+  describe('.fork()', function(){
 
-    it('is a curried ternary function', () => {
+    it('is a curried ternary function', function(){
       expect(fork).to.be.a('function');
       expect(fork.length).to.equal(3);
       expect(fork(U.noop)).to.be.a('function');
       expect(fork(U.noop, U.noop)).to.be.a('function');
     });
 
-    it('throws when not given a Function as first argument', () => {
-      const f = () => fork(1);
+    it('throws when not given a Function as first argument', function(){
+      var f = function(){ return fork(1) };
       expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('throws when not given a Function as second argument', () => {
-      const f = () => fork(U.add(1), 1);
+    it('throws when not given a Function as second argument', function(){
+      var f = function(){ return fork(U.add(1), 1) };
       expect(f).to.throw(TypeError, /Future.*second/);
     });
 
-    it('throws when not given a Future as third argument', () => {
-      const f = () => fork(U.add(1), U.add(1), 1);
+    it('throws when not given a Future as third argument', function(){
+      var f = function(){ return fork(U.add(1), U.add(1), 1) };
       expect(f).to.throw(TypeError, /Future.*third/);
     });
 
-    it('dispatches to #_fork()', done => {
-      const a = () => {};
-      const b = () => {};
-      const mock = Object.create(F.mock);
+    it('dispatches to #_fork()', function(done){
+      var a = function(){};
+      var b = function(){};
+      var mock = Object.create(F.mock);
 
-      mock._fork = (x, y) => {
+      mock._fork = function(x, y){
         expect(x).to.equal(a);
         expect(y).to.equal(b);
         done();
@@ -76,29 +76,29 @@ describe('Future', () => {
 
   });
 
-  describe('.value()', () => {
+  describe('.value()', function(){
 
-    it('is a curried binary function', () => {
+    it('is a curried binary function', function(){
       expect(value).to.be.a('function');
       expect(value.length).to.equal(2);
       expect(value(U.noop)).to.be.a('function');
     });
 
-    it('throws when not given a Function as first argument', () => {
-      const f = () => value(1);
+    it('throws when not given a Function as first argument', function(){
+      var f = function(){ return value(1) };
       expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('throws when not given a Future as second argument', () => {
-      const f = () => value(U.add(1), 1);
+    it('throws when not given a Future as second argument', function(){
+      var f = function(){ return value(U.add(1), 1) };
       expect(f).to.throw(TypeError, /Future.*second/);
     });
 
-    it('dispatches to #value()', done => {
-      const a = () => {};
-      const mock = Object.create(F.mock);
+    it('dispatches to #value()', function(done){
+      var a = function(){};
+      var mock = Object.create(F.mock);
 
-      mock.value = x => {
+      mock.value = function(x){
         expect(x).to.equal(a);
         done();
       };
@@ -108,29 +108,29 @@ describe('Future', () => {
 
   });
 
-  describe('.done()', () => {
+  describe('.done()', function(){
 
-    it('is a curried binary function', () => {
+    it('is a curried binary function', function(){
       expect(done).to.be.a('function');
       expect(done.length).to.equal(2);
       expect(done(U.noop)).to.be.a('function');
     });
 
-    it('throws when not given a Function as first argument', () => {
-      const f = () => done(1);
+    it('throws when not given a Function as first argument', function(){
+      var f = function(){ return done(1) };
       expect(f).to.throw(TypeError, /Future.*first/);
     });
 
-    it('throws when not given a Future as second argument', () => {
-      const f = () => done(U.add(1), 1);
+    it('throws when not given a Future as second argument', function(){
+      var f = function(){ return done(U.add(1), 1) };
       expect(f).to.throw(TypeError, /Future.*second/);
     });
 
-    it('dispatches to #done()', fin => {
-      const a = () => {};
-      const mock = Object.create(F.mock);
+    it('dispatches to #done()', function(fin){
+      var a = function(){};
+      var mock = Object.create(F.mock);
 
-      mock.done = x => {
+      mock.done = function(x){
         expect(x).to.equal(a);
         fin();
       };
@@ -140,96 +140,96 @@ describe('Future', () => {
 
   });
 
-  describe('.promise()', () => {
+  describe('.promise()', function(){
 
-    it('throws when not given a Future', () => {
-      const f = () => promise(1);
+    it('throws when not given a Future', function(){
+      var f = function(){ return promise(1) };
       expect(f).to.throw(TypeError, /Future/);
     });
 
-    it('dispatches to #promise', done => {
-      const mock = Object.create(F.mock);
+    it('dispatches to #promise', function(done){
+      var mock = Object.create(F.mock);
       mock.promise = done;
       promise(mock);
     });
 
   });
 
-  describe('.seq()', () => {
+  describe('.seq()', function(){
 
-    it('throws when not given a Parallel', () => {
-      const f = () => seq(1);
+    it('throws when not given a Parallel', function(){
+      var f = function(){ return seq(1) };
       expect(f).to.throw(TypeError, /Future/);
     });
 
-    it('returns the Future contained in the Parallel', () => {
-      const par = Par(F.mock);
-      const x = seq(par);
+    it('returns the Future contained in the Parallel', function(){
+      var par = Par(F.mock);
+      var x = seq(par);
       expect(x).to.equal(F.mock);
     });
 
   });
 
-  describe('.extractLeft()', () => {
+  describe('.extractLeft()', function(){
 
-    it('throws when not given a Future', () => {
-      const f = () => extractLeft(1);
+    it('throws when not given a Future', function(){
+      var f = function(){ return extractLeft(1) };
       expect(f).to.throw(TypeError, /Future/);
     });
 
-    it('dispatches to #extractLeft', done => {
-      const mock = Object.create(F.mock);
+    it('dispatches to #extractLeft', function(done){
+      var mock = Object.create(F.mock);
       mock.extractLeft = done;
       extractLeft(mock);
     });
 
   });
 
-  describe('.extractRight()', () => {
+  describe('.extractRight()', function(){
 
-    it('throws when not given a Future', () => {
-      const f = () => extractRight(1);
+    it('throws when not given a Future', function(){
+      var f = function(){ return extractRight(1) };
       expect(f).to.throw(TypeError, /Future/);
     });
 
-    it('dispatches to #extractRight', done => {
-      const mock = Object.create(F.mock);
+    it('dispatches to #extractRight', function(done){
+      var mock = Object.create(F.mock);
       mock.extractRight = done;
       extractRight(mock);
     });
 
   });
 
-  describe('#fork()', () => {
+  describe('#fork()', function(){
 
-    it('throws when invoked out of context', () => {
-      const f = () => Future.prototype.fork.call(null, U.noop, U.noop);
+    it('throws when invoked out of context', function(){
+      var f = function(){ return Future.prototype.fork.call(null, U.noop, U.noop) };
       expect(f).to.throw(TypeError, /Future/);
     });
 
-    it('throws TypeError when first argument is not a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => F.mock.fork(x, U.noop));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    it('throws TypeError when first argument is not a function', function(){
+      var xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      var fs = xs.map(function(x){ return function(){ return F.mock.fork(x, U.noop) } });
+      fs.forEach(function(f){ return expect(f).to.throw(TypeError, /Future/) });
     });
 
-    it('throws TypeError when second argument is not a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => F.mock.fork(U.noop, x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    it('throws TypeError when second argument is not a function', function(){
+      var xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      var fs = xs.map(function(x){ return function(){ return F.mock.fork(U.noop, x) } });
+      fs.forEach(function(f){ return expect(f).to.throw(TypeError, /Future/) });
     });
 
-    it('does not throw when both arguments are functions', () => {
-      const f = () => F.mock.fork(U.noop, U.noop);
+    it('does not throw when both arguments are functions', function(){
+      var f = function(){ return F.mock.fork(U.noop, U.noop) };
       expect(f).to.not.throw(TypeError);
     });
 
-    it('dispatches to #_fork()', done => {
-      const mock = Object.create(Future.prototype);
-      const a = () => {};
-      const b = () => {};
+    it('dispatches to #_fork()', function(done){
+      var mock = Object.create(Future.prototype);
+      var a = function(){};
+      var b = function(){};
 
-      mock._fork = (x, y) => {
+      mock._fork = function(x, y){
         expect(x).to.equal(a);
         expect(y).to.equal(b);
         done();
@@ -240,24 +240,24 @@ describe('Future', () => {
 
   });
 
-  describe('#value()', () => {
+  describe('#value()', function(){
 
-    it('throws when invoked out of context', () => {
-      const f = () => F.mock.value.call(null, U.noop);
+    it('throws when invoked out of context', function(){
+      var f = function(){ return F.mock.value.call(null, U.noop) };
       expect(f).to.throw(TypeError, /Future/);
     });
 
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => F.mock.value(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    it('throws TypeError when not given a function', function(){
+      var xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      var fs = xs.map(function(x){ return function(){ return F.mock.value(x) } });
+      fs.forEach(function(f){ return expect(f).to.throw(TypeError, /Future/) });
     });
 
-    it('dispatches to #_fork(), using the input as resolution callback', done => {
-      const mock = Object.create(Future.prototype);
-      const res = () => {};
+    it('dispatches to #_fork(), using the input as resolution callback', function(done){
+      var mock = Object.create(Future.prototype);
+      var res = function(){};
 
-      mock._fork = (l, r) => {
+      mock._fork = function(l, r){
         expect(r).to.equal(res);
         done();
       };
@@ -265,101 +265,101 @@ describe('Future', () => {
       mock.value(res);
     });
 
-    it('throws when _f calls the rejection callback', () => {
-      const mock = Object.create(Future.prototype);
-      mock._fork = l => {l(1)};
-      expect(() => mock.value(U.noop)).to.throw(Error);
+    it('throws when _f calls the rejection callback', function(){
+      var mock = Object.create(Future.prototype);
+      mock._fork = function(l){l(1)};
+      expect(function(){ return mock.value(U.noop) }).to.throw(Error);
     });
 
-    it('returns the return value of #_fork()', () => {
-      const mock = Object.create(Future.prototype);
-      const sentinel = {};
-      mock._fork = () => sentinel;
+    it('returns the return value of #_fork()', function(){
+      var mock = Object.create(Future.prototype);
+      var sentinel = {};
+      mock._fork = function(){ return sentinel };
       expect(mock.value(U.noop)).to.equal(sentinel);
     });
 
   });
 
-  describe('#done()', () => {
+  describe('#done()', function(){
 
-    it('throws when invoked out of context', () => {
-      const f = () => F.mock.done.call(null, U.noop);
+    it('throws when invoked out of context', function(){
+      var f = function(){ return F.mock.done.call(null, U.noop) };
       expect(f).to.throw(TypeError, /Future/);
     });
 
-    it('throws TypeError when not given a function', () => {
-      const xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
-      const fs = xs.map(x => () => F.mock.done(x));
-      fs.forEach(f => expect(f).to.throw(TypeError, /Future/));
+    it('throws TypeError when not given a function', function(){
+      var xs = [NaN, {}, [], 1, 'a', new Date, undefined, null];
+      var fs = xs.map(function(x){ return function(){ return F.mock.done(x) } });
+      fs.forEach(function(f){ return expect(f).to.throw(TypeError, /Future/) });
     });
 
-    it('passes the rejection value as first parameter', fin => {
-      const mock = Object.create(Future.prototype);
-      mock._fork = l => {l(1)};
-      mock.done((x, y) => {
+    it('passes the rejection value as first parameter', function(fin){
+      var mock = Object.create(Future.prototype);
+      mock._fork = function(l){l(1)};
+      mock.done(function(x, y){
         expect(x).to.equal(1);
         expect(y).to.equal(undefined);
         fin();
       });
     });
 
-    it('passes the resolution value as second parameter', fin => {
-      const mock = Object.create(Future.prototype);
-      mock._fork = (l, r) => {r(1)};
-      mock.done((x, y) => {
+    it('passes the resolution value as second parameter', function(fin){
+      var mock = Object.create(Future.prototype);
+      mock._fork = function(l, r){r(1)};
+      mock.done(function(x, y){
         expect(x).to.equal(null);
         expect(y).to.equal(1);
         fin();
       });
     });
 
-    it('returns the return done of #_fork()', () => {
-      const mock = Object.create(Future.prototype);
-      const sentinel = {};
-      mock._fork = () => sentinel;
+    it('returns the return done of #_fork()', function(){
+      var mock = Object.create(Future.prototype);
+      var sentinel = {};
+      mock._fork = function(){ return sentinel };
       expect(mock.done(U.noop)).to.equal(sentinel);
     });
 
   });
 
-  describe('#promise()', () => {
+  describe('#promise()', function(){
 
-    it('returns a Promise', () => {
-      const actual = F.mock.promise();
+    it('returns a Promise', function(){
+      var actual = F.mock.promise();
       expect(actual).to.be.an.instanceof(Promise);
     });
 
-    it('resolves if the Future resolves', done => {
-      const mock = Object.create(Future.prototype);
-      mock._fork = (l, r) => r(1);
+    it('resolves if the Future resolves', function(done){
+      var mock = Object.create(Future.prototype);
+      mock._fork = function(l, r){ return r(1) };
       mock.promise().then(
-        x => (expect(x).to.equal(1), done()),
+        function(x){ return (expect(x).to.equal(1), done()) },
         done
       );
     });
 
-    it('rejects if the Future rejects', done => {
-      const mock = Object.create(Future.prototype);
-      mock._fork = l => l(1);
+    it('rejects if the Future rejects', function(done){
+      var mock = Object.create(Future.prototype);
+      mock._fork = function(l){ return l(1) };
       mock.promise().then(
-        () => done(new Error('It resolved')),
-        x => (expect(x).to.equal(1), done())
+        function(){ return done(new Error('It resolved')) },
+        function(x){ return (expect(x).to.equal(1), done()) }
       );
     });
 
   });
 
-  describe('#extractLeft()', () => {
+  describe('#extractLeft()', function(){
 
-    it('returns empty array', () => {
+    it('returns empty array', function(){
       expect(F.mock.extractLeft()).to.deep.equal([]);
     });
 
   });
 
-  describe('#extractRight()', () => {
+  describe('#extractRight()', function(){
 
-    it('returns empty array', () => {
+    it('returns empty array', function(){
       expect(F.mock.extractRight()).to.deep.equal([]);
     });
 

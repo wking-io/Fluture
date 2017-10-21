@@ -1,11 +1,11 @@
 'use strict';
 
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const Future = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var Future = require('..');
 
-const resolve = x => Promise.resolve(x);
-const noop = () => {};
+var resolve = x => Promise.resolve(x);
+var noop = () => {};
 
 suite.add('encaseP', {
   defer: true,

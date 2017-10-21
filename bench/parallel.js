@@ -1,12 +1,12 @@
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const Future = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var Future = require('..');
 
-const noop = () => {};
-const makeArr = length => Array.from({length}, (_, i) => Future.of(i));
-const empty = makeArr(0);
-const small = makeArr(2);
-const big = makeArr(100);
+var noop = () => {};
+var makeArr = length => Array.from({length}, (_, i) => Future.of(i));
+var empty = makeArr(0);
+var small = makeArr(2);
+var big = makeArr(100);
 
 suite.add('Empty', () => {
   Future.parallel(1, empty).fork(noop, noop);

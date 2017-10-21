@@ -33,12 +33,14 @@ For more information:
 
 > `npm install --save fluture`
 
-### In ES5 or older environments
+Fluture is written for EcmaScript version 5.
 
-Fluture depends on these functions being present:
-[`Object.create`][JS:Object.create],
+For older environments you may need to polyfill one or more of the following
+functions: [`Object.create`][JS:Object.create],
 [`Object.assign`][JS:Object.assign] and [`Array.isArray`][JS:Array.isArray].
-You may need to polyfill one or more.
+Fluture will tell you when this is needed.
+
+### CommonJS Module
 
 <!-- eslint-disable no-var -->
 <!-- eslint-disable padding-line-between-statements -->
@@ -57,7 +59,7 @@ getPackageName('package.json')
 //> "fluture"
 ```
 
-### In ES6 or newer environments
+### EcmaScript Module
 
 The `package.json` sets a `module`-field for build-tools like [Rollup][]. The
 module version also has TypeScript definitions.
@@ -66,7 +68,7 @@ module version also has TypeScript definitions.
 import {readFile} from 'fs';
 import {node, encase} from 'fluture';
 
-const getPackageName = file =>
+var getPackageName = file =>
   node(done => { readFile(file, 'utf8', done) })
   .chain(encase(JSON.parse))
   .map(x => x.name);
@@ -76,7 +78,7 @@ getPackageName('package.json')
 //> "fluture"
 ```
 
-### From a CDN
+### Global Bundle (CDN)
 
 Fluture is hosted in full with all of its dependencies at
 https://rawgit.com/fluture-js/Fluture/master/dist/bundle.js.
@@ -281,10 +283,10 @@ Fluture interprets your transformations in a stack safe way. This means that
 none of the following operations raise `RangeError: Maximum call stack size exceeded`:
 
 ```js
-const add1 = x => x + 1;
-let m = Future.of(1);
+var add1 = x => x + 1;
+var m = Future.of(1);
 
-for(let i = 0; i < 100000; i++){
+for(var i = 0; i < 100000; i++){
   m = m.map(add1);
 }
 
@@ -293,8 +295,8 @@ m.fork(console.error, console.log);
 ```
 
 ```js
-const m = (function recur(x){
-  const mx = Future.of(x + 1);
+var m = (function recur(x){
+  var mx = Future.of(x + 1);
   return x < 100000 ? mx.chain(recur) : mx;
 }(1));
 
@@ -311,8 +313,8 @@ When using this module with [Sanctuary Def][$] (and [Sanctuary][S] by
 extension) you might run into the following issue:
 
 ```js
-const S = require('sanctuary');
-const Future = require('fluture');
+var S = require('sanctuary');
+var Future = require('fluture');
 S.I(Future.of(1));
 //! Since there is no type of which all the above values are members,
 //! the type-variable constraint has been violated.
@@ -321,15 +323,15 @@ S.I(Future.of(1));
 This happens because Sanctuary Def needs to know about the types created by
 Fluture to determine whether the type-variables are consistent.
 
-To let Sanctuary know about these types, we can obtain the type definitions from
+To var Sanctuary know about these types, we can obtain the type definitions from
 [`fluture-sanctuary-types`][FST] and pass them to [`S.create`][S:create]:
 
 ```js
-const {create, env} = require('sanctuary');
-const {env: flutureEnv} = require('fluture-sanctuary-types');
-const Future = require('fluture');
+var {create, env} = require('sanctuary');
+var {env: flutureEnv} = require('fluture-sanctuary-types');
+var Future = require('fluture');
 
-const S = create({checkTypes: true, env: env.concat(flutureEnv)});
+var S = create({checkTypes: true, env: env.concat(flutureEnv)});
 
 S.I(Future.of(1));
 //> Future.of(1)
@@ -344,11 +346,11 @@ When [`isFuture`](#isfuture) returns `false`, a conversion is necessary. Usually
 the most concise way of doing this is as follows:
 
 ```js
-const NoFuture = require('incompatible-future');
-const incompatible = NoFuture.of('Hello');
+var NoFuture = require('incompatible-future');
+var incompatible = NoFuture.of('Hello');
 
 //Cast the incompatible Future to our version of Future:
-const compatible = Future(incompatible.fork.bind(incompatible));
+var compatible = Future(incompatible.fork.bind(incompatible));
 
 compatible.both(Future.of('world')).value(console.log);
 //> ["Hello", "world"]
@@ -375,7 +377,7 @@ the appropriate continuation with a failure or success value.
 ```js
 Future(function computation(reject, resolve){
   //Asynchronous work:
-  const x = setTimeout(resolve, 3000, 'world');
+  var x = setTimeout(resolve, 3000, 'world');
   //Cancellation:
   return () => clearTimeout(x);
 });
@@ -400,7 +402,7 @@ Creates a Future which immediately resolves with the given value. This function
 is compliant with the [Fantasy Land Applicative specification][FL:applicative].
 
 ```js
-const eventualThing = Future.of('world');
+var eventualThing = Future.of('world');
 eventualThing.fork(
   console.error,
   thing => console.log(`Hello ${thing}!`)
@@ -435,7 +437,7 @@ after :: Number -> b -> Future a b
 Creates a Future which resolves with the given value after n milliseconds.
 
 ```js
-const eventualThing = Future.after(500, 'world');
+var eventualThing = Future.after(500, 'world');
 eventualThing.fork(console.error, thing => console.log(`Hello ${thing}!`));
 //> "Hello world!"
 ```
@@ -453,7 +455,7 @@ rejectAfter :: Number -> a -> Future a b
 Creates a Future which rejects with the given reason after n milliseconds.
 
 ```js
-const eventualError = Future.rejectAfter(500, new Error('Kaputt!'));
+var eventualError = Future.rejectAfter(500, new Error('Kaputt!'));
 eventualError.fork(err => console.log('Oh no - ' + err.message), console.log);
 //! Oh no - Kaputt!
 ```
@@ -484,8 +486,8 @@ land.
 
 ```js
 Future.do(function*(){
-  const thing = yield Future.after(300, 'world');
-  const message = yield Future.after(300, 'Hello ' + thing);
+  var thing = yield Future.after(300, 'world');
+  var message = yield Future.after(300, 'Hello ' + thing);
   return message + '!';
 })
 .fork(console.error, console.log);
@@ -497,10 +499,10 @@ Error handling is slightly different in do-notation, you need to [`fold`](#fold)
 the error into your control domain, I recommend folding into an [`Either`][S:Either]:
 
 ```js
-const attempt = Future.fold(S.Left, S.Right);
-const ajaxGet = url => Future.reject('Failed to load ' + url);
+var attempt = Future.fold(S.Left, S.Right);
+var ajaxGet = url => Future.reject('Failed to load ' + url);
 Future.do(function*(){
-  const e = yield attempt(ajaxGet('/message'));
+  var e = yield attempt(ajaxGet('/message'));
   return S.either(
     e => `Oh no! ${e}`,
     x => `Yippee! ${x}`,
@@ -530,7 +532,7 @@ or rejects with the error thrown by the given function.
 Short for [`Future.encase(f, undefined)`](#encase).
 
 ```js
-const data = {foo: 'bar'};
+var data = {foo: 'bar'};
 Future.try(() => data.foo.bar.baz)
 .fork(console.error, console.log);
 //> [TypeError: Cannot read property 'baz' of undefined]
@@ -603,7 +605,7 @@ function with the value and resolves with the result. If the function throws
 an exception, it is caught and the Future will reject with the exception:
 
 ```js
-const data = '{"foo" = "bar"}';
+var data = '{"foo" = "bar"}';
 Future.encase(JSON.parse, data)
 .fork(console.error, console.log);
 //! [SyntaxError: Unexpected token =]
@@ -614,8 +616,8 @@ version of `f`. Instead of throwing exceptions, the encased version always
 returns a Future when given the remaining argument(s):
 
 ```js
-const data = '{"foo" = "bar"}';
-const safeJsonParse = Future.encase(JSON.parse);
+var data = '{"foo" = "bar"}';
+var safeJsonParse = Future.encase(JSON.parse);
 safeJsonParse(data).fork(console.error, console.log);
 //! [SyntaxError: Unexpected token =]
 ```
@@ -642,7 +644,7 @@ When forked, the Future calls the function with the value to produce the Promise
 and resolves with its resolution value, or rejects with its rejection reason.
 
 ```js
-const fetchf = Future.encaseP(fetch);
+var fetchf = Future.encaseP(fetch);
 
 fetchf('https://api.github.com/users/Avaq')
 .chain(res => Future.tryP(_ => res.json()))
@@ -675,9 +677,9 @@ resolves the second argument passed to the Nodeback, or or rejects with the
 first argument.
 
 ```js
-const fs = require('fs');
+var fs = require('fs');
 
-const read = Future.encaseN2(fs.readFile);
+var read = Future.encaseN2(fs.readFile);
 
 read('README.md', 'utf8')
 .map(text => text.split('\n'))
@@ -936,7 +938,7 @@ isResolved().and(getValue());
 
 ```js
 //Asynchronous "all", where the resulting Future will be the leftmost to reject:
-const all = ms => ms.reduce(Future.and, Future.of(true));
+var all = ms => ms.reduce(Future.and, Future.of(true));
 all([Future.after(20, 1), Future.of(2)]).value(console.log);
 //> 2
 ```
@@ -967,7 +969,7 @@ planA().or(planB());
 
 ```js
 //Asynchronous "any", where the resulting Future will be the leftmost to resolve:
-const any = ms => ms.reduce(Future.or, Future.reject('empty list'));
+var any = ms => ms.reduce(Future.or, Future.reject('empty list'));
 any([Future.reject(1), Future.after(20, 2), Future.of(3)]).value(console.log);
 //> 2
 ```
@@ -1001,7 +1003,7 @@ Future.reject(new Error('It broke!')).fork(
 );
 //> "Oh no! It broke!"
 
-const consoleFork = Future.fork(console.error, console.log);
+var consoleFork = Future.fork(console.error, console.log);
 consoleFork(Future.of('Hello'));
 //> "Hello"
 ```
@@ -1010,8 +1012,8 @@ After you `fork` a Future, the computation will start running. If you wish to
 cancel the computation, you may use the function returned by `fork`:
 
 ```js
-const fut = Future.after(300, 'hello');
-const cancel = fut.fork(console.error, console.log);
+var fut = Future.after(300, 'hello');
+var cancel = fut.fork(console.error, console.log);
 cancel();
 //Nothing will happen. The Future was cancelled before it could settle.
 ```
@@ -1068,8 +1070,8 @@ This is like [fork](#fork), but instead of taking two unary functions, it takes
 a single binary function. As with `fork()`, `done()` returns [`Cancel`](#types):
 
 ```js
-const m = Future.after(300, 'hello');
-const cancel = m.done((err, val) => console.log(val));
+var m = Future.after(300, 'hello');
+var cancel = m.done((err, val) => console.log(val));
 cancel();
 //Nothing will happen. The Future was cancelled before it could settle.
 ```
@@ -1117,7 +1119,7 @@ Future.after(100, 'hello')
 .fork(console.error, console.log);
 //> "bye"
 
-const first = futures => futures.reduce(Future.race, Future.never);
+var first = futures => futures.reduce(Future.race, Future.never);
 first([
   Future.after(100, 'hello'),
   Future.after(50, 'bye'),
@@ -1142,8 +1144,8 @@ Run two Futures in parallel. Basically like calling
 [`Future.parallel`](#parallel) with exactly two Futures:
 
 ```js
-const a = Future.of('a');
-const b = Future.of('b');
+var a = Future.of('a');
+var b = Future.of('b');
 
 Future.both(a, b).fork(console.error, console.log);
 //> ['a', 'b']
@@ -1163,7 +1165,7 @@ Creates a Future which when forked runs all Futures in the given `array` in
 parallel, ensuring no more than `limit` Futures are running at once.
 
 ```js
-const tenFutures = Array.from(Array(10).keys()).map(Future.after(20));
+var tenFutures = Array.from(Array(10).keys()).map(Future.after(20));
 
 //Runs all Futures in sequence:
 Future.parallel(1, tenFutures).fork(console.error, console.log);
@@ -1185,11 +1187,11 @@ If you want to settle all Futures, even if some may fail, you can use this in
 combination with [fold](#fold):
 
 ```js
-const unstableFutures = Array.from({length: 4}, (_, i) =>
+var unstableFutures = Array.from({length: 4}, (_, i) =>
   Future.node(done => done(Math.random() > 0.75 ? 'failed' : null, i))
 );
 
-const stabalizedFutures = unstableFutures.map(Future.fold(S.Left, S.Right));
+var stabalizedFutures = unstableFutures.map(Future.fold(S.Left, S.Right));
 
 Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
@@ -1210,16 +1212,16 @@ that don't know about Future-specific functions like [`parallel`](#parallel) or
 [`race`](#race), but *do* know how to operate on Apply and Alternative.
 
 ```js
-const {of, ap, sequence} = require('sanctuary');
-const {Future, Par, seq} = require('fluture');
+var {of, ap, sequence} = require('sanctuary');
+var {Future, Par, seq} = require('fluture');
 
 //Some dummy values
-const x = 1;
-const f = a => a + 1;
+var x = 1;
+var f = a => a + 1;
 
 //The following two are equal ways to construct a ConcurrentFuture
-const parx = of(Par, x);
-const parf = Par(of(Future, f));
+var parx = of(Par, x);
+var parf = Par(of(Future, f));
 
 //We can make use of parallel apply
 seq(ap(parx, parf)).value(console.log);
@@ -1328,7 +1330,7 @@ resource. The resolution value of `dispose` is ignored.
 
 <!-- eslint-disable no-undef -->
 ```js
-const withConnection = Future.hook(
+var withConnection = Future.hook(
   openConnection('localhost'),
   closeConnection
 );
@@ -1347,7 +1349,7 @@ resources in the `cancel` function of the disposal Future:
 
 <!-- eslint-disable no-unused-vars -->
 ```js
-const closeConnection = conn => Future((rej, res) => {
+var closeConnection = conn => Future((rej, res) => {
 
   //We try to dispose gracefully.
   conn.flushGracefully(err => {
@@ -1393,7 +1395,7 @@ Future.of('Hello')
 Note that the *first* Future is given as the *last* argument to `Future.finally()`:
 
 ```js
-const program = S.pipe([
+var program = S.pipe([
   Future.of,
   Future.finally(Future.of('All done!').map(console.log)),
   Future.fork(console.error, console.log)
@@ -1427,8 +1429,8 @@ whenever it's forked, it can load the value from cache rather than reexecuting
 the chain.
 
 ```js
-const {readFile} = require('fs');
-const eventualPackage = Future.cache(
+var {readFile} = require('fs');
+var eventualPackage = Future.cache(
   Future.node(done => {
     console.log('Reading some big data');
     readFile('package.json', 'utf8', done);
@@ -1461,15 +1463,15 @@ using the exact `Future` constructor you're testing against.
 
 <!-- eslint-disable no-unused-expressions -->
 ```js
-const Future1 = require('/path/to/fluture');
-const Future2 = require('/other/path/to/fluture');
-const noop = () => {};
+var Future1 = require('/path/to/fluture');
+var Future2 = require('/other/path/to/fluture');
+var noop = () => {};
 
-const m1 = Future1(noop);
+var m1 = Future1(noop);
 Future1.isFuture(m1) === (m1 instanceof Future1);
 //> true
 
-const m2 = Future2(noop);
+var m2 = Future2(noop);
 Future1.isFuture(m2) === (m2 instanceof Future1);
 //> false
 ```

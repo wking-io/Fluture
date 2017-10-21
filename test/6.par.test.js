@@ -1,159 +1,159 @@
 import {expect} from 'chai';
-import {Future, Par, seq, of, reject, never, ap, map, alt} from '../index.es.js';
+import {Future, Par, seq, of, reject, never, ap, map, alt} from '../index.mjs.js';
 import * as U from './util';
 import * as F from './futures';
 import Z from 'sanctuary-type-classes';
 
-describe('alt()', () => {
+describe('alt()', function(){
 
-  it('is a curried binary function', () => {
+  it('is a curried binary function', function(){
     expect(alt).to.be.a('function');
     expect(alt.length).to.equal(2);
     expect(alt(Par.of(1))).to.be.a('function');
   });
 
-  it('throws when not given a Function as first argument', () => {
-    const f = () => alt(1);
+  it('throws when not given a Function as first argument', function(){
+    var f = function(){ return alt(1) };
     expect(f).to.throw(TypeError, /alt.*first/);
   });
 
-  it('throws when not given a Future as second argument', () => {
-    const f = () => alt(Par.of(1), 1);
+  it('throws when not given a Future as second argument', function(){
+    var f = function(){ return alt(Par.of(1), 1) };
     expect(f).to.throw(TypeError, /alt.*second/);
   });
 
 });
 
-describe('Par()', () => {
+describe('Par()', function(){
 
-  it('is a unary function', () => {
+  it('is a unary function', function(){
     expect(Par).to.be.a('function');
     expect(Par.length).to.equal(1);
   });
 
-  it('throws when not given a Future', () => {
-    const f = () => Par(1);
+  it('throws when not given a Future', function(){
+    var f = function(){ return Par(1) };
     expect(f).to.throw(TypeError, /Future/);
   });
 
-  describe('.of()', () => {
+  describe('.of()', function(){
 
-    const of = Z.of;
+    var of = Z.of;
 
-    it('resolves with the value', () => {
-      const m = of(Par, 1);
+    it('resolves with the value', function(){
+      var m = of(Par, 1);
       return U.assertResolved(seq(m), 1);
     });
 
   });
 
-  describe('.zero()', () => {
+  describe('.zero()', function(){
 
-    const zero = Z.zero;
+    var zero = Z.zero;
 
-    it('creates a never-ending ConcurrentFuture', () => {
-      const m = zero(Par);
+    it('creates a never-ending ConcurrentFuture', function(){
+      var m = zero(Par);
       expect(seq(m)).to.equal(never);
     });
 
   });
 
-  describe('#ap()', () => {
+  describe('#ap()', function(){
 
-    const mf = of(U.bang);
+    var mf = of(U.bang);
 
-    it('throws TypeError when the Future does not resolve to a Function', () => {
-      const f = () => seq(ap(Par(of(1)), Par(F.resolved))).fork(U.noop, U.noop);
+    it('throws TypeError when the Future does not resolve to a Function', function(){
+      var f = function(){ return seq(ap(Par(of(1)), Par(F.resolved))).fork(U.noop, U.noop) };
       expect(f).to.throw(TypeError, /Future#ap/);
     });
 
-    it('calls the function contained in the given Future to its contained value', () => {
-      const actual = ap(Par(mf), Par(F.resolved));
+    it('calls the function contained in the given Future to its contained value', function(){
+      var actual = ap(Par(mf), Par(F.resolved));
       return U.assertResolved(seq(actual), 'resolved!');
     });
 
-    it('rejects if one of the two reject', () => {
-      const left = ap(Par(mf), Par(F.rejected));
-      const right = ap(Par(F.rejected), Par(F.resolved));
+    it('rejects if one of the two reject', function(){
+      var left = ap(Par(mf), Par(F.rejected));
+      var right = ap(Par(F.rejected), Par(F.resolved));
       return Promise.all([
         U.assertRejected(seq(left), 'rejected'),
         U.assertRejected(seq(right), 'rejected')
       ]);
     });
 
-    it('does not matter if either resolves late', () => {
-      const left = ap(Par(mf), Par(F.resolvedSlow));
-      const right = ap(Par(F.resolvedSlow.and(mf)), Par(F.resolved));
+    it('does not matter if either resolves late', function(){
+      var left = ap(Par(mf), Par(F.resolvedSlow));
+      var right = ap(Par(F.resolvedSlow.and(mf)), Par(F.resolved));
       return Promise.all([
         U.assertResolved(seq(left), 'resolvedSlow!'),
         U.assertResolved(seq(right), 'resolved!')
       ]);
     });
 
-    it('cannot reject twice', () => {
-      const actual = ap(Par(F.rejected), Par(F.rejected));
+    it('cannot reject twice', function(){
+      var actual = ap(Par(F.rejected), Par(F.rejected));
       return U.assertRejected(seq(actual), 'rejected');
     });
 
     it('forks in parallel', function(){
       this.slow(40);
       this.timeout(30);
-      const actual = ap(Par(F.resolvedSlow.and(mf)), Par(F.resolvedSlow));
+      var actual = ap(Par(F.resolvedSlow.and(mf)), Par(F.resolvedSlow));
       return U.assertResolved(seq(actual), 'resolvedSlow!');
     });
 
-    it('creates a cancel function which cancels both Futures', done => {
-      let cancelled = false;
-      const m = Par(Future(() => () => (cancelled ? done() : (cancelled = true))));
-      const cancel = seq(ap(m, m)).fork(U.noop, U.noop);
+    it('creates a cancel function which cancels both Futures', function(done){
+      var cancelled = false;
+      var m = Par(Future(function(){ return function(){ return (cancelled ? done() : (cancelled = true)) } }));
+      var cancel = seq(ap(m, m)).fork(U.noop, U.noop);
       cancel();
     });
 
-    it('shows a reasonable representation when cast to string', () => {
-      const m = ap(Par(of(1)), Par(reject(0)));
-      const s = 'ConcurrentFuture(new ParallelAp(Future.reject(0), Future.of(1)))';
+    it('shows a reasonable representation when cast to string', function(){
+      var m = ap(Par(of(1)), Par(reject(0)));
+      var s = 'ConcurrentFuture(new ParallelAp(Future.reject(0), Future.of(1)))';
       expect(m.toString()).to.equal(s);
     });
 
   });
 
-  describe('#map()', () => {
+  describe('#map()', function(){
 
-    it('applies the given function to its inner', () => {
-      const actual = map(U.add(1), Par(of(1)));
+    it('applies the given function to its inner', function(){
+      var actual = map(U.add(1), Par(of(1)));
       return U.assertResolved(seq(actual), 2);
     });
 
-    it('does not map rejected state', () => {
-      const actual = map(_ => 'mapped', Par(F.rejected));
+    it('does not map rejected state', function(){
+      var actual = map(function(){ return 'mapped' }, Par(F.rejected));
       return U.assertRejected(seq(actual), 'rejected');
     });
 
-    it('shows a reasonable representation when cast to string', () => {
-      const m = map(U.noop, Par(F.resolved));
-      const expected = `ConcurrentFuture(Future.of("resolved").map(${U.noop.toString()}))`;
+    it('shows a reasonable representation when cast to string', function(){
+      var m = map(U.noop, Par(F.resolved));
+      var expected = 'ConcurrentFuture(Future.of("resolved").map(' + (U.noop.toString()) + '))';
       expect(m.toString()).to.equal(expected);
     });
 
   });
 
-  describe('#alt', () => {
+  describe('#alt', function(){
 
-    it('rejects when the first one rejects', () => {
-      const m1 = Par(Future((rej, res) => void setTimeout(res, 15, 1)));
-      const m2 = Par(Future(rej => void setTimeout(rej, 5, U.error)));
+    it('rejects when the first one rejects', function(){
+      var m1 = Par(Future(function(rej, res){ return void setTimeout(res, 15, 1) }));
+      var m2 = Par(Future(function(rej){ return void setTimeout(rej, 5, U.error) }));
       return U.assertRejected(seq(alt(m1, m2)), U.error);
     });
 
-    it('resolves when the first one resolves', () => {
-      const m1 = Par(Future((rej, res) => void setTimeout(res, 5, 1)));
-      const m2 = Par(Future(rej => void setTimeout(rej, 15, U.error)));
+    it('resolves when the first one resolves', function(){
+      var m1 = Par(Future(function(rej, res){ return void setTimeout(res, 5, 1) }));
+      var m2 = Par(Future(function(rej){ return void setTimeout(rej, 15, U.error) }));
       return U.assertResolved(seq(alt(m1, m2)), 1);
     });
 
-    it('shows a reasonable representation when cast to string', () => {
-      const m = alt(Par(of(2)), Par(of(1)));
-      const s = 'ConcurrentFuture(Future.of(1))';
+    it('shows a reasonable representation when cast to string', function(){
+      var m = alt(Par(of(2)), Par(of(1)));
+      var s = 'ConcurrentFuture(Future.of(1))';
       expect(m.toString()).to.equal(s);
     });
 

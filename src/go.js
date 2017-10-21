@@ -7,15 +7,17 @@ import {show, showf, noop} from './internal/fn';
 import {invalidArgument, typeError, invalidFuture} from './internal/throw';
 import {Undetermined, Synchronous, Asynchronous} from './internal/timing';
 
-const check$iterator = g => isIterator(g) ? g : invalidArgument(
-  'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
-);
+function check$iterator(g){
+  return isIterator(g) ? g : invalidArgument(
+    'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
+  );
+}
 
-const check$iteration = o => {
+function check$iteration(o){
   if(!isIteration(o)) typeError(
     'Future.do was given an invalid generator:'
     + ' Its iterator did not return a valid iteration from iterator.next()'
-    + `\n  Actual: ${show(o)}`
+    + '\n  Actual: ' + show(o)
   );
   if(o.done || isFuture(o.value)) return o;
   return invalidFuture(
@@ -24,7 +26,7 @@ const check$iteration = o => {
     o.value,
     '\n  Tip: If you\'re using a generator, make sure you always yield a Future'
   );
-};
+}
 
 export function Go(generator){
   this._generator = generator;
@@ -34,9 +36,9 @@ Go.prototype = Object.create(Core);
 
 Go.prototype._fork = function Go$_fork(rej, res){
 
-  const iterator = check$iterator(this._generator());
+  var iterator = check$iterator(this._generator());
 
-  let timing = Undetermined, cancel = noop, state, value;
+  var timing = Undetermined, cancel = noop, state, value;
 
   function resolved(x){
     value = x;

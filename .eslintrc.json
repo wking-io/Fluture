@@ -1,15 +1,20 @@
 {
-  "extends": ["warp/module"],
+  "extends": ["warp"],
   "plugins": ["markdown"],
   "env": {
     "browser": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 5,
+    "sourceType": "module"
   },
   "globals": {
     "module": false,
     "require": false,
     "global": false,
     "Future": false,
-    "S": false
+    "S": false,
+    "Promise": false
   },
   "rules": {
     "space-before-blocks": [2, "never"],

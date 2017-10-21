@@ -1,4 +1,4 @@
-export const FL = {
+export var FL = {
   map: 'fantasy-land/map',
   bimap: 'fantasy-land/bimap',
   chain: 'fantasy-land/chain',
@@ -8,10 +8,10 @@ export const FL = {
   zero: 'fantasy-land/zero'
 };
 
-export const ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
+export var ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
 
-export const namespace = 'fluture';
-export const name = 'Future';
-export const version = 3;
+export var namespace = 'fluture';
+export var name = 'Future';
+export var version = 3;
 
-export const $$type = `${namespace}/${name}@${version}`;
+export var $$type = namespace + '/' + name + '@' + version;

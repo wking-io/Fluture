@@ -1,8 +1,8 @@
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const DataTask = require('data.task');
-const RamdaFuture = require('ramda-fantasy').Future;
-const Fluture = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var DataTask = require('data.task');
+var RamdaFuture = require('ramda-fantasy').Future;
+var Fluture = require('..');
 
 suite.add('Fluture', () => {
   Fluture((rej, res) => res(1));

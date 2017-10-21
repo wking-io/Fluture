@@ -4,7 +4,11 @@
   "description": "FantasyLand compliant (monadic) alternative to Promises",
   "main": "index.js",
   "types": "index.d.ts",
-  "module": "index.es.js",
+  "module": "index.mjs.js",
+  "@std/esm": {
+    "esm": "all",
+    "cjs": true
+  },
   "files": [
     "src",
     "index.es.js",
@@ -18,8 +22,8 @@
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "release": "npm outdated --long; xyz --edit --repo git@github.com:fluture-js/Fluture.git --tag 'X.Y.Z' --script scripts/distribute --increment",
     "test": "npm run lint && npm run lint:readme && npm run test:unit",
-    "test:unit": "rollup -c rollup.config.test.js && mocha --require source-map-support/register --reporter test/reporter.js index.test.js",
-    "test:coverage": "codecov"
+    "test:unit": "npm run build && nyc mocha --require @std/esm --ui bdd --reporter list --check-leaks --full-trace test/**.test.js",
+    "test:coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
   "homepage": "https://github.com/fluture-js/Fluture",
@@ -57,6 +61,7 @@
     "sanctuary-type-identifiers": "^2.0.0"
   },
   "devDependencies": {
+    "@std/esm": "^0.12.1",
     "benchmark": "^2.1.0",
     "chai": "^4.1.2",
     "codecov": "^2.2.0",
@@ -67,22 +72,18 @@
     "fantasy-land": "^3.0.0",
     "fantasy-states": "^0.2.1",
     "fun-task": "^1.5.1",
-    "istanbul": "^0.4.5",
     "jsverify": "^0.8.3",
     "lodash.curry": "^4.1.1",
     "mocha": "^4.0.0",
+    "nyc": "^11.2.1",
     "ramda": "^0.25.0",
     "ramda-fantasy": "^0.8.0",
     "remark-cli": "^4.0.0",
     "remark-validate-links": "^7.0.0",
     "rimraf": "^2.6.2",
     "rollup": "^0.47.6",
-    "rollup-plugin-buble": "^0.16.0",
     "rollup-plugin-commonjs": "^8.2.1",
-    "rollup-plugin-istanbul": "^1.1.0",
-    "rollup-plugin-multi-entry": "^2.0.1",
     "rollup-plugin-node-resolve": "^3.0.0",
-    "source-map-support": "^0.5.0",
     "xyz": "^2.0.1"
   }
 }

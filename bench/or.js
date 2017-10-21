@@ -1,12 +1,12 @@
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const Future = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var Future = require('..');
 
-const noop = () => {};
-const a = Future.of('a');
-const b = Future.of('b');
-const _a = Future.reject('!a');
-const _b = Future.reject('!b');
+var noop = () => {};
+var a = Future.of('a');
+var b = Future.of('b');
+var _a = Future.reject('!a');
+var _b = Future.reject('!b');
 
 suite.add('res res', () => {
   a.or(b).fork(noop, noop);

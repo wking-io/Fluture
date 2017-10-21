@@ -1,8 +1,31 @@
-export const isFunction = f => typeof f === 'function';
-export const isThenable = m => m instanceof Promise || Boolean(m) && isFunction(m.then);
-export const isBoolean = f => typeof f === 'boolean';
-export const isNumber = f => typeof f === 'number';
-export const isUnsigned = n => (n === Infinity || isNumber(n) && n > 0 && n % 1 === 0);
-export const isObject = o => o !== null && typeof o === 'object';
-export const isIterator = i => isObject(i) && isFunction(i.next);
-export const isArray = Array.isArray;
+export function isFunction(f){
+  return typeof f === 'function';
+}
+
+export function isThenable(m){
+  return m instanceof Promise || Boolean(m) && isFunction(m.then);
+}
+
+export function isBoolean(f){
+  return typeof f === 'boolean';
+}
+
+export function isNumber(f){
+  return typeof f === 'number';
+}
+
+export function isUnsigned(n){
+  return (n === Infinity || isNumber(n) && n > 0 && n % 1 === 0);
+}
+
+export function isObject(o){
+  return o !== null && typeof o === 'object';
+}
+
+export function isIterator(i){
+  return isObject(i) && isFunction(i.next);
+}
+
+export function isArray(x){
+  return Array.isArray(x);
+}

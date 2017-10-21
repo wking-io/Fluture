@@ -1,5 +1,13 @@
 import {isObject, isBoolean} from './is';
 
-export const Next = x => ({done: false, value: x});
-export const Done = x => ({done: true, value: x});
-export const isIteration = x => isObject(x) && isBoolean(x.done);
+export function Next(x){
+  return {done: false, value: x};
+}
+
+export function Done(x){
+  return {done: true, value: x};
+}
+
+export function isIteration(x){
+  return isObject(x) && isBoolean(x.done);
+}

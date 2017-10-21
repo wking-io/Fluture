@@ -1,10 +1,10 @@
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const Future = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var Future = require('..');
 
-const noop = () => {};
-const a = Future.of('a');
-const b = Future.after(5, 'b');
+var noop = () => {};
+var a = Future.of('a');
+var b = Future.after(5, 'b');
 
 suite.add('Left winner', () => {
   a.race(b).fork(noop, noop);

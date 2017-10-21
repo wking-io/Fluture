@@ -1,11 +1,11 @@
 /*eslint no-spaced-func:0, no-unexpected-multiline:0*/
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const Ramda = require('ramda');
-const Fluture = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var Ramda = require('ramda');
+var Fluture = require('..');
 
-const noop = () => {};
-const B = (f, g) => x => f(g(x));
+var noop = () => {};
+var B = (f, g) => x => f(g(x));
 
 suite.add('Method API', () => {
   Fluture.of(1)
@@ -56,16 +56,16 @@ suite.add('Curried Ramda dispatch API', () => {
           (Fluture.of(1)))));
 });
 
-const mapChainF = B(Fluture.chain(x => Fluture.of(f => f(x + 1))), Fluture.map(x => x + 1));
-const mapChainApF = B(Fluture.ap(Fluture.of(x => x + 1)), mapChainF);
-const mapChainApForkF = B(Fluture.fork(noop, noop), mapChainApF);
+var mapChainF = B(Fluture.chain(x => Fluture.of(f => f(x + 1))), Fluture.map(x => x + 1));
+var mapChainApF = B(Fluture.ap(Fluture.of(x => x + 1)), mapChainF);
+var mapChainApForkF = B(Fluture.fork(noop, noop), mapChainApF);
 suite.add('Precomposed dispatch API', () => {
   mapChainApForkF(Fluture.of(1));
 });
 
-const mapChainR = B(Ramda.chain(x => Fluture.of(f => f(x + 1))), Ramda.map(x => x + 1));
-const mapChainApR = B(Ramda.ap(Fluture.of(x => x + 1)), mapChainR);
-const mapChainApForkR = B(Fluture.fork(noop, noop), mapChainApR);
+var mapChainR = B(Ramda.chain(x => Fluture.of(f => f(x + 1))), Ramda.map(x => x + 1));
+var mapChainApR = B(Ramda.ap(Fluture.of(x => x + 1)), mapChainR);
+var mapChainApForkR = B(Fluture.fork(noop, noop), mapChainApR);
 suite.add('Precomposed Ramda dispatch API', () => {
   mapChainApForkR(Fluture.of(1));
 });

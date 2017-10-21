@@ -10,7 +10,7 @@ export function Node(fn){
 Node.prototype = Object.create(Core);
 
 Node.prototype._fork = function Node$fork(rej, res){
-  let open = true;
+  var open = true;
   this._fn(function Node$done(err, val){
     if(open){
       open = false;
@@ -21,8 +21,7 @@ Node.prototype._fork = function Node$fork(rej, res){
 };
 
 Node.prototype.toString = function Node$toString(){
-  const {_fn} = this;
-  return `Future.node(${showf(_fn)})`;
+  return 'Future.node(' + showf(this._fn) + ')';
 };
 
 export function node(f){

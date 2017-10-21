@@ -11,7 +11,7 @@ export function EncaseN(fn, a){
 EncaseN.prototype = Object.create(Core);
 
 EncaseN.prototype._fork = function EncaseN$fork(rej, res){
-  let open = true;
+  var open = true;
   this._fn(this._a, function EncaseN$done(err, val){
     if(open){
       open = false;
@@ -22,8 +22,7 @@ EncaseN.prototype._fork = function EncaseN$fork(rej, res){
 };
 
 EncaseN.prototype.toString = function EncaseN$toString(){
-  const {_fn, _a} = this;
-  return `Future.encaseN(${showf(_fn)}, ${show(_a)})`;
+  return 'Future.encaseN(' + showf(this._fn) + ', ' + show(this._a) + ')';
 };
 
 export function encaseN(f, x){
