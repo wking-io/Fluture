@@ -1,5 +1,5 @@
 /**
- * Fluture bundled; version 7.1.3
+ * Fluture bundled; version 7.2.0
  */
 
 var Fluture = (function () {
@@ -287,10 +287,10 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //.
   //. ```javascript
   //. //    hasMethod :: String -> a -> Boolean
-  //. var hasMethod = name => x => x != null && typeof x[name] == 'function';
+  //. const hasMethod = name => x => x != null && typeof x[name] == 'function';
   //.
   //. //    Foo :: TypeClass
-  //. var Foo = Z.TypeClass(
+  //. const Foo = Z.TypeClass(
   //.   'my-package/Foo',
   //.   'http://example.com/my-package#Foo',
   //.   [],
@@ -298,7 +298,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //. );
   //.
   //. //    Bar :: TypeClass
-  //. var Bar = Z.TypeClass(
+  //. const Bar = Z.TypeClass(
   //.   'my-package/Bar',
   //.   'http://example.com/my-package#Bar',
   //.   [Foo],
@@ -344,7 +344,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     var x = _x;
     for (var idx = 0; idx < path.length; idx += 1) {
       var k = path[idx];
-      if (x == null || !(allowInheritedProps || has(k, x))) { return null; }
+      if (x == null || !(allowInheritedProps || has(k, x))) return null;
       x = x[k];
     }
     return typeof x === 'function' ? x : null;
@@ -385,13 +385,13 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
                             x.constructor != null &&
                             x.constructor.prototype === x;
           var m = null;
-          if (!isPrototype) { m = funcPath([name], x); }
-          if (m == null)    { m = implPath([type(x), 'prototype', name]); }
+          if (!isPrototype) m = funcPath([name], x);
+          if (m == null)    m = implPath([type(x), 'prototype', name]);
           return m && m.bind(x);
         };
     }
 
-    var version = '6.0.0';  // updated programmatically
+    var version = '6.1.0';  // updated programmatically
     var keys = Object.keys(requirements);
 
     var typeClass = TypeClass(
@@ -859,14 +859,12 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 
   //  Array$prototype$toString :: Array a ~> () -> String
   function Array$prototype$toString() {
-    var this$1 = this;
-
     var reprs = this.map(toString);
     var keys = Object.keys(this).sort();
     for (var idx = 0; idx < keys.length; idx += 1) {
       var k = keys[idx];
       if (!/^\d+$/.test(k)) {
-        reprs.push(toString(k) + ': ' + toString(this$1[k]));
+        reprs.push(toString(k) + ': ' + toString(this[k]));
       }
     }
     return '[' + reprs.join(', ') + ']';
@@ -874,23 +872,19 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 
   //  Array$prototype$equals :: Array a ~> Array a -> Boolean
   function Array$prototype$equals(other) {
-    var this$1 = this;
-
-    if (other.length !== this.length) { return false; }
+    if (other.length !== this.length) return false;
     for (var idx = 0; idx < this.length; idx += 1) {
-      if (!equals(this$1[idx], other[idx])) { return false; }
+      if (!equals(this[idx], other[idx])) return false;
     }
     return true;
   }
 
   //  Array$prototype$lte :: Array a ~> Array a -> Boolean
   function Array$prototype$lte(other) {
-    var this$1 = this;
-
     for (var idx = 0; true; idx += 1) {
-      if (idx === this$1.length) { return true; }
-      if (idx === other.length) { return false; }
-      if (!equals(this$1[idx], other[idx])) { return lte(this$1[idx], other[idx]); }
+      if (idx === this.length) return true;
+      if (idx === other.length) return false;
+      if (!equals(this[idx], other[idx])) return lte(this[idx], other[idx]);
     }
   }
 
@@ -906,12 +900,10 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 
   //  Array$prototype$ap :: Array a ~> Array (a -> b) -> Array b
   function Array$prototype$ap(fs) {
-    var this$1 = this;
-
     var result = [];
     for (var idx = 0; idx < fs.length; idx += 1) {
       for (var idx2 = 0; idx2 < this.length; idx2 += 1) {
-        result.push(fs[idx](this$1[idx2]));
+        result.push(fs[idx](this[idx2]));
       }
     }
     return result;
@@ -993,13 +985,11 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 
   //  Object$prototype$toString :: StrMap a ~> () -> String
   function Object$prototype$toString() {
-    var this$1 = this;
-
     var reprs = [];
     var keys = Object.keys(this).sort();
     for (var idx = 0; idx < keys.length; idx += 1) {
       var k = keys[idx];
-      reprs.push(toString(k) + ': ' + toString(this$1[k]));
+      reprs.push(toString(k) + ': ' + toString(this[k]));
     }
     return '{' + reprs.join(', ') + '}';
   }
@@ -1014,46 +1004,38 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 
   //  Object$prototype$lte :: StrMap a ~> StrMap a -> Boolean
   function Object$prototype$lte(other) {
-    var this$1 = this;
-
     var theseKeys = Object.keys(this).sort();
     var otherKeys = Object.keys(other).sort();
     while (true) {
-      if (theseKeys.length === 0) { return true; }
-      if (otherKeys.length === 0) { return false; }
+      if (theseKeys.length === 0) return true;
+      if (otherKeys.length === 0) return false;
       var k = theseKeys.shift();
       var z = otherKeys.shift();
-      if (k < z) { return true; }
-      if (k > z) { return false; }
-      if (!equals(this$1[k], other[k])) { return lte(this$1[k], other[k]); }
+      if (k < z) return true;
+      if (k > z) return false;
+      if (!equals(this[k], other[k])) return lte(this[k], other[k]);
     }
   }
 
   //  Object$prototype$concat :: StrMap a ~> StrMap a -> StrMap a
   function Object$prototype$concat(other) {
-    var this$1 = this;
-
     var result = {};
-    for (var k in this$1) { result[k] = this$1[k]; }
-    for (k in other) { result[k] = other[k]; }
+    for (var k in this) result[k] = this[k];
+    for (k in other) result[k] = other[k];
     return result;
   }
 
   //  Object$prototype$map :: StrMap a ~> (a -> b) -> StrMap b
   function Object$prototype$map(f) {
-    var this$1 = this;
-
     var result = {};
-    for (var k in this$1) { result[k] = f(this$1[k]); }
+    for (var k in this) result[k] = f(this[k]);
     return result;
   }
 
   //  Object$prototype$ap :: StrMap a ~> StrMap (a -> b) -> StrMap b
   function Object$prototype$ap(other) {
-    var this$1 = this;
-
     var result = {};
-    for (var k in this$1) { if (k in other) { result[k] = other[k](this$1[k]); } }
+    for (var k in this) if (k in other) result[k] = other[k](this[k]);
     return result;
   }
 
@@ -1288,13 +1270,13 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     }
 
     return function toString(x) {
-      if ($seen.indexOf(x) >= 0) { return '<Circular>'; }
+      if ($seen.indexOf(x) >= 0) return '<Circular>';
 
       var xType = type(x);
       if (xType === 'Object') {
         var result;
         try { result = call(x.toString, x); } catch (err) {}
-        if (result != null && result !== '[object Object]') { return result; }
+        if (result != null && result !== '[object Object]') return result;
       }
 
       return call(implPath([xType, 'prototype', 'toString']) || x.toString, x);
@@ -1334,7 +1316,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     var $pairs = [];
 
     return function equals(x, y) {
-      if (!sameType(x, y)) { return false; }
+      if (!sameType(x, y)) return false;
 
       //  This algorithm for comparing circular data structures was
       //  suggested in <http://stackoverflow.com/a/40622794/312785>.
@@ -1405,7 +1387,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     var $pairs = [];
 
     return function lte(x, y) {
-      if (!sameType(x, y)) { return false; }
+      if (!sameType(x, y)) return false;
 
       //  This algorithm for comparing circular data structures was
       //  suggested in <http://stackoverflow.com/a/40622794/312785>.
@@ -1468,6 +1450,50 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //. ```
   function gte(x, y) {
     return lte(y, x);
+  }
+
+  //# min :: Ord a => (a, a) -> a
+  //.
+  //. Returns the smaller of its two arguments.
+  //.
+  //. This function is derived from [`lte`](#lte).
+  //.
+  //. See also [`max`](#max).
+  //.
+  //. ```javascript
+  //. > min(10, 2)
+  //. 2
+  //.
+  //. > min(new Date('1999-12-31'), new Date('2000-01-01'))
+  //. new Date('1999-12-31')
+  //.
+  //. > min('10', '2')
+  //. '10'
+  //. ```
+  function min(x, y) {
+    return lte(x, y) ? x : y;
+  }
+
+  //# max :: Ord a => (a, a) -> a
+  //.
+  //. Returns the larger of its two arguments.
+  //.
+  //. This function is derived from [`lte`](#lte).
+  //.
+  //. See also [`min`](#min).
+  //.
+  //. ```javascript
+  //. > max(10, 2)
+  //. 10
+  //.
+  //. > max(new Date('1999-12-31'), new Date('2000-01-01'))
+  //. new Date('2000-01-01')
+  //.
+  //. > max('10', '2')
+  //. '2'
+  //. ```
+  function max(x, y) {
+    return lte(x, y) ? y : x;
   }
 
   //# compose :: Semigroupoid c => (c j k, c i j) -> c i k
@@ -1733,6 +1759,44 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     return Applicative.methods.of(typeRep)(x);
   }
 
+  //# append :: (Applicative f, Semigroup (f a)) => (a, f a) -> f a
+  //.
+  //. Returns the result of appending the first argument to the second.
+  //.
+  //. This function is derived from [`concat`](#concat) and [`of`](#of).
+  //.
+  //. See also [`prepend`](#prepend).
+  //.
+  //. ```javascript
+  //. > append(3, [1, 2])
+  //. [1, 2, 3]
+  //.
+  //. > append(3, Cons(1, Cons(2, Nil)))
+  //. Cons(1, Cons(2, Cons(3, Nil)))
+  //. ```
+  function append(x, xs) {
+    return concat(xs, of(xs.constructor, x));
+  }
+
+  //# prepend :: (Applicative f, Semigroup (f a)) => (a, f a) -> f a
+  //.
+  //. Returns the result of prepending the first argument to the second.
+  //.
+  //. This function is derived from [`concat`](#concat) and [`of`](#of).
+  //.
+  //. See also [`append`](#append).
+  //.
+  //. ```javascript
+  //. > prepend(1, [2, 3])
+  //. [1, 2, 3]
+  //.
+  //. > prepend(1, Cons(2, Cons(3, Nil)))
+  //. Cons(1, Cons(2, Cons(3, Nil)))
+  //. ```
+  function prepend(x, xs) {
+    return concat(of(xs.constructor, x), xs);
+  }
+
   //# chain :: Chain m => (a -> m b, m a) -> m b
   //.
   //. Function wrapper for [`fantasy-land/chain`][].
@@ -1811,6 +1875,8 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //. Cons(1, Cons(3, Nil))
   //. ```
   function filter(pred, m) {
+    //  Fast path for arrays.
+    if (Array.isArray(m)) return m.filter(function(x) { return pred(x); });
     var M = m.constructor;
     return reduce(function(m, x) { return pred(x) ? concat(m, of(M, x)) : m; },
                   empty(M),
@@ -1909,6 +1975,209 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //. ```
   function reduce(f, x, foldable) {
     return Foldable.methods.reduce(foldable)(f, x);
+  }
+
+  //# size :: Foldable f => f a -> Integer
+  //.
+  //. Returns the number of elements of the given structure.
+  //.
+  //. This function is derived from [`reduce`](#reduce).
+  //.
+  //. ```javascript
+  //. > size([])
+  //. 0
+  //.
+  //. > size(['foo', 'bar', 'baz'])
+  //. 3
+  //.
+  //. > size(Nil)
+  //. 0
+  //.
+  //. > size(Cons('foo', Cons('bar', Cons('baz', Nil))))
+  //. 3
+  //. ```
+  function size(foldable) {
+    //  Fast path for arrays.
+    if (Array.isArray(foldable)) return foldable.length;
+    return reduce(function(n, _) { return n + 1; }, 0, foldable);
+  }
+
+  //# elem :: (Setoid a, Foldable f) => (a, f a) -> Boolean
+  //.
+  //. Takes a value and a structure and returns `true` if the
+  //. value is an element of the structure; `false` otherwise.
+  //.
+  //. This function is derived from [`equals`](#equals) and
+  //. [`reduce`](#reduce).
+  //.
+  //. ```javascript
+  //. > elem('c', ['a', 'b', 'c'])
+  //. true
+  //.
+  //. > elem('x', ['a', 'b', 'c'])
+  //. false
+  //.
+  //. > elem(3, {x: 1, y: 2, z: 3})
+  //. true
+  //.
+  //. > elem(8, {x: 1, y: 2, z: 3})
+  //. false
+  //.
+  //. > elem(0, Just(0))
+  //. true
+  //.
+  //. > elem(0, Just(1))
+  //. false
+  //.
+  //. > elem(0, Nothing)
+  //. false
+  //. ```
+  function elem(x, foldable) {
+    return reduce(function(b, y) { return b || equals(x, y); },
+                  false,
+                  foldable);
+  }
+
+  //# reverse :: (Applicative f, Foldable f, Monoid (f a)) => f a -> f a
+  //.
+  //. Reverses the elements of the given structure.
+  //.
+  //. This function is derived from [`concat`](#concat), [`empty`](#empty),
+  //. [`of`](#of), and [`reduce`](#reduce).
+  //.
+  //. ```javascript
+  //. > reverse([1, 2, 3])
+  //. [3, 2, 1]
+  //.
+  //. > reverse(Cons(1, Cons(2, Cons(3, Nil))))
+  //. Cons(3, Cons(2, Cons(1, Nil)))
+  //. ```
+  function reverse(foldable) {
+    //  Fast path for arrays.
+    if (Array.isArray(foldable)) return foldable.slice().reverse();
+    var F = foldable.constructor;
+    return reduce(function(xs, x) { return concat(of(F, x), xs); },
+                  empty(F),
+                  foldable);
+  }
+
+  //# sort :: (Ord a, Applicative f, Foldable f, Monoid (f a)) => f a -> f a
+  //.
+  //. Performs a [stable sort][] of the elements of the given structure,
+  //. using [`lte`](#lte) for comparisons.
+  //.
+  //. This function is derived from [`lte`](#lte), [`concat`](#concat),
+  //. [`empty`](#empty), [`of`](#of), and [`reduce`](#reduce).
+  //.
+  //. See also [`sortBy`](#sortBy).
+  //.
+  //. ```javascript
+  //. > sort(['foo', 'bar', 'baz'])
+  //. ['bar', 'baz', 'foo']
+  //.
+  //. > sort([Just(2), Nothing, Just(1)])
+  //. [Nothing, Just(1), Just(2)]
+  //.
+  //. > sort(Cons('foo', Cons('bar', Cons('baz', Nil))))
+  //. Cons('bar', Cons('baz', Cons('foo', Nil)))
+  //. ```
+  function sort(foldable) {
+    return sortBy(identity, foldable);
+  }
+
+  //# sortBy :: (Ord b, Applicative f, Foldable f, Monoid (f a)) => (a -> b, f a) -> f a
+  //.
+  //. Performs a [stable sort][] of the elements of the given structure,
+  //. using [`lte`](#lte) to compare the values produced by applying the
+  //. given function to each element of the structure.
+  //.
+  //. This function is derived from [`lte`](#lte), [`concat`](#concat),
+  //. [`empty`](#empty), [`of`](#of), and [`reduce`](#reduce).
+  //.
+  //. See also [`sort`](#sort).
+  //.
+  //. ```javascript
+  //. > sortBy(s => s.length, ['red', 'green', 'blue'])
+  //. ['red', 'blue', 'green']
+  //.
+  //. > sortBy(s => s.length, ['black', 'white'])
+  //. ['black', 'white']
+  //.
+  //. > sortBy(s => s.length, ['white', 'black'])
+  //. ['white', 'black']
+  //.
+  //. > sortBy(s => s.length, Cons('red', Cons('green', Cons('blue', Nil))))
+  //. Cons('red', Cons('blue', Cons('green', Nil)))
+  //. ```
+  function sortBy(f, foldable) {
+    var rs = reduce(function(xs, x) {
+      var fx = f(x);
+      var lower = 0;
+      var upper = xs.length;
+      while (lower < upper) {
+        var idx = Math.floor((lower + upper) / 2);
+        if (lte(xs[idx].fx, fx)) lower = idx + 1; else upper = idx;
+      }
+      xs.splice(lower, 0, {x: x, fx: fx});
+      return xs;
+    }, [], foldable);
+
+    var F = foldable.constructor;
+    var result = empty(F);
+    for (var idx = 0; idx < rs.length; idx += 1) {
+      result = concat(result, of(F, rs[idx].x));
+    }
+    return result;
+  }
+
+  //# takeWhile :: (Applicative f, Foldable f, Monoid (f a)) => (a -> Boolean, f a) -> f a
+  //.
+  //. Discards the first inner value which does not satisfy the predicate, and
+  //. all subsequent inner values.
+  //.
+  //. This function is derived from [`concat`](#concat), [`empty`](#empty),
+  //. [`of`](#of), and [`reduce`](#reduce).
+  //.
+  //. See also [`dropWhile`](#dropWhile).
+  //.
+  //. ```javascript
+  //. > takeWhile(s => /x/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
+  //. ['xy', 'xz', 'yx']
+  //.
+  //. > takeWhile(s => /y/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
+  //. ['xy']
+  //.
+  //. > takeWhile(s => /z/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
+  //. []
+  //. ```
+  function takeWhile(pred, foldable) {
+    var take = true;
+    return filter(function(x) { return take = take && pred(x); }, foldable);
+  }
+
+  //# dropWhile :: (Applicative f, Foldable f, Monoid (f a)) => (a -> Boolean, f a) -> f a
+  //.
+  //. Retains the first inner value which does not satisfy the predicate, and
+  //. all subsequent inner values.
+  //.
+  //. This function is derived from [`concat`](#concat), [`empty`](#empty),
+  //. [`of`](#of), and [`reduce`](#reduce).
+  //.
+  //. See also [`takeWhile`](#takeWhile).
+  //.
+  //. ```javascript
+  //. > dropWhile(s => /x/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
+  //. ['yz', 'zx', 'zy']
+  //.
+  //. > dropWhile(s => /y/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
+  //. ['xz', 'yx', 'yz', 'zx', 'zy']
+  //.
+  //. > dropWhile(s => /z/.test(s), ['xy', 'xz', 'yx', 'yz', 'zx', 'zy'])
+  //. ['xy', 'xz', 'yx', 'yz', 'zx', 'zy']
+  //. ```
+  function dropWhile(pred, foldable) {
+    var take = false;
+    return filter(function(x) { return take = take || !pred(x); }, foldable);
   }
 
   //# traverse :: (Applicative f, Traversable t) => (TypeRep f, a -> f b, t a) -> f (t b)
@@ -2020,6 +2289,8 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     lte: lte,
     gt: gt,
     gte: gte,
+    min: min,
+    max: max,
     compose: compose,
     id: id,
     concat: concat,
@@ -2033,6 +2304,8 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     apFirst: apFirst,
     apSecond: apSecond,
     of: of,
+    append: append,
+    prepend: prepend,
     chain: chain,
     join: join,
     chainRec: chainRec,
@@ -2041,6 +2314,13 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     alt: alt,
     zero: zero,
     reduce: reduce,
+    size: size,
+    elem: elem,
+    reverse: reverse,
+    sort: sort,
+    sortBy: sortBy,
+    takeWhile: takeWhile,
+    dropWhile: dropWhile,
     traverse: traverse,
     sequence: sequence,
     extend: extend,
@@ -2093,6 +2373,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 //. [`fantasy-land/reduce`]:    https://github.com/fantasyland/fantasy-land#reduce-method
 //. [`fantasy-land/traverse`]:  https://github.com/fantasyland/fantasy-land#traverse-method
 //. [`fantasy-land/zero`]:      https://github.com/fantasyland/fantasy-land#zero-method
+//. [stable sort]:              https://en.wikipedia.org/wiki/Sorting_algorithm#Stability
 //. [type-classes]:             https://github.com/sanctuary-js/sanctuary-def#type-classes
 });
 
@@ -2185,50 +2466,49 @@ var inspectF = createCommonjsModule(function (module) {
 }));
 });
 
-var setImmediate$1 = function (f, x) { return setTimeout(f, 0, x); };
+function setImmediate$1(f, x){ return setTimeout(f, 0, x) }
 
 var setImmediate = typeof global.setImmediate === 'function'
   ? global.setImmediate
   : /* istanbul ignore next: environment-specific */ setImmediate$1;
 
-var noop = function noop(){};
-var moop = function moop(){ return this };
+function noop(){}
+function moop(){ return this }
 var show = sanctuaryTypeClasses.toString;
-var padf = function (sf, s) { return s.replace(/^/gm, sf).replace(sf, ''); };
-var showf = function (f) { return padf('  ', inspectF(2, f)); };
+function padf(sf, s){ return s.replace(/^/gm, sf).replace(sf, '') }
+function showf(f){ return padf('  ', inspectF(2, f)) }
 
-var mapArray = function (xs, f) {
+function mapArray(xs, f){
   var l = xs.length, ys = new Array(l);
-  for(var i = 0; i < l; i++) { ys[i] = f(xs[i], i, xs); }
+  for(var i = 0; i < l; i++) ys[i] = f(xs[i], i, xs);
   return ys;
-};
+}
 
-var partial1 = function (f, a) { return function bound1(b, c, d){
-  switch(arguments.length){
-    case 1: return f(a, b);
-    case 2: return f(a, b, c);
-    default: return f(a, b, c, d);
-  }
-}; };
+function partial1(f, a){
+  return function bound1(b, c, d){
+    switch(arguments.length){
+      case 1: return f(a, b);
+      case 2: return f(a, b, c);
+      default: return f(a, b, c, d);
+    }
+  };
+}
 
-var partial2 = function (f, a, b) { return function bound2(c, d){
-  return arguments.length === 1 ? f(a, b, c) : f(a, b, c, d);
-}; };
+function partial2(f, a, b){
+  return function bound2(c, d){
+    return arguments.length === 1 ? f(a, b, c) : f(a, b, c, d);
+  };
+}
 
-var partial3 = function (f, a, b, c) { return function bound3(d){
-  return f(a, b, c, d);
-}; };
+function partial3(f, a, b, c){
+  return function bound3(d){
+    return f(a, b, c, d);
+  };
+}
 
-var immediately = function (f) { return function (x) { return setImmediate(f, x); }; };
-
-var isFunction = function (f) { return typeof f === 'function'; };
-var isThenable = function (m) { return m instanceof Promise || Boolean(m) && isFunction(m.then); };
-var isBoolean = function (f) { return typeof f === 'boolean'; };
-var isNumber = function (f) { return typeof f === 'number'; };
-var isUnsigned = function (n) { return (n === Infinity || isNumber(n) && n > 0 && n % 1 === 0); };
-var isObject = function (o) { return o !== null && typeof o === 'object'; };
-var isIterator = function (i) { return isObject(i) && isFunction(i.next); };
-var isArray = Array.isArray;
+function immediately(f){
+  return function immediate(x){ return setImmediate(f, x) };
+}
 
 var FL = {
   map: 'fantasy-land/map',
@@ -2246,7 +2526,7 @@ var namespace = 'fluture';
 var name = 'Future';
 var version = 3;
 
-var $$type = namespace + "/" + name + "@" + version;
+var $$type = namespace + '/' + name + '@' + version;
 
 var sanctuaryTypeIdentifiers$2 = createCommonjsModule(function (module) {
 /*
@@ -2366,7 +2646,7 @@ var sanctuaryTypeIdentifiers$2 = createCommonjsModule(function (module) {
   //. ### Usage
   //.
   //. ```javascript
-  //. var type = require('sanctuary-type-identifiers');
+  //. const type = require('sanctuary-type-identifiers');
   //. ```
   //.
   //. ```javascript
@@ -2441,50 +2721,91 @@ var sanctuaryTypeIdentifiers$2 = createCommonjsModule(function (module) {
 //. [4]: #specification
 });
 
-var error = function (message) {
+function error(message){
   throw new Error(message);
-};
+}
 
-var typeError = function (message) {
+function typeError(message){
   throw new TypeError(message);
-};
+}
 
-var invalidArgument = function (it, at, expected, actual) { return typeError(
-  (it + " expects its " + (ordinal[at]) + " argument to " + expected + "\n  Actual: " + (show(actual)))
-); };
+function invalidArgument(it, at, expected, actual){
+  typeError(
+    it + ' expects its ' + ordinal[at] + ' argument to ' + expected + '\n  Actual: ' + show(actual)
+  );
+}
 
-var invalidContext = function (it, actual) { return typeError(
-  it + " was invoked outside the context of a Future. You might want to use"
-  + " a dispatcher instead\n  Called on: " + (show(actual))
-); };
+function invalidContext(it, actual){
+  typeError(
+    it + ' was invoked outside the context of a Future. You might want to use'
+  + ' a dispatcher instead\n  Called on: ' + (show(actual))
+  );
+}
 
-var invalidNamespace = function (m, x) { return (
-  "The Future was not created by " + namespace + ". "
-+ "Make sure you transform other Futures to " + namespace + " Futures. "
-+ "Got " + (x ? ("a Future from " + x) : 'an unscoped Future') + "."
-+ '\n  See: https://github.com/fluture-js/Fluture#casting-futures'
-); };
+function invalidNamespace(m, x){
+  return (
+    'The Future was not created by ' + namespace + '. '
+  + 'Make sure you transform other Futures to ' + namespace + ' Futures. '
+  + 'Got ' + (x ? ('a Future from ' + x) : 'an unscoped Future') + '.'
+  + '\n  See: https://github.com/fluture-js/Fluture#casting-futures'
+  );
+}
 
-var invalidVersion = function (m, x) { return (
-  "The Future was created by " + (x < version ? 'an older' : 'a newer') + " version of " + namespace + ". "
-+ 'This means that one of the sources which creates Futures is outdated. '
-+ 'Update this source, or transform its created Futures to be compatible.'
-+ '\n  See: https://github.com/fluture-js/Fluture#casting-futures'
-); };
+function invalidVersion(m, x){
+  return (
+    'The Future was created by ' + (x < version ? 'an older' : 'a newer')
+  + ' version of ' + namespace + '. '
+  + 'This means that one of the sources which creates Futures is outdated. '
+  + 'Update this source, or transform its created Futures to be compatible.'
+  + '\n  See: https://github.com/fluture-js/Fluture#casting-futures'
+  );
+}
 
-var invalidFuture = function (it, at, m, s) {
-  if ( s === void 0 ) s = '';
-
+function invalidFuture(it, at, m, s){
   var id = sanctuaryTypeIdentifiers$2.parse(sanctuaryTypeIdentifiers$2(m));
   var info = id.name === name ? '\n' + (
     id.namespace !== namespace ? invalidNamespace(m, id.namespace)
   : id.version !== version ? invalidVersion(m, id.version)
   : 'Nothing seems wrong. Contact the Fluture maintainers.') : '';
   typeError(
-    it + " expects " + (ordinal[at] ? ("its " + (ordinal[at]) + " argument to be a valid Future") : at) + "."
-  + info + "\n  Actual: " + (show(m)) + " :: " + (id.name) + s
+    it + ' expects ' + (ordinal[at] ? 'its ' + ordinal[at] + ' argument to be a valid Future' : at)
+  + '.' + info + '\n  Actual: ' + (show(m)) + ' :: ' + (id.name) + (s || '')
   );
-};
+}
+
+function isFunction(f){
+  return typeof f === 'function';
+}
+
+function isThenable(m){
+  return m instanceof Promise || Boolean(m) && isFunction(m.then);
+}
+
+function isBoolean(f){
+  return typeof f === 'boolean';
+}
+
+function isNumber(f){
+  return typeof f === 'number';
+}
+
+function isUnsigned(n){
+  return (n === Infinity || isNumber(n) && n > 0 && n % 1 === 0);
+}
+
+function isObject(o){
+  return o !== null && typeof o === 'object';
+}
+
+function isIterator(i){
+  return isObject(i) && isFunction(i.next);
+}
+
+function isArray(x){
+  return Array.isArray(x);
+}
+
+'use strict';
 
 /**
  * Custom implementation of a double ended queue.
@@ -2525,8 +2846,8 @@ Denque.prototype.peekAt = function peekAt(index) {
     return void 0;
   }
   var len = this.size();
-  if (i >= len || i < -len) { return undefined; }
-  if (i < 0) { i += len; }
+  if (i >= len || i < -len) return undefined;
+  if (i < 0) i += len;
   i = (this._head + i) & this._capacityMask;
   return this._list[i];
 };
@@ -2545,7 +2866,7 @@ Denque.prototype.get = function get(i) {
  * @returns {*}
  */
 Denque.prototype.peek = function peek() {
-  if (this._head === this._tail) { return undefined; }
+  if (this._head === this._tail) return undefined;
   return this._list[this._head];
 };
 
@@ -2580,9 +2901,9 @@ Object.defineProperty(Denque.prototype, 'length', {
  * @returns {number}
  */
 Denque.prototype.size = function size() {
-  if (this._head === this._tail) { return 0; }
-  if (this._head < this._tail) { return this._tail - this._head; }
-  else { return this._capacityMask + 1 - (this._head - this._tail); }
+  if (this._head === this._tail) return 0;
+  if (this._head < this._tail) return this._tail - this._head;
+  else return this._capacityMask + 1 - (this._head - this._tail);
 };
 
 /**
@@ -2590,13 +2911,13 @@ Denque.prototype.size = function size() {
  * @param item
  */
 Denque.prototype.unshift = function unshift(item) {
-  if (item === undefined) { return this.length; }
+  if (item === undefined) return this.length;
   var len = this._list.length;
   this._head = (this._head - 1 + len) & this._capacityMask;
   this._list[this._head] = item;
-  if (this._tail === this._head) { this._growArray(); }
-  if (this._head < this._tail) { return this._tail - this._head; }
-  else { return this._capacityMask + 1 - (this._head - this._tail); }
+  if (this._tail === this._head) this._growArray();
+  if (this._head < this._tail) return this._tail - this._head;
+  else return this._capacityMask + 1 - (this._head - this._tail);
 };
 
 /**
@@ -2606,11 +2927,11 @@ Denque.prototype.unshift = function unshift(item) {
  */
 Denque.prototype.shift = function shift() {
   var head = this._head;
-  if (head === this._tail) { return undefined; }
+  if (head === this._tail) return undefined;
   var item = this._list[head];
   this._list[head] = undefined;
   this._head = (head + 1) & this._capacityMask;
-  if (head < 2 && this._tail > 10000 && this._tail <= this._list.length >>> 2) { this._shrinkArray(); }
+  if (head < 2 && this._tail > 10000 && this._tail <= this._list.length >>> 2) this._shrinkArray();
   return item;
 };
 
@@ -2619,7 +2940,7 @@ Denque.prototype.shift = function shift() {
  * @param item
  */
 Denque.prototype.push = function push(item) {
-  if (item === undefined) { return this.length; }
+  if (item === undefined) return this.length;
   var tail = this._tail;
   this._list[tail] = item;
   this._tail = (tail + 1) & this._capacityMask;
@@ -2627,8 +2948,8 @@ Denque.prototype.push = function push(item) {
     this._growArray();
   }
 
-  if (this._head < this._tail) { return this._tail - this._head; }
-  else { return this._capacityMask + 1 - (this._head - this._tail); }
+  if (this._head < this._tail) return this._tail - this._head;
+  else return this._capacityMask + 1 - (this._head - this._tail);
 };
 
 /**
@@ -2638,12 +2959,12 @@ Denque.prototype.push = function push(item) {
  */
 Denque.prototype.pop = function pop() {
   var tail = this._tail;
-  if (tail === this._head) { return undefined; }
+  if (tail === this._head) return undefined;
   var len = this._list.length;
   this._tail = (tail - 1 + len) & this._capacityMask;
   var item = this._list[this._tail];
   this._list[this._tail] = undefined;
-  if (this._head < 2 && tail > 10000 && tail <= len >>> 2) { this._shrinkArray(); }
+  if (this._head < 2 && tail > 10000 && tail <= len >>> 2) this._shrinkArray();
   return item;
 };
 
@@ -2654,30 +2975,28 @@ Denque.prototype.pop = function pop() {
  * @returns {*}
  */
 Denque.prototype.removeOne = function removeOne(index) {
-  var this$1 = this;
-
   var i = index;
   // expect a number or return undefined
   if ((i !== (i | 0))) {
     return void 0;
   }
-  if (this._head === this._tail) { return void 0; }
+  if (this._head === this._tail) return void 0;
   var size = this.size();
   var len = this._list.length;
-  if (i >= size || i < -size) { return void 0; }
-  if (i < 0) { i += size; }
+  if (i >= size || i < -size) return void 0;
+  if (i < 0) i += size;
   i = (this._head + i) & this._capacityMask;
   var item = this._list[i];
   var k;
   if (index < size / 2) {
     for (k = index; k > 0; k--) {
-      this$1._list[i] = this$1._list[i = (i - 1 + len) & this$1._capacityMask];
+      this._list[i] = this._list[i = (i - 1 + len) & this._capacityMask];
     }
     this._list[i] = void 0;
     this._head = (this._head + 1 + len) & this._capacityMask;
   } else {
     for (k = size - 1 - index; k > 0; k--) {
-      this$1._list[i] = this$1._list[i = ( i + 1 + len) & this$1._capacityMask];
+      this._list[i] = this._list[i = ( i + 1 + len) & this._capacityMask];
     }
     this._list[i] = void 0;
     this._tail = (this._tail - 1 + len) & this._capacityMask;
@@ -2694,8 +3013,6 @@ Denque.prototype.removeOne = function removeOne(index) {
  * @returns {array}
  */
 Denque.prototype.remove = function remove(index, count) {
-  var this$1 = this;
-
   var i = index;
   var removed;
   var del_count = count;
@@ -2703,11 +3020,11 @@ Denque.prototype.remove = function remove(index, count) {
   if ((i !== (i | 0))) {
     return void 0;
   }
-  if (this._head === this._tail) { return void 0; }
+  if (this._head === this._tail) return void 0;
   var size = this.size();
   var len = this._list.length;
-  if (i >= size || i < -size || count < 1) { return void 0; }
-  if (i < 0) { i += size; }
+  if (i >= size || i < -size || count < 1) return void 0;
+  if (i < 0) i += size;
   if (count === 1 || !count) {
     removed = new Array(1);
     removed[0] = this.removeOne(i);
@@ -2718,50 +3035,50 @@ Denque.prototype.remove = function remove(index, count) {
     this.clear();
     return removed;
   }
-  if (i + count > size) { count = size - i; }
+  if (i + count > size) count = size - i;
   var k;
   removed = new Array(count);
   for (k = 0; k < count; k++) {
-    removed[k] = this$1._list[(this$1._head + i + k) & this$1._capacityMask];
+    removed[k] = this._list[(this._head + i + k) & this._capacityMask];
   }
   i = (this._head + i) & this._capacityMask;
   if (index + count === size) {
     this._tail = (this._tail - count + len) & this._capacityMask;
     for (k = count; k > 0; k--) {
-      this$1._list[i = (i + 1 + len) & this$1._capacityMask] = void 0;
+      this._list[i = (i + 1 + len) & this._capacityMask] = void 0;
     }
     return removed;
   }
   if (index === 0) {
     this._head = (this._head + count + len) & this._capacityMask;
     for (k = count - 1; k > 0; k--) {
-      this$1._list[i = (i + 1 + len) & this$1._capacityMask] = void 0;
+      this._list[i = (i + 1 + len) & this._capacityMask] = void 0;
     }
     return removed;
   }
   if (index < size / 2) {
     this._head = (this._head + index + count + len) & this._capacityMask;
     for (k = index; k > 0; k--) {
-      this$1.unshift(this$1._list[i = (i - 1 + len) & this$1._capacityMask]);
+      this.unshift(this._list[i = (i - 1 + len) & this._capacityMask]);
     }
     i = (this._head - 1 + len) & this._capacityMask;
     while (del_count > 0) {
-      this$1._list[i = (i - 1 + len) & this$1._capacityMask] = void 0;
+      this._list[i = (i - 1 + len) & this._capacityMask] = void 0;
       del_count--;
     }
   } else {
     this._tail = i;
     i = (i + count + len) & this._capacityMask;
     for (k = size - (count + index); k > 0; k--) {
-      this$1.push(this$1._list[i++]);
+      this.push(this._list[i++]);
     }
     i = this._tail;
     while (del_count > 0) {
-      this$1._list[i = (i + 1 + len) & this$1._capacityMask] = void 0;
+      this._list[i = (i + 1 + len) & this._capacityMask] = void 0;
       del_count--;
     }
   }
-  if (this._head < 2 && this._tail > 10000 && this._tail <= len >>> 2) { this._shrinkArray(); }
+  if (this._head < 2 && this._tail > 10000 && this._tail <= len >>> 2) this._shrinkArray();
   return removed;
 };
 
@@ -2777,19 +3094,16 @@ Denque.prototype.remove = function remove(index, count) {
  * @returns {array}
  */
 Denque.prototype.splice = function splice(index, count) {
-  var arguments$1 = arguments;
-  var this$1 = this;
-
   var i = index;
   var size = this.size();
   // expect a number or return undefined
   if ((i !== (i | 0))) {
     return void 0;
   }
-  if (this._head === this._tail) { return void 0; }
-  if (i > size || i < -size) { return void 0; }
-  if (i === size && count != 0) { return void 0; }
-  if (i < 0) { i += size; }
+  if (this._head === this._tail) return void 0;
+  if (i > size || i < -size) return void 0;
+  if (i === size && count != 0) return void 0;
+  if (i < 0) i += size;
   if (arguments.length > 2) {
     var k;
     var temp;
@@ -2800,7 +3114,7 @@ Denque.prototype.splice = function splice(index, count) {
     if (i < size / 2) {
       temp = new Array(i);
       for (k = 0; k < i; k++) {
-        temp[k] = this$1._list[(this$1._head + k) & this$1._capacityMask];
+        temp[k] = this._list[(this._head + k) & this._capacityMask];
       }
       if (count === 0) {
         removed = [];
@@ -2812,16 +3126,16 @@ Denque.prototype.splice = function splice(index, count) {
         this._head = (this._head + i + len) & this._capacityMask;
       }
       while (arg_len > arguments_index) {
-        this$1.unshift(arguments$1[--arg_len]);
+        this.unshift(arguments[--arg_len]);
       }
       for (k = i; k > 0; k--) {
-        this$1.unshift(temp[k - 1]);
+        this.unshift(temp[k - 1]);
       }
     } else {
       temp = new Array(size - (i + count));
       var leng = temp.length;
       for (k = 0; k < leng; k++) {
-        temp[k] = this$1._list[(this$1._head + i + count + k) & this$1._capacityMask];
+        temp[k] = this._list[(this._head + i + count + k) & this._capacityMask];
       }
       if (count === 0) {
         removed = [];
@@ -2833,10 +3147,10 @@ Denque.prototype.splice = function splice(index, count) {
         this._tail = (this._tail - leng + len) & this._capacityMask;
       }
       while (arguments_index < arg_len) {
-        this$1.push(arguments$1[arguments_index++]);
+        this.push(arguments[arguments_index++]);
       }
       for (k = 0; k < leng; k++) {
-        this$1.push(temp[k]);
+        this.push(temp[k]);
       }
     }
     return removed;
@@ -2882,9 +3196,7 @@ Denque.prototype.toArray = function toArray() {
  * @private
  */
 Denque.prototype._fromArray = function _fromArray(array) {
-  var this$1 = this;
-
-  for (var i = 0; i < array.length; i++) { this$1.push(array[i]); }
+  for (var i = 0; i < array.length; i++) this.push(array[i]);
 };
 
 /**
@@ -2899,10 +3211,10 @@ Denque.prototype._copyArray = function _copyArray(fullCopy) {
   var len = list.length;
   var i;
   if (fullCopy || this._head > this._tail) {
-    for (i = this._head; i < len; i++) { newArray.push(list[i]); }
-    for (i = 0; i < this._tail; i++) { newArray.push(list[i]); }
+    for (i = this._head; i < len; i++) newArray.push(list[i]);
+    for (i = 0; i < this._tail; i++) newArray.push(list[i]);
   } else {
-    for (i = this._head; i < this._tail; i++) { newArray.push(list[i]); }
+    for (i = this._head; i < this._tail; i++) newArray.push(list[i]);
   }
   return newArray;
 };
@@ -2977,7 +3289,7 @@ function interpreter(rej, res){
       future = future._spawn;
     }
 
-    if(async) { drain(); }
+    if(async) drain();
   }
 
   //This function serves as a rejection handler for our current future.
@@ -3007,7 +3319,7 @@ function interpreter(rej, res){
 
     if(async && action !== terminator){
       action.cancel();
-      while((it = queue.shift()) && it !== terminator) { it.cancel(); }
+      while((it = queue.shift()) && it !== terminator) it.cancel();
     }
 
     settle(m);
@@ -3021,7 +3333,7 @@ function interpreter(rej, res){
   function warmupActions(){
     while(it = cold.pop()){
       it = it.run(early);
-      if(settled) { return; }
+      if(settled) return;
       queue.unshift(it);
     }
 
@@ -3049,11 +3361,11 @@ function interpreter(rej, res){
       settled = false;
       if(action = cold.shift()){
         cancel = future._fork(rejected, resolved);
-        if(!settled) { warmupActions(); }
+        if(!settled) warmupActions();
       }else if(action = queue.shift()){
         cancel = future._fork(rejected, resolved);
-      }else { break; }
-      if(settled) { continue; }
+      }else break;
+      if(settled) continue;
       async = true;
       return;
     }
@@ -3069,20 +3381,23 @@ function interpreter(rej, res){
   return function Sequence$cancel(){
     cancel();
     action && action.cancel();
-    while(it = queue.shift()) { it.cancel(); }
+    while(it = queue.shift()) it.cancel();
   };
 
 }
 
 var empty = ({isEmpty: true, size: 0, head: null, tail: null});
-var cons = function (head, tail) { return ({isEmpty: false, size: tail.size + 1, head: head, tail: tail}); };
 
-var throwRejection = function (x) { return error(
-  ("Future#value was called on a rejected Future\n  Actual: Future.reject(" + (show(x)) + ")")
-); };
+function cons(head, tail){
+  return {isEmpty: false, size: tail.size + 1, head: head, tail: tail};
+}
+
+function throwRejection(x){
+  error('Future#value was called on a rejected Future\n  Actual: Future.reject(' + show(x) + ')');
+}
 
 function Future$1(computation){
-  if(!isFunction(computation)) { invalidArgument('Future', 0, 'be a Function', computation); }
+  if(!isFunction(computation)) invalidArgument('Future', 0, 'be a Function', computation);
   return new Computation(computation);
 }
 
@@ -3091,114 +3406,115 @@ function isFuture(x){
 }
 
 Future$1.prototype.ap = function Future$ap(other){
-  if(!isFuture(this)) { invalidContext('Future#ap', this); }
-  if(!isFuture(other)) { invalidFuture('Future#ap', 0, other); }
+  if(!isFuture(this)) invalidContext('Future#ap', this);
+  if(!isFuture(other)) invalidFuture('Future#ap', 0, other);
   return this._ap(other);
 };
 
 Future$1.prototype.map = function Future$map(mapper){
-  if(!isFuture(this)) { invalidContext('Future#map', this); }
-  if(!isFunction(mapper)) { invalidArgument('Future#map', 0, 'to be a Function', mapper); }
+  if(!isFuture(this)) invalidContext('Future#map', this);
+  if(!isFunction(mapper)) invalidArgument('Future#map', 0, 'to be a Function', mapper);
   return this._map(mapper);
 };
 
 Future$1.prototype.bimap = function Future$bimap(lmapper, rmapper){
-  if(!isFuture(this)) { invalidContext('Future#bimap', this); }
-  if(!isFunction(lmapper)) { invalidArgument('Future#bimap', 0, 'to be a Function', lmapper); }
-  if(!isFunction(rmapper)) { invalidArgument('Future#bimap', 1, 'to be a Function', rmapper); }
+  if(!isFuture(this)) invalidContext('Future#bimap', this);
+  if(!isFunction(lmapper)) invalidArgument('Future#bimap', 0, 'to be a Function', lmapper);
+  if(!isFunction(rmapper)) invalidArgument('Future#bimap', 1, 'to be a Function', rmapper);
   return this._bimap(lmapper, rmapper);
 };
 
 Future$1.prototype.chain = function Future$chain(mapper){
-  if(!isFuture(this)) { invalidContext('Future#chain', this); }
-  if(!isFunction(mapper)) { invalidArgument('Future#chain', 0, 'to be a Function', mapper); }
+  if(!isFuture(this)) invalidContext('Future#chain', this);
+  if(!isFunction(mapper)) invalidArgument('Future#chain', 0, 'to be a Function', mapper);
   return this._chain(mapper);
 };
 
 Future$1.prototype.mapRej = function Future$mapRej(mapper){
-  if(!isFuture(this)) { invalidContext('Future#mapRej', this); }
-  if(!isFunction(mapper)) { invalidArgument('Future#mapRej', 0, 'to be a Function', mapper); }
+  if(!isFuture(this)) invalidContext('Future#mapRej', this);
+  if(!isFunction(mapper)) invalidArgument('Future#mapRej', 0, 'to be a Function', mapper);
   return this._mapRej(mapper);
 };
 
 Future$1.prototype.chainRej = function Future$chainRej(mapper){
-  if(!isFuture(this)) { invalidContext('Future#chainRej', this); }
-  if(!isFunction(mapper)) { invalidArgument('Future#chainRej', 0, 'to be a Function', mapper); }
+  if(!isFuture(this)) invalidContext('Future#chainRej', this);
+  if(!isFunction(mapper)) invalidArgument('Future#chainRej', 0, 'to be a Function', mapper);
   return this._chainRej(mapper);
 };
 
 Future$1.prototype.race = function Future$race(other){
-  if(!isFuture(this)) { invalidContext('Future#race', this); }
-  if(!isFuture(other)) { invalidFuture('Future#race', 0, other); }
+  if(!isFuture(this)) invalidContext('Future#race', this);
+  if(!isFuture(other)) invalidFuture('Future#race', 0, other);
   return this._race(other);
 };
 
 Future$1.prototype.both = function Future$both(other){
-  if(!isFuture(this)) { invalidContext('Future#both', this); }
-  if(!isFuture(other)) { invalidFuture('Future#both', 0, other); }
+  if(!isFuture(this)) invalidContext('Future#both', this);
+  if(!isFuture(other)) invalidFuture('Future#both', 0, other);
   return this._both(other);
 };
 
 Future$1.prototype.and = function Future$and(other){
-  if(!isFuture(this)) { invalidContext('Future#and', this); }
-  if(!isFuture(other)) { invalidFuture('Future#and', 0, other); }
+  if(!isFuture(this)) invalidContext('Future#and', this);
+  if(!isFuture(other)) invalidFuture('Future#and', 0, other);
   return this._and(other);
 };
 
 Future$1.prototype.or = function Future$or(other){
-  if(!isFuture(this)) { invalidContext('Future#or', this); }
-  if(!isFuture(other)) { invalidFuture('Future#or', 0, other); }
+  if(!isFuture(this)) invalidContext('Future#or', this);
+  if(!isFuture(other)) invalidFuture('Future#or', 0, other);
   return this._or(other);
 };
 
 Future$1.prototype.swap = function Future$swap(){
-  if(!isFuture(this)) { invalidContext('Future#ap', this); }
+  if(!isFuture(this)) invalidContext('Future#ap', this);
   return this._swap();
 };
 
 Future$1.prototype.fold = function Future$fold(lmapper, rmapper){
-  if(!isFuture(this)) { invalidContext('Future#ap', this); }
-  if(!isFunction(lmapper)) { invalidArgument('Future#fold', 0, 'to be a Function', lmapper); }
-  if(!isFunction(rmapper)) { invalidArgument('Future#fold', 1, 'to be a Function', rmapper); }
+  if(!isFuture(this)) invalidContext('Future#ap', this);
+  if(!isFunction(lmapper)) invalidArgument('Future#fold', 0, 'to be a Function', lmapper);
+  if(!isFunction(rmapper)) invalidArgument('Future#fold', 1, 'to be a Function', rmapper);
   return this._fold(lmapper, rmapper);
 };
 
 Future$1.prototype.finally = function Future$finally(other){
-  if(!isFuture(this)) { invalidContext('Future#finally', this); }
-  if(!isFuture(other)) { invalidFuture('Future#finally', 0, other); }
+  if(!isFuture(this)) invalidContext('Future#finally', this);
+  if(!isFuture(other)) invalidFuture('Future#finally', 0, other);
   return this._finally(other);
 };
 
 Future$1.prototype.lastly = function Future$lastly(other){
-  if(!isFuture(this)) { invalidContext('Future#lastly', this); }
-  if(!isFuture(other)) { invalidFuture('Future#lastly', 0, other); }
+  if(!isFuture(this)) invalidContext('Future#lastly', this);
+  if(!isFuture(other)) invalidFuture('Future#lastly', 0, other);
   return this._finally(other);
 };
 
 Future$1.prototype.fork = function Future$fork(rej, res){
-  if(!isFuture(this)) { invalidContext('Future#fork', this); }
-  if(!isFunction(rej)) { invalidArgument('Future#fork', 0, 'to be a Function', rej); }
-  if(!isFunction(res)) { invalidArgument('Future#fork', 0, 'to be a Function', res); }
+  if(!isFuture(this)) invalidContext('Future#fork', this);
+  if(!isFunction(rej)) invalidArgument('Future#fork', 0, 'to be a Function', rej);
+  if(!isFunction(res)) invalidArgument('Future#fork', 0, 'to be a Function', res);
   return this._fork(rej, res);
 };
 
 Future$1.prototype.value = function Future$value(res){
-  if(!isFuture(this)) { invalidContext('Future#value', this); }
-  if(!isFunction(res)) { invalidArgument('Future#value', 0, 'to be a Function', res); }
+  if(!isFuture(this)) invalidContext('Future#value', this);
+  if(!isFunction(res)) invalidArgument('Future#value', 0, 'to be a Function', res);
   return this._fork(throwRejection, res);
 };
 
 Future$1.prototype.done = function Future$done(callback){
-  if(!isFuture(this)) { invalidContext('Future#done', this); }
-  if(!isFunction(callback)) { invalidArgument('Future#done', 0, 'to be a Function', callback); }
+  if(!isFuture(this)) invalidContext('Future#done', this);
+  if(!isFunction(callback)) invalidArgument('Future#done', 0, 'to be a Function', callback);
   return this._fork(function Future$done$rej(x){ callback(x); },
                     function Future$done$res(x){ callback(null, x); });
 };
 
 Future$1.prototype.promise = function Future$promise(){
-  var this$1 = this;
-
-  return new Promise(function (res, rej) { return this$1._fork(rej, res); });
+  var _this = this;
+  return new Promise(function Future$promise$computation(res, rej){
+    _this._fork(rej, res);
+  });
 };
 
 Future$1.prototype.isRejected = function Future$isRejected(){
@@ -3276,10 +3592,10 @@ Core._finally = function Core$finally(other){
 };
 
 function check$fork(f, c){
-  if(!(f === undefined || (isFunction(f) && f.length === 0))) { typeError(
+  if(!(f === undefined || (isFunction(f) && f.length === 0))) typeError(
     'Future expected its computation to return a nullary function or void'
-    + "\n  Actual: " + (show(f)) + "\n  From calling: " + (showf(c))
-  ); }
+    + '\n  Actual: ' + show(f) + '\n  From calling: ' + showf(c)
+  );
 }
 
 function Computation(computation){
@@ -3310,7 +3626,7 @@ Computation.prototype._fork = function Computation$_fork(rej, res){
 };
 
 Computation.prototype.toString = function Computation$toString(){
-  return ("Future(" + (showf(this._computation)) + ")");
+  return 'Future(' + showf(this._computation) + ')';
 };
 
 function Rejected(value){
@@ -3352,10 +3668,12 @@ Rejected.prototype.extractLeft = function Rejected$extractLeft(){
 };
 
 Rejected.prototype.toString = function Rejected$toString(){
-  return ("Future.reject(" + (show(this._value)) + ")");
+  return 'Future.reject(' + show(this._value) + ')';
 };
 
-var reject = function (x) { return new Rejected(x); };
+function reject(x){
+  return new Rejected(x);
+}
 
 function Resolved(value){
   this._value = value;
@@ -3372,9 +3690,10 @@ Resolved.prototype._and = function Resolved$and(other){
 };
 
 Resolved.prototype._both = function Resolved$both(other){
-  var this$1 = this;
-
-  return other._map(function (x) { return [this$1._value, x]; });
+  var left = this._value;
+  return other._map(function Resolved$both$mapper(right){
+    return [left, right];
+  });
 };
 
 Resolved.prototype._swap = function Resolved$swap(){
@@ -3382,9 +3701,10 @@ Resolved.prototype._swap = function Resolved$swap(){
 };
 
 Resolved.prototype._finally = function Resolved$finally(other){
-  var this$1 = this;
-
-  return other._map(function () { return this$1._value; });
+  var value = this._value;
+  return other._map(function Resolved$finally$mapper(){
+    return value;
+  });
 };
 
 Resolved.prototype._fork = function _fork(rej, res){
@@ -3401,10 +3721,12 @@ Resolved.prototype.extractRight = function Resolved$extractRight(){
 };
 
 Resolved.prototype.toString = function Resolved$toString(){
-  return ("Future.of(" + (show(this._value)) + ")");
+  return 'Future.of(' + show(this._value) + ')';
 };
 
-var of = function (x) { return new Resolved(x); };
+function of(x){
+  return new Resolved(x);
+}
 
 function Never(){
   this._isNever = true;
@@ -3437,247 +3759,268 @@ Never.prototype.toString = function Never$toString(){
 };
 
 var never = new Never();
-var isNever = function (x) { return isFuture(x) && x._isNever === true; };
+
+function isNever(x){
+  return isFuture(x) && x._isNever === true;
+}
 
 function Eager(future){
-  var this$1 = this;
-
-  this.rej = noop;
-  this.res = noop;
-  this.rejected = false;
-  this.resolved = false;
-  this.value = null;
-  this.cancel = future._fork(function (x) {
-    this$1.value = x;
-    this$1.rejected = true;
-    this$1.cancel = noop;
-    this$1.rej(x);
-  }, function (x) {
-    this$1.value = x;
-    this$1.resolved = true;
-    this$1.cancel = noop;
-    this$1.res(x);
+  var _this = this;
+  _this.rej = noop;
+  _this.res = noop;
+  _this.rejected = false;
+  _this.resolved = false;
+  _this.value = null;
+  _this.cancel = future._fork(function Eager$reject(x){
+    _this.value = x;
+    _this.rejected = true;
+    _this.cancel = noop;
+    _this.rej(x);
+  }, function Eager$resolve(x){
+    _this.value = x;
+    _this.resolved = true;
+    _this.cancel = noop;
+    _this.res(x);
   });
 }
 
 Eager.prototype = Object.create(Core);
 
 Eager.prototype._fork = function Eager$_fork(rej, res){
-  if(this.rejected) { rej(this.value); }
-  else if(this.resolved) { res(this.value); }
+  if(this.rejected) rej(this.value);
+  else if(this.resolved) res(this.value);
   else{
     this.rej = rej;
     this.res = res;
   }
-
   return this.cancel;
 };
 
-var Action = function Action () {};
+function check$ap(f){
+  return isFunction(f) ? f : typeError(
+    'Future#ap expects its first argument to be a Future of a Function'
+    + '\n  Actual: Future.of(' + show(f) + ')'
+  );
+}
 
-Action.prototype.rejected = function rejected (x){ this.cancel(); return new Rejected(x) };
-Action.prototype.resolved = function resolved (x){ this.cancel(); return new Resolved(x) };
-Action.prototype.run = function run (){ return this };
-Action.prototype.cancel = function cancel (){};
-var check$ap = function (f) { return isFunction(f) ? f : typeError(
-  'Future#ap expects its first argument to be a Future of a Function'
-  + "\n  Actual: Future.of(" + (show(f)) + ")"
-); };
-var ApAction = (function (Action) {
-  function ApAction(other){ Action.call(this); this.other = other; }
+function check$chain(m, f, x){
+  return isFuture(m) ? m : invalidFuture(
+    'Future#chain',
+    'the function it\'s given to return a Future',
+    m,
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
+  );
+}
 
-  if ( Action ) ApAction.__proto__ = Action;
-  ApAction.prototype = Object.create( Action && Action.prototype );
-  ApAction.prototype.constructor = ApAction;
-  ApAction.prototype.resolved = function resolved (f){ check$ap(f); return this.other._map(function (x) { return f(x); }) };
-  ApAction.prototype.toString = function toString (){ return ("ap(" + (this.other.toString()) + ")") };
+function check$chainRej(m, f, x){
+  return isFuture(m) ? m : invalidFuture(
+    'Future#chainRej',
+    'the function it\'s given to return a Future',
+    m,
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
+  );
+}
 
-  return ApAction;
-}(Action));
-var MapAction = (function (Action) {
-  function MapAction(mapper){ Action.call(this); this.mapper = mapper; }
+var Action = {
+  rejected: function Action$rejected(x){ this.cancel(); return new Rejected(x) },
+  resolved: function Action$resolved(x){ this.cancel(); return new Resolved(x) },
+  run: function Action$run(){ return this },
+  cancel: function Action$cancel(){}
+};
 
-  if ( Action ) MapAction.__proto__ = Action;
-  MapAction.prototype = Object.create( Action && Action.prototype );
-  MapAction.prototype.constructor = MapAction;
-  MapAction.prototype.resolved = function resolved (x){ return new Resolved(this.mapper(x)) };
-  MapAction.prototype.toString = function toString (){ return ("map(" + (showf(this.mapper)) + ")") };
+function ApAction(other){ this.other = other; }
+ApAction.prototype = Object.create(Action);
 
-  return MapAction;
-}(Action));
-var BimapAction = (function (Action) {
-  function BimapAction(lmapper, rmapper){ Action.call(this); this.lmapper = lmapper; this.rmapper = rmapper; }
+ApAction.prototype.resolved = function ApAction$resolved(f){
+  check$ap(f);
+  return this.other._map(function ApAction$resolved$mapper(x){ return f(x) });
+};
 
-  if ( Action ) BimapAction.__proto__ = Action;
-  BimapAction.prototype = Object.create( Action && Action.prototype );
-  BimapAction.prototype.constructor = BimapAction;
-  BimapAction.prototype.rejected = function rejected (x){ return new Rejected(this.lmapper(x)) };
-  BimapAction.prototype.resolved = function resolved (x){ return new Resolved(this.rmapper(x)) };
-  BimapAction.prototype.toString = function toString (){ return ("bimap(" + (showf(this.lmapper)) + ", " + (showf(this.rmapper)) + ")") };
+ApAction.prototype.toString = function ApAction$toString(){
+  return 'ap(' + this.other.toString() + ')';
+};
 
-  return BimapAction;
-}(Action));
-var check$chain = function (m, f, x) { return isFuture(m) ? m : invalidFuture(
-  'Future#chain',
-  'the function it\'s given to return a Future',
-  m,
-  ("\n  From calling: " + (showf(f)) + "\n  With: " + (show(x)))
-); };
-var ChainAction = (function (Action) {
-  function ChainAction(mapper){ Action.call(this); this.mapper = mapper; }
+function MapAction(mapper){ this.mapper = mapper; }
+MapAction.prototype = Object.create(Action);
 
-  if ( Action ) ChainAction.__proto__ = Action;
-  ChainAction.prototype = Object.create( Action && Action.prototype );
-  ChainAction.prototype.constructor = ChainAction;
-  ChainAction.prototype.resolved = function resolved (x){ return check$chain(this.mapper(x), this.mapper, x) };
-  ChainAction.prototype.toString = function toString (){ return ("chain(" + (showf(this.mapper)) + ")") };
+MapAction.prototype.resolved = function MapAction$resolved(x){
+  return new Resolved(this.mapper(x));
+};
 
-  return ChainAction;
-}(Action));
-var MapRejAction = (function (Action) {
-  function MapRejAction(mapper){ Action.call(this); this.mapper = mapper; }
+MapAction.prototype.toString = function MapAction$toString(){
+  return 'map(' + showf(this.mapper) + ')';
+};
 
-  if ( Action ) MapRejAction.__proto__ = Action;
-  MapRejAction.prototype = Object.create( Action && Action.prototype );
-  MapRejAction.prototype.constructor = MapRejAction;
-  MapRejAction.prototype.rejected = function rejected (x){ return new Rejected(this.mapper(x)) };
-  MapRejAction.prototype.toString = function toString (){ return ("mapRej(" + (showf(this.mapper)) + ")") };
+function BimapAction(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper; }
+BimapAction.prototype = Object.create(Action);
 
-  return MapRejAction;
-}(Action));
-var check$chainRej = function (m, f, x) { return isFuture(m) ? m : invalidFuture(
-  'Future#chainRej',
-  'the function it\'s given to return a Future',
-  m,
-  ("\n  From calling: " + (showf(f)) + "\n  With: " + (show(x)))
-); };
-var ChainRejAction = (function (Action) {
-  function ChainRejAction(mapper){ Action.call(this); this.mapper = mapper; }
+BimapAction.prototype.rejected = function BimapAction$rejected(x){
+  return new Rejected(this.lmapper(x));
+};
 
-  if ( Action ) ChainRejAction.__proto__ = Action;
-  ChainRejAction.prototype = Object.create( Action && Action.prototype );
-  ChainRejAction.prototype.constructor = ChainRejAction;
-  ChainRejAction.prototype.rejected = function rejected (x){ return check$chainRej(this.mapper(x), this.mapper, x) };
-  ChainRejAction.prototype.toString = function toString (){ return ("chainRej(" + (showf(this.mapper)) + ")") };
+BimapAction.prototype.resolved = function BimapAction$resolved(x){
+  return new Resolved(this.rmapper(x));
+};
 
-  return ChainRejAction;
-}(Action));
-var SwapAction = (function (Action) {
-  function SwapAction(){ Action.call(this); return SwapAction.instance || (SwapAction.instance = this) }
+BimapAction.prototype.toString = function BimapAction$toString(){
+  return 'bimap(' + showf(this.lmapper) + ', ' + showf(this.rmapper) + ')';
+};
 
-  if ( Action ) SwapAction.__proto__ = Action;
-  SwapAction.prototype = Object.create( Action && Action.prototype );
-  SwapAction.prototype.constructor = SwapAction;
-  SwapAction.prototype.rejected = function rejected (x){ return new Resolved(x) };
-  SwapAction.prototype.resolved = function resolved (x){ return new Rejected(x) };
-  SwapAction.prototype.toString = function toString (){ return 'swap()' };
+function ChainAction(mapper){ this.mapper = mapper; }
+ChainAction.prototype = Object.create(Action);
 
-  return SwapAction;
-}(Action));
-var FoldAction = (function (Action) {
-  function FoldAction(lmapper, rmapper){ Action.call(this); this.lmapper = lmapper; this.rmapper = rmapper; }
+ChainAction.prototype.resolved = function ChainAction$resolved(x){
+  return check$chain(this.mapper(x), this.mapper, x);
+};
 
-  if ( Action ) FoldAction.__proto__ = Action;
-  FoldAction.prototype = Object.create( Action && Action.prototype );
-  FoldAction.prototype.constructor = FoldAction;
-  FoldAction.prototype.rejected = function rejected (x){ return new Resolved(this.lmapper(x)) };
-  FoldAction.prototype.resolved = function resolved (x){ return new Resolved(this.rmapper(x)) };
-  FoldAction.prototype.toString = function toString (){ return ("fold(" + (showf(this.lmapper)) + ", " + (showf(this.rmapper)) + ")") };
+ChainAction.prototype.toString = function ChainAction$toString(){
+  return 'chain(' + showf(this.mapper) + ')';
+};
 
-  return FoldAction;
-}(Action));
-var FinallyAction = (function (Action) {
-  function FinallyAction(other){ Action.call(this); this.other = other; }
+function MapRejAction(mapper){ this.mapper = mapper; }
+MapRejAction.prototype = Object.create(Action);
 
-  if ( Action ) FinallyAction.__proto__ = Action;
-  FinallyAction.prototype = Object.create( Action && Action.prototype );
-  FinallyAction.prototype.constructor = FinallyAction;
-  FinallyAction.prototype.cancel = function cancel (){ this.other._fork(noop, noop)(); };
-  FinallyAction.prototype.rejected = function rejected (x){ return this.other._and(new Rejected(x)) };
-  FinallyAction.prototype.resolved = function resolved (x){ return this.other._map(function () { return x; }) };
-  FinallyAction.prototype.toString = function toString (){ return ("finally(" + (this.other.toString()) + ")") };
+MapRejAction.prototype.rejected = function MapRejAction$rejected(x){
+  return new Rejected(this.mapper(x));
+};
 
-  return FinallyAction;
-}(Action));
-var AndAction = (function (Action) {
-  function AndAction(other){ Action.call(this); this.other = other; }
+MapRejAction.prototype.toString = function MapRejAction$toString(){
+  return 'mapRej(' + showf(this.mapper) + ')';
+};
 
-  if ( Action ) AndAction.__proto__ = Action;
-  AndAction.prototype = Object.create( Action && Action.prototype );
-  AndAction.prototype.constructor = AndAction;
-  AndAction.prototype.resolved = function resolved (){ return this.other };
-  AndAction.prototype.toString = function toString (){ return ("and(" + (this.other.toString()) + ")") };
+function ChainRejAction(mapper){ this.mapper = mapper; }
+ChainRejAction.prototype = Object.create(Action);
 
-  return AndAction;
-}(Action));
-var OrAction = (function (Action) {
-  function OrAction(other){ Action.call(this); this.other = other; }
+ChainRejAction.prototype.rejected = function ChainRejAction$rejected(x){
+  return check$chainRej(this.mapper(x), this.mapper, x);
+};
 
-  if ( Action ) OrAction.__proto__ = Action;
-  OrAction.prototype = Object.create( Action && Action.prototype );
-  OrAction.prototype.constructor = OrAction;
-  OrAction.prototype.rejected = function rejected (){ return this.other };
-  OrAction.prototype.toString = function toString (){ return ("or(" + (this.other.toString()) + ")") };
+ChainRejAction.prototype.toString = function ChainRejAction$toString(){
+  return 'chainRej(' + showf(this.mapper) + ')';
+};
 
-  return OrAction;
-}(Action));
-var RaceAction = (function (Action) {
-  function RaceAction(other){ Action.call(this); this.other = other; }
+function SwapAction(){}
+SwapAction.prototype = Object.create(Action);
 
-  if ( Action ) RaceAction.__proto__ = Action;
-  RaceAction.prototype = Object.create( Action && Action.prototype );
-  RaceAction.prototype.constructor = RaceAction;
-  RaceAction.prototype.run = function run (early){ return new RaceActionState(early, new Eager(this.other)) };
-  RaceAction.prototype.toString = function toString (){ return ("race(" + (this.other.toString()) + ")") };
+SwapAction.prototype.rejected = function SwapAction$rejected(x){
+  return new Resolved(x);
+};
 
-  return RaceAction;
-}(Action));
-var RaceActionState = (function (RaceAction) {
-  function RaceActionState(early, other){
-    var this$1 = this;
+SwapAction.prototype.resolved = function SwapAction$resolved(x){
+  return new Rejected(x);
+};
 
-    RaceAction.call(this, other);
-    this.cancel = other._fork(function (x) { return early(new Rejected(x), this$1); }, function (x) { return early(new Resolved(x), this$1); });
-  }
+SwapAction.prototype.toString = function SwapAction$toString(){
+  return 'swap()';
+};
 
-  if ( RaceAction ) RaceActionState.__proto__ = RaceAction;
-  RaceActionState.prototype = Object.create( RaceAction && RaceAction.prototype );
-  RaceActionState.prototype.constructor = RaceActionState;
+function FoldAction(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper; }
+FoldAction.prototype = Object.create(Action);
 
-  return RaceActionState;
-}(RaceAction));
-var BothAction = (function (Action) {
-  function BothAction(other){ Action.call(this); this.other = other; }
+FoldAction.prototype.rejected = function FoldAction$rejected(x){
+  return new Resolved(this.lmapper(x));
+};
 
-  if ( Action ) BothAction.__proto__ = Action;
-  BothAction.prototype = Object.create( Action && Action.prototype );
-  BothAction.prototype.constructor = BothAction;
-  BothAction.prototype.run = function run (early){ return new BothActionState(early, new Eager(this.other)) };
-  BothAction.prototype.resolved = function resolved (x){ return this.other._map(function (y) { return [x, y]; }) };
-  BothAction.prototype.toString = function toString (){ return ("both(" + (this.other.toString()) + ")") };
+FoldAction.prototype.resolved = function FoldAction$resolved(x){
+  return new Resolved(this.rmapper(x));
+};
 
-  return BothAction;
-}(Action));
-var BothActionState = (function (BothAction) {
-  function BothActionState(early, other){
-    var this$1 = this;
+FoldAction.prototype.toString = function FoldAction$toString(){
+  return 'fold(' + showf(this.lmapper) + ', ' + showf(this.rmapper) + ')';
+};
 
-    BothAction.call(this, other);
-    this.cancel = this.other.fork(function (x) { return early(new Rejected(x), this$1); }, noop);
-  }
+function FinallyAction(other){ this.other = other; }
+FinallyAction.prototype = Object.create(Action);
 
-  if ( BothAction ) BothActionState.__proto__ = BothAction;
-  BothActionState.prototype = Object.create( BothAction && BothAction.prototype );
-  BothActionState.prototype.constructor = BothActionState;
+FinallyAction.prototype.rejected = function FinallyAction$rejected(x){
+  return this.other._and(new Rejected(x));
+};
 
-  return BothActionState;
-}(BothAction));
+FinallyAction.prototype.resolved = function FinallyAction$resolved(x){
+  return this.other._map(function FoldAction$resolved$mapper(){ return x });
+};
+
+FinallyAction.prototype.cancel = function FinallyAction$cancel(){
+  this.other._fork(noop, noop)();
+};
+
+FinallyAction.prototype.toString = function FinallyAction$toString(){
+  return 'finally(' + this.other.toString() + ')';
+};
+
+function AndAction(other){ this.other = other; }
+AndAction.prototype = Object.create(Action);
+
+AndAction.prototype.resolved = function AndAction$resolved(){
+  return this.other;
+};
+
+AndAction.prototype.toString = function AndAction$toString(){
+  return 'and(' + this.other.toString() + ')';
+};
+
+function OrAction(other){ this.other = other; }
+OrAction.prototype = Object.create(Action);
+
+OrAction.prototype.rejected = function OrAction$rejected(){
+  return this.other;
+};
+
+OrAction.prototype.toString = function OrAction$toString(){
+  return 'or(' + this.other.toString() + ')';
+};
+
+function RaceAction(other){ this.other = other; }
+RaceAction.prototype = Object.create(Action);
+
+RaceAction.prototype.run = function RaceAction$run(early){
+  return new RaceActionState(early, new Eager(this.other));
+};
+
+RaceAction.prototype.toString = function RaceAction$toString(){
+  return 'race(' + this.other.toString() + ')';
+};
+
+function BothAction(other){ this.other = other; }
+BothAction.prototype = Object.create(Action);
+
+BothAction.prototype.resolved = function BothAction$resolved(x){
+  return this.other._map(function BothAction$resolved$mapper(y){ return [x, y] });
+};
+
+BothAction.prototype.run = function BothAction$run(early){
+  return new BothActionState(early, new Eager(this.other));
+};
+
+BothAction.prototype.toString = function BothAction$toString(){
+  return 'both(' + this.other.toString() + ')';
+};
+
+function RaceActionState(early, other){
+  var _this = this;
+  _this.other = other;
+  _this.cancel = other._fork(
+    function RaceActionState$rej(x){ early(new Rejected(x), _this); },
+    function RaceActionState$res(x){ early(new Resolved(x), _this); }
+  );
+}
+
+RaceActionState.prototype = Object.create(RaceAction.prototype);
+
+function BothActionState(early, other){
+  var _this = this;
+  _this.other = other;
+  _this.cancel = other._fork(
+    function BothActionState$rej(x){ early(new Rejected(x), _this); },
+    noop
+  );
+}
+
+BothActionState.prototype = Object.create(BothAction.prototype);
 
 function Sequence(spawn, actions){
-  if ( actions === void 0 ) actions = empty;
-
   this._spawn = spawn;
-  this._actions = actions;
+  this._actions = actions || empty;
 }
 
 Sequence.prototype = Object.create(Future$1.prototype);
@@ -3744,16 +4087,24 @@ Sequence.prototype.toString = function Sequence$toString(){
   var str = '', tail = this._actions;
 
   while(!tail.isEmpty){
-    str = "." + (tail.head.toString()) + str;
+    str = '.' + tail.head.toString() + str;
     tail = tail.tail;
   }
 
-  return ("" + (this._spawn.toString()) + str);
+  return this._spawn.toString() + str;
 };
 
-var Next = function (x) { return ({done: false, value: x}); };
-var Done = function (x) { return ({done: true, value: x}); };
-var isIteration = function (x) { return isObject(x) && isBoolean(x.done); };
+function Next(x){
+  return {done: false, value: x};
+}
+
+function Done(x){
+  return {done: true, value: x};
+}
+
+function isIteration(x){
+  return isObject(x) && isBoolean(x.done);
+}
 
 var Undetermined = 0;
 var Synchronous = 1;
@@ -3768,9 +4119,8 @@ ChainRec.prototype = Object.create(Core);
 
 ChainRec.prototype._fork = function ChainRec$_fork(rej, res){
 
-  var ref = this;
-  var _step = ref._step;
-  var _init = ref._init;
+  var _step = this._step;
+  var _init = this._init;
   var timing = Undetermined, cancel = noop, state = Next(_init);
 
   function resolved(it){
@@ -3800,7 +4150,7 @@ ChainRec.prototype._fork = function ChainRec$_fork(rej, res){
 };
 
 ChainRec.prototype.toString = function ChainRec$toString(){
-  return ("Future.chainRec(" + (showf(this._step)) + ", " + (show(this._init)) + ")");
+  return 'Future.chainRec(' + showf(this._step) + ', ' + show(this._init) + ')';
 };
 
 function chainRec(step, init){
@@ -3808,247 +4158,221 @@ function chainRec(step, init){
 }
 
 function ap$mval(mval, mfunc){
-  if(!sanctuaryTypeClasses.Apply.test(mfunc)) { invalidArgument('Future.ap', 1, 'be an Apply', mfunc); }
+  if(!sanctuaryTypeClasses.Apply.test(mfunc)) invalidArgument('Future.ap', 1, 'be an Apply', mfunc);
   return sanctuaryTypeClasses.ap(mval, mfunc);
 }
 
 function ap(mval, mfunc){
-  if(!sanctuaryTypeClasses.Apply.test(mval)) { invalidArgument('Future.ap', 0, 'be an Apply', mval); }
-  if(arguments.length === 1) { return partial1(ap$mval, mval); }
+  if(!sanctuaryTypeClasses.Apply.test(mval)) invalidArgument('Future.ap', 0, 'be an Apply', mval);
+  if(arguments.length === 1) return partial1(ap$mval, mval);
   return ap$mval(mval, mfunc);
 }
 
 function alt$left(left, right){
-  if(!sanctuaryTypeClasses.Alt.test(right)) { invalidArgument('alt', 1, 'be an Alt', right); }
+  if(!sanctuaryTypeClasses.Alt.test(right)) invalidArgument('alt', 1, 'be an Alt', right);
   return sanctuaryTypeClasses.alt(left, right);
 }
 
 function alt(left, right){
-  if(!sanctuaryTypeClasses.Alt.test(left)) { invalidArgument('alt', 0, 'be an Alt', left); }
-  if(arguments.length === 1) { return partial1(alt$left, left); }
+  if(!sanctuaryTypeClasses.Alt.test(left)) invalidArgument('alt', 0, 'be an Alt', left);
+  if(arguments.length === 1) return partial1(alt$left, left);
   return alt$left(left, right);
 }
 
 function map$mapper(mapper, m){
-  if(!sanctuaryTypeClasses.Functor.test(m)) { invalidArgument('Future.map', 1, 'be a Functor', m); }
+  if(!sanctuaryTypeClasses.Functor.test(m)) invalidArgument('Future.map', 1, 'be a Functor', m);
   return sanctuaryTypeClasses.map(mapper, m);
 }
 
 function map(mapper, m){
-  if(!isFunction(mapper)) { invalidArgument('Future.map', 0, 'be a Function', mapper); }
-  if(arguments.length === 1) { return partial1(map$mapper, mapper); }
+  if(!isFunction(mapper)) invalidArgument('Future.map', 0, 'be a Function', mapper);
+  if(arguments.length === 1) return partial1(map$mapper, mapper);
   return map$mapper(mapper, m);
 }
 
 function bimap$lmapper$rmapper(lmapper, rmapper, m){
-  if(!sanctuaryTypeClasses.Bifunctor.test(m)) { invalidArgument('Future.bimap', 2, 'be a Bifunctor', m); }
+  if(!sanctuaryTypeClasses.Bifunctor.test(m)) invalidArgument('Future.bimap', 2, 'be a Bifunctor', m);
   return sanctuaryTypeClasses.bimap(lmapper, rmapper, m);
 }
 
 function bimap$lmapper(lmapper, rmapper, m){
-  if(!isFunction(rmapper)) { invalidArgument('Future.bimap', 1, 'be a Function', rmapper); }
-  if(arguments.length === 2) { return partial2(bimap$lmapper$rmapper, lmapper, rmapper); }
+  if(!isFunction(rmapper)) invalidArgument('Future.bimap', 1, 'be a Function', rmapper);
+  if(arguments.length === 2) return partial2(bimap$lmapper$rmapper, lmapper, rmapper);
   return bimap$lmapper$rmapper(lmapper, rmapper, m);
 }
 
 function bimap(lmapper, rmapper, m){
-  if(!isFunction(lmapper)) { invalidArgument('Future.bimap', 0, 'be a Function', lmapper); }
-  if(arguments.length === 1) { return partial1(bimap$lmapper, lmapper); }
-  if(arguments.length === 2) { return bimap$lmapper(lmapper, rmapper); }
+  if(!isFunction(lmapper)) invalidArgument('Future.bimap', 0, 'be a Function', lmapper);
+  if(arguments.length === 1) return partial1(bimap$lmapper, lmapper);
+  if(arguments.length === 2) return bimap$lmapper(lmapper, rmapper);
   return bimap$lmapper(lmapper, rmapper, m);
 }
 
 function chain$chainer(chainer, m){
-  if(!sanctuaryTypeClasses.Chain.test(m)) { invalidArgument('Future.chain', 1, 'be a Chain', m); }
+  if(!sanctuaryTypeClasses.Chain.test(m)) invalidArgument('Future.chain', 1, 'be a Chain', m);
   return sanctuaryTypeClasses.chain(chainer, m);
 }
 
 function chain(chainer, m){
-  if(!isFunction(chainer)) { invalidArgument('Future.chain', 0, 'be a Function', chainer); }
-  if(arguments.length === 1) { return partial1(chain$chainer, chainer); }
+  if(!isFunction(chainer)) invalidArgument('Future.chain', 0, 'be a Function', chainer);
+  if(arguments.length === 1) return partial1(chain$chainer, chainer);
   return chain$chainer(chainer, m);
 }
 
 function mapRej$mapper(mapper, m){
-  if(!isFuture(m)) { invalidFuture('Future.mapRej', 1, m); }
+  if(!isFuture(m)) invalidFuture('Future.mapRej', 1, m);
   return m.mapRej(mapper);
 }
 
 function mapRej(mapper, m){
-  if(!isFunction(mapper)) { invalidArgument('Future.mapRej', 0, 'be a Function', mapper); }
-  if(arguments.length === 1) { return partial1(mapRej$mapper, mapper); }
+  if(!isFunction(mapper)) invalidArgument('Future.mapRej', 0, 'be a Function', mapper);
+  if(arguments.length === 1) return partial1(mapRej$mapper, mapper);
   return mapRej$mapper(mapper, m);
 }
 
 function chainRej$chainer(chainer, m){
-  if(!isFuture(m)) { invalidFuture('Future.chainRej', 1, m); }
+  if(!isFuture(m)) invalidFuture('Future.chainRej', 1, m);
   return m.chainRej(chainer);
 }
 
 function chainRej(chainer, m){
-  if(!isFunction(chainer)) { invalidArgument('Future.chainRej', 0, 'be a Function', chainer); }
-  if(arguments.length === 1) { return partial1(chainRej$chainer, chainer); }
+  if(!isFunction(chainer)) invalidArgument('Future.chainRej', 0, 'be a Function', chainer);
+  if(arguments.length === 1) return partial1(chainRej$chainer, chainer);
   return chainRej$chainer(chainer, m);
 }
 
 function lastly$right(right, left){
-  if(!isFuture(left)) { invalidFuture('Future.finally', 1, left); }
+  if(!isFuture(left)) invalidFuture('Future.finally', 1, left);
   return left.finally(right);
 }
 
 function lastly(right, left){
-  if(!isFuture(right)) { invalidFuture('Future.finally', 0, right); }
-  if(arguments.length === 1) { return partial1(lastly$right, right); }
+  if(!isFuture(right)) invalidFuture('Future.finally', 0, right);
+  if(arguments.length === 1) return partial1(lastly$right, right);
   return lastly$right(right, left);
 }
 
 function and$left(left, right){
-  if(!isFuture(right)) { invalidFuture('Future.and', 1, right); }
+  if(!isFuture(right)) invalidFuture('Future.and', 1, right);
   return left.and(right);
 }
 
 function and(left, right){
-  if(!isFuture(left)) { invalidFuture('Future.and', 0, left); }
-  if(arguments.length === 1) { return partial1(and$left, left); }
+  if(!isFuture(left)) invalidFuture('Future.and', 0, left);
+  if(arguments.length === 1) return partial1(and$left, left);
   return and$left(left, right);
 }
 
 function both$left(left, right){
-  if(!isFuture(right)) { invalidFuture('Future.both', 1, right); }
+  if(!isFuture(right)) invalidFuture('Future.both', 1, right);
   return left.both(right);
 }
 
 function both(left, right){
-  if(!isFuture(left)) { invalidFuture('Future.both', 0, left); }
-  if(arguments.length === 1) { return partial1(both$left, left); }
+  if(!isFuture(left)) invalidFuture('Future.both', 0, left);
+  if(arguments.length === 1) return partial1(both$left, left);
   return both$left(left, right);
 }
 
 function or$left(left, right){
-  if(!isFuture(right)) { invalidFuture('Future.or', 1, right); }
+  if(!isFuture(right)) invalidFuture('Future.or', 1, right);
   return left.or(right);
 }
 
 function or(left, right){
-  if(!isFuture(left)) { invalidFuture('Future.or', 0, left); }
-  if(arguments.length === 1) { return partial1(or$left, left); }
+  if(!isFuture(left)) invalidFuture('Future.or', 0, left);
+  if(arguments.length === 1) return partial1(or$left, left);
   return or$left(left, right);
 }
 
 function race$right(right, left){
-  if(!isFuture(left)) { invalidFuture('Future.race', 1, left); }
+  if(!isFuture(left)) invalidFuture('Future.race', 1, left);
   return left.race(right);
 }
 
 function race(right, left){
-  if(!isFuture(right)) { invalidFuture('Future.race', 0, right); }
-  if(arguments.length === 1) { return partial1(race$right, right); }
+  if(!isFuture(right)) invalidFuture('Future.race', 0, right);
+  if(arguments.length === 1) return partial1(race$right, right);
   return race$right(right, left);
 }
 
 function swap(m){
-  if(!isFuture(m)) { invalidFuture('Future.swap', 0, m); }
+  if(!isFuture(m)) invalidFuture('Future.swap', 0, m);
   return m.swap();
 }
 
 function fold$f$g(f, g, m){
-  if(!isFuture(m)) { invalidFuture('Future.fold', 2, m); }
+  if(!isFuture(m)) invalidFuture('Future.fold', 2, m);
   return m.fold(f, g);
 }
 
 function fold$f(f, g, m){
-  if(!isFunction(g)) { invalidArgument('Future.fold', 1, 'be a function', g); }
-  if(arguments.length === 2) { return partial2(fold$f$g, f, g); }
+  if(!isFunction(g)) invalidArgument('Future.fold', 1, 'be a function', g);
+  if(arguments.length === 2) return partial2(fold$f$g, f, g);
   return fold$f$g(f, g, m);
 }
 
 function fold(f, g, m){
-  if(!isFunction(f)) { invalidArgument('Future.fold', 0, 'be a function', f); }
-  if(arguments.length === 1) { return partial1(fold$f, f); }
-  if(arguments.length === 2) { return fold$f(f, g); }
+  if(!isFunction(f)) invalidArgument('Future.fold', 0, 'be a function', f);
+  if(arguments.length === 1) return partial1(fold$f, f);
+  if(arguments.length === 2) return fold$f(f, g);
   return fold$f(f, g, m);
 }
 
 function done$callback(callback, m){
-  if(!isFuture(m)) { invalidFuture('Future.done', 1, m); }
+  if(!isFuture(m)) invalidFuture('Future.done', 1, m);
   return m.done(callback);
 }
 
 function done(callback, m){
-  if(!isFunction(callback)) { invalidArgument('Future.done', 0, 'be a Function', callback); }
-  if(arguments.length === 1) { return partial1(done$callback, callback); }
+  if(!isFunction(callback)) invalidArgument('Future.done', 0, 'be a Function', callback);
+  if(arguments.length === 1) return partial1(done$callback, callback);
   return done$callback(callback, m);
 }
 
 function fork$f$g(f, g, m){
-  if(!isFuture(m)) { invalidFuture('Future.fork', 2, m); }
+  if(!isFuture(m)) invalidFuture('Future.fork', 2, m);
   return m._fork(f, g);
 }
 
 function fork$f(f, g, m){
-  if(!isFunction(g)) { invalidArgument('Future.fork', 1, 'be a function', g); }
-  if(arguments.length === 2) { return partial2(fork$f$g, f, g); }
+  if(!isFunction(g)) invalidArgument('Future.fork', 1, 'be a function', g);
+  if(arguments.length === 2) return partial2(fork$f$g, f, g);
   return fork$f$g(f, g, m);
 }
 
 function fork(f, g, m){
-  if(!isFunction(f)) { invalidArgument('Future.fork', 0, 'be a function', f); }
-  if(arguments.length === 1) { return partial1(fork$f, f); }
-  if(arguments.length === 2) { return fork$f(f, g); }
+  if(!isFunction(f)) invalidArgument('Future.fork', 0, 'be a function', f);
+  if(arguments.length === 1) return partial1(fork$f, f);
+  if(arguments.length === 2) return fork$f(f, g);
   return fork$f(f, g, m);
 }
 
 function promise(m){
-  if(!isFuture(m)) { invalidFuture('Future.promise', 0, m); }
+  if(!isFuture(m)) invalidFuture('Future.promise', 0, m);
   return m.promise();
 }
 
 function value$cont(cont, m){
-  if(!isFuture(m)) { invalidFuture('Future.value', 1, m); }
+  if(!isFuture(m)) invalidFuture('Future.value', 1, m);
   return m.value(cont);
 }
 
 function value(cont, m){
-  if(!isFunction(cont)) { invalidArgument('Future.value', 0, 'be a Function', cont); }
-  if(arguments.length === 1) { return partial1(value$cont, cont); }
+  if(!isFunction(cont)) invalidArgument('Future.value', 0, 'be a Function', cont);
+  if(arguments.length === 1) return partial1(value$cont, cont);
   return value$cont(cont, m);
 }
 
 function extractLeft(m){
-  if(!isFuture(m)) { invalidFuture('Future.extractLeft', 0, m); }
+  if(!isFuture(m)) invalidFuture('Future.extractLeft', 0, m);
   return m.extractLeft();
 }
 
 function extractRight(m){
-  if(!isFuture(m)) { invalidFuture('Future.extractRight', 0, m); }
+  if(!isFuture(m)) invalidFuture('Future.extractRight', 0, m);
   return m.extractRight();
 }
-
-
-
-var dispatchers = Object.freeze({
-	ap: ap,
-	alt: alt,
-	map: map,
-	bimap: bimap,
-	chain: chain,
-	mapRej: mapRej,
-	chainRej: chainRej,
-	lastly: lastly,
-	finally: lastly,
-	and: and,
-	both: both,
-	or: or,
-	race: race,
-	swap: swap,
-	fold: fold,
-	done: done,
-	fork: fork,
-	promise: promise,
-	value: value,
-	extractLeft: extractLeft,
-	extractRight: extractRight
-});
 
 Future$1['@@type'] = $$type;
 Future$1[FL.of] = Future$1.of = of;
@@ -4104,7 +4428,7 @@ After.prototype._swap = function After$swap(){
 
 After.prototype._fork = function After$_fork(rej, res){
   var id = setTimeout(res, this._time, this._value);
-  return function () { clearTimeout(id); };
+  return function After$cancel(){ clearTimeout(id); };
 };
 
 After.prototype.extractRight = function After$extractRight(){
@@ -4112,7 +4436,7 @@ After.prototype.extractRight = function After$extractRight(){
 };
 
 After.prototype.toString = function After$toString(){
-  return ("Future.after(" + (show(this._time)) + ", " + (show(this._value)) + ")");
+  return 'Future.after(' + show(this._time) + ', ' + show(this._value) + ')';
 };
 
 function RejectAfter(time, value){
@@ -4130,7 +4454,7 @@ RejectAfter.prototype._swap = function RejectAfter$swap(){
 
 RejectAfter.prototype._fork = function RejectAfter$_fork(rej){
   var id = setTimeout(rej, this._time, this._value);
-  return function () { clearTimeout(id); };
+  return function RejectAfter$cancel(){ clearTimeout(id); };
 };
 
 RejectAfter.prototype.extractLeft = function RejectAfter$extractLeft(){
@@ -4138,7 +4462,7 @@ RejectAfter.prototype.extractLeft = function RejectAfter$extractLeft(){
 };
 
 RejectAfter.prototype.toString = function RejectAfter$toString(){
-  return ("Future.rejectAfter(" + (show(this._time)) + ", " + (show(this._value)) + ")");
+  return 'Future.rejectAfter(' + show(this._time) + ', ' + show(this._value) + ')';
 };
 
 function after$time(time, value){
@@ -4146,8 +4470,8 @@ function after$time(time, value){
 }
 
 function after(time, value){
-  if(!isUnsigned(time)) { invalidArgument('Future.after', 0, 'be a positive integer', time); }
-  if(arguments.length === 1) { return partial1(after$time, time); }
+  if(!isUnsigned(time)) invalidArgument('Future.after', 0, 'be a positive integer', time);
+  if(arguments.length === 1) return partial1(after$time, time);
   return after$time(time, value);
 }
 
@@ -4156,8 +4480,8 @@ function rejectAfter$time(time, reason){
 }
 
 function rejectAfter(time, reason){
-  if(!isUnsigned(time)) { invalidArgument('Future.rejectAfter', 0, 'be a positive integer', time); }
-  if(arguments.length === 1) { return partial1(rejectAfter$time, time); }
+  if(!isUnsigned(time)) invalidArgument('Future.rejectAfter', 0, 'be a positive integer', time);
+  if(arguments.length === 1) return partial1(rejectAfter$time, time);
   return rejectAfter$time(time, reason);
 }
 
@@ -4175,11 +4499,11 @@ Attempt.prototype._fork = function Attempt$fork(rej, res){
 };
 
 Attempt.prototype.toString = function Attempt$toString(){
-  return ("Future.try(" + (showf(this._fn)) + ")");
+  return 'Future.try(' + showf(this._fn) + ')';
 };
 
 function attempt(f){
-  if(!isFunction(f)) { invalidArgument('Future.try', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.try', 0, 'be a function', f);
   return new Attempt(f);
 }
 
@@ -4218,21 +4542,21 @@ Cached.prototype.extractRight = function Cached$extractRight(){
 
 Cached.prototype._addToQueue = function Cached$addToQueue(rej, res){
   var _this = this;
-  if(_this._state > Pending) { return noop; }
+  if(_this._state > Pending) return noop;
   var i = _this._queue.push(new Queued(rej, res)) - 1;
   _this._queued = _this._queued + 1;
 
   return function Cached$removeFromQueue(){
-    if(_this._state > Pending) { return; }
+    if(_this._state > Pending) return;
     _this._queue[i] = undefined;
     _this._queued = _this._queued - 1;
-    if(_this._queued === 0) { _this.reset(); }
+    if(_this._queued === 0) _this.reset();
   };
 };
 
 Cached.prototype._drainQueue = function Cached$drainQueue(){
-  if(this._state <= Pending) { return; }
-  if(this._queued === 0) { return; }
+  if(this._state <= Pending) return;
+  if(this._queued === 0) return;
   var queue = this._queue;
   var length = queue.length;
   var state = this._state;
@@ -4248,14 +4572,14 @@ Cached.prototype._drainQueue = function Cached$drainQueue(){
 };
 
 Cached.prototype.reject = function Cached$reject(reason){
-  if(this._state > Pending) { return; }
+  if(this._state > Pending) return;
   this._value = reason;
   this._state = Rejected$1;
   this._drainQueue();
 };
 
 Cached.prototype.resolve = function Cached$resolve(value){
-  if(this._state > Pending) { return; }
+  if(this._state > Pending) return;
   this._value = value;
   this._state = Resolved$1;
   this._drainQueue();
@@ -4263,7 +4587,7 @@ Cached.prototype.resolve = function Cached$resolve(value){
 
 Cached.prototype.run = function Cached$run(){
   var _this = this;
-  if(_this._state > Cold) { return; }
+  if(_this._state > Cold) return;
   _this._state = Pending;
   _this._cancel = _this._pure._fork(
     function Cached$fork$rej(x){ _this.reject(x); },
@@ -4272,8 +4596,8 @@ Cached.prototype.run = function Cached$run(){
 };
 
 Cached.prototype.reset = function Cached$reset(){
-  if(this._state === Cold) { return; }
-  if(this._state > Pending) { this._cancel(); }
+  if(this._state === Cold) return;
+  if(this._state > Pending) this._cancel();
   this._cancel = noop;
   this._queue = [];
   this._queued = 0;
@@ -4295,11 +4619,11 @@ Cached.prototype._fork = function Cached$_fork(rej, res){
 };
 
 Cached.prototype.toString = function Cached$toString(){
-  return ("Future.cache(" + (this._pure.toString()) + ")");
+  return 'Future.cache(' + this._pure.toString() + ')';
 };
 
 function cache(m){
-  if(!isFuture(m)) { invalidFuture('Future.cache', 0, m); }
+  if(!isFuture(m)) invalidFuture('Future.cache', 0, m);
   return new Cached(m);
 }
 
@@ -4318,15 +4642,12 @@ Encase.prototype._fork = function Encase$fork(rej, res){
 };
 
 Encase.prototype.toString = function Encase$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  return ("Future.encase(" + (showf(_fn)) + ", " + (show(_a)) + ")");
+  return 'Future.encase(' + showf(this._fn) + ', ' + show(this._a) + ')';
 };
 
 function encase(f, x){
-  if(!isFunction(f)) { invalidArgument('Future.encase', 0, 'be a function', f); }
-  if(arguments.length === 1) { return partial1(encase, f); }
+  if(!isFunction(f)) invalidArgument('Future.encase', 0, 'be a function', f);
+  if(arguments.length === 1) return partial1(encase, f);
   return new Encase(f, x);
 }
 
@@ -4346,15 +4667,11 @@ Encase2.prototype._fork = function Encase2$fork(rej, res){
 };
 
 Encase2.prototype.toString = function Encase2$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
-  return ("Future.encase2(" + (showf(_fn)) + ", " + (show(_a)) + ", " + (show(_b)) + ")");
+  return 'Future.encase2(' + showf(this._fn) + ', ' + show(this._a) + ', ' + show(this._b) + ')';
 };
 
 function encase2(f, x, y){
-  if(!isFunction(f)) { invalidArgument('Future.encase2', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.encase2', 0, 'be a function', f);
 
   switch(arguments.length){
     case 1: return partial1(encase2, f);
@@ -4380,16 +4697,19 @@ Encase3.prototype._fork = function Encase3$fork(rej, res){
 };
 
 Encase3.prototype.toString = function Encase3$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
-  var _c = ref._c;
-  return ("Future.encase3(" + (showf(_fn)) + ", " + (show(_a)) + ", " + (show(_b)) + ", " + (show(_c)) + ")");
+  return 'Future.encase3('
+       + showf(this._fn)
+       + ', '
+       + show(this._a)
+       + ', '
+       + show(this._b)
+       + ', '
+       + show(this._c)
+       + ')';
 };
 
 function encase3(f, x, y, z){
-  if(!isFunction(f)) { invalidArgument('Future.encase3', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.encase3', 0, 'be a function', f);
 
   switch(arguments.length){
     case 1: return partial1(encase3, f);
@@ -4418,15 +4738,12 @@ EncaseN.prototype._fork = function EncaseN$fork(rej, res){
 };
 
 EncaseN.prototype.toString = function EncaseN$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  return ("Future.encaseN(" + (showf(_fn)) + ", " + (show(_a)) + ")");
+  return 'Future.encaseN(' + showf(this._fn) + ', ' + show(this._a) + ')';
 };
 
 function encaseN(f, x){
-  if(!isFunction(f)) { invalidArgument('Future.encaseN', 0, 'be a function', f); }
-  if(arguments.length === 1) { return partial1(encaseN, f); }
+  if(!isFunction(f)) invalidArgument('Future.encaseN', 0, 'be a function', f);
+  if(arguments.length === 1) return partial1(encaseN, f);
   return new EncaseN(f, x);
 }
 
@@ -4450,15 +4767,11 @@ EncaseN2.prototype._fork = function EncaseN2$fork(rej, res){
 };
 
 EncaseN2.prototype.toString = function EncaseN2$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
-  return ("Future.encaseN2(" + (showf(_fn)) + ", " + (show(_a)) + ", " + (show(_b)) + ")");
+  return 'Future.encaseN2(' + showf(this._fn) + ', ' + show(this._a) + ', ' + show(this._b) + ')';
 };
 
 function encaseN2(f, x, y){
-  if(!isFunction(f)) { invalidArgument('Future.encaseN2', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.encaseN2', 0, 'be a function', f);
 
   switch(arguments.length){
     case 1: return partial1(encaseN2, f);
@@ -4488,16 +4801,19 @@ EncaseN$1.prototype._fork = function EncaseN$3$fork(rej, res){
 };
 
 EncaseN$1.prototype.toString = function EncaseN$3$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
-  var _c = ref._c;
-  return ("Future.encaseN3(" + (showf(_fn)) + ", " + (show(_a)) + ", " + (show(_b)) + ", " + (show(_c)) + ")");
+  return 'Future.encaseN3('
+       + showf(this._fn)
+       + ', '
+       + show(this._a)
+       + ', '
+       + show(this._b)
+       + ', '
+       + show(this._c)
+       + ')';
 };
 
 function encaseN3(f, x, y, z){
-  if(!isFunction(f)) { invalidArgument('Future.encaseN3', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.encaseN3', 0, 'be a function', f);
 
   switch(arguments.length){
     case 1: return partial1(encaseN3, f);
@@ -4510,8 +4826,8 @@ function encaseN3(f, x, y, z){
 function check$promise(p, f, a){
   return isThenable(p) ? p : typeError(
     'Future.encaseP expects the function it\'s given to return a Promise/Thenable'
-    + "\n  Actual: " + (show(p)) + "\n  From calling: " + (showf(f))
-    + "\n  With: " + (show(a))
+    + '\n  Actual: ' + (show(p)) + '\n  From calling: ' + (showf(f))
+    + '\n  With: ' + (show(a))
   );
 }
 
@@ -4523,9 +4839,8 @@ function EncaseP(fn, a){
 EncaseP.prototype = Object.create(Core);
 
 EncaseP.prototype._fork = function EncaseP$fork(rej, res){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
+  var _fn = this._fn;
+  var _a = this._a;
   var open = true;
   check$promise(_fn(_a), _fn, _a).then(immediately(function EncaseP$res(x){
     if(open){
@@ -4542,24 +4857,21 @@ EncaseP.prototype._fork = function EncaseP$fork(rej, res){
 };
 
 EncaseP.prototype.toString = function EncaseP$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  return ("Future.encaseP(" + (showf(_fn)) + ", " + (show(_a)) + ")");
+  return 'Future.encaseP(' + showf(this._fn) + ', ' + show(this._a) + ')';
 };
 
 function encaseP(f, x){
-  if(!isFunction(f)) { invalidArgument('Future.encaseP', 0, 'be a function', f); }
-  if(arguments.length === 1) { return partial1(encaseP, f); }
+  if(!isFunction(f)) invalidArgument('Future.encaseP', 0, 'be a function', f);
+  if(arguments.length === 1) return partial1(encaseP, f);
   return new EncaseP(f, x);
 }
 
 function check$promise$1(p, f, a, b){
   return isThenable(p) ? p : typeError(
     'Future.encaseP2 expects the function it\'s given to return a Promise/Thenable'
-    + "\n  Actual: " + (show(p)) + "\n  From calling: " + (showf(f))
-    + "\n  With 1: " + (show(a))
-    + "\n  With 2: " + (show(b))
+    + '\n  Actual: ' + (show(p)) + '\n  From calling: ' + (showf(f))
+    + '\n  With 1: ' + (show(a))
+    + '\n  With 2: ' + (show(b))
   );
 }
 
@@ -4572,10 +4884,9 @@ function EncaseP2(fn, a, b){
 EncaseP2.prototype = Object.create(Core);
 
 EncaseP2.prototype._fork = function EncaseP2$fork(rej, res){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
+  var _fn = this._fn;
+  var _a = this._a;
+  var _b = this._b;
   var open = true;
   check$promise$1(_fn(_a, _b), _fn, _a, _b).then(immediately(function EncaseP2$res(x){
     if(open){
@@ -4592,15 +4903,11 @@ EncaseP2.prototype._fork = function EncaseP2$fork(rej, res){
 };
 
 EncaseP2.prototype.toString = function EncaseP2$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
-  return ("Future.encaseP2(" + (showf(_fn)) + ", " + (show(_a)) + ", " + (show(_b)) + ")");
+  return 'Future.encaseP2(' + showf(this._fn) + ', ' + show(this._a) + ', ' + show(this._b) + ')';
 };
 
 function encaseP2(f, x, y){
-  if(!isFunction(f)) { invalidArgument('Future.encaseP2', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.encaseP2', 0, 'be a function', f);
 
   switch(arguments.length){
     case 1: return partial1(encaseP2, f);
@@ -4612,10 +4919,10 @@ function encaseP2(f, x, y){
 function check$promise$2(p, f, a, b, c){
   return isThenable(p) ? p : typeError(
     'Future.encaseP3 expects the function it\'s given to return a Promise/Thenable'
-    + "\n  Actual: " + (show(p)) + "\n  From calling: " + (showf(f))
-    + "\n  With 1: " + (show(a))
-    + "\n  With 2: " + (show(b))
-    + "\n  With 3: " + (show(c))
+    + '\n  Actual: ' + (show(p)) + '\n  From calling: ' + (showf(f))
+    + '\n  With 1: ' + (show(a))
+    + '\n  With 2: ' + (show(b))
+    + '\n  With 3: ' + (show(c))
   );
 }
 
@@ -4629,11 +4936,10 @@ function EncaseP3(fn, a, b, c){
 EncaseP3.prototype = Object.create(Core);
 
 EncaseP3.prototype._fork = function EncaseP3$fork(rej, res){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
-  var _c = ref._c;
+  var _fn = this._fn;
+  var _a = this._a;
+  var _b = this._b;
+  var _c = this._c;
   var open = true;
   check$promise$2(_fn(_a, _b, _c), _fn, _a, _b, _c).then(immediately(function EncaseP3$res(x){
     if(open){
@@ -4650,16 +4956,19 @@ EncaseP3.prototype._fork = function EncaseP3$fork(rej, res){
 };
 
 EncaseP3.prototype.toString = function EncaseP3$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  var _a = ref._a;
-  var _b = ref._b;
-  var _c = ref._c;
-  return ("Future.encaseP3(" + (show(_fn)) + ", " + (show(_a)) + ", " + (show(_b)) + ", " + (show(_c)) + ")");
+  return 'Future.encaseP3('
+       + showf(this._fn)
+       + ', '
+       + show(this._a)
+       + ', '
+       + show(this._b)
+       + ', '
+       + show(this._c)
+       + ')';
 };
 
 function encaseP3(f, x, y, z){
-  if(!isFunction(f)) { invalidArgument('Future.encaseP3', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.encaseP3', 0, 'be a function', f);
 
   switch(arguments.length){
     case 1: return partial1(encaseP3, f);
@@ -4671,24 +4980,26 @@ function encaseP3(f, x, y, z){
 
 /*eslint consistent-return: 0*/
 
-var check$iterator = function (g) { return isIterator(g) ? g : invalidArgument(
-  'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
-); };
+function check$iterator(g){
+  return isIterator(g) ? g : invalidArgument(
+    'Future.do', 0, 'return an iterator, maybe you forgot the "*"', g
+  );
+}
 
-var check$iteration = function (o) {
-  if(!isIteration(o)) { typeError(
+function check$iteration(o){
+  if(!isIteration(o)) typeError(
     'Future.do was given an invalid generator:'
     + ' Its iterator did not return a valid iteration from iterator.next()'
-    + "\n  Actual: " + (show(o))
-  ); }
-  if(o.done || isFuture(o.value)) { return o; }
+    + '\n  Actual: ' + show(o)
+  );
+  if(o.done || isFuture(o.value)) return o;
   return invalidFuture(
     'Future.do',
     'the iterator to produce only valid Futures',
     o.value,
     '\n  Tip: If you\'re using a generator, make sure you always yield a Future'
   );
-};
+}
 
 function Go(generator){
   this._generator = generator;
@@ -4704,7 +5015,7 @@ Go.prototype._fork = function Go$_fork(rej, res){
 
   function resolved(x){
     value = x;
-    if(timing === Asynchronous) { return drain(); }
+    if(timing === Asynchronous) return drain();
     timing = Synchronous;
     state = check$iteration(iterator.next(value));
   }
@@ -4732,30 +5043,30 @@ Go.prototype._fork = function Go$_fork(rej, res){
 };
 
 Go.prototype.toString = function Go$toString(){
-  return ("Future.do(" + (showf(this._generator)) + ")");
+  return `Future.do(${showf(this._generator)})`;
 };
 
 function go(generator){
-  if(!isFunction(generator)) { invalidArgument('Future.do', 0, 'be a Function', generator); }
+  if(!isFunction(generator)) invalidArgument('Future.do', 0, 'be a Function', generator);
   return new Go(generator);
 }
 
 function check$dispose(m, f, x){
-  if(!isFuture(m)) { invalidFuture(
+  if(!isFuture(m)) invalidFuture(
     'Future.hook',
     'the first function it\'s given to return a Future',
     m,
-    ("\n  From calling: " + (showf(f)) + "\n  With: " + (show(x)))
-  ); }
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
+  );
 }
 
 function check$consume(m, f, x){
-  if(!isFuture(m)) { invalidFuture(
+  if(!isFuture(m)) invalidFuture(
     'Future.hook',
     'the second function it\'s given to return a Future',
     m,
-    ("\n  From calling: " + (showf(f)) + "\n  With: " + (show(x)))
-  ); }
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
+  );
 }
 
 function Hook(acquire, dispose, consume){
@@ -4768,10 +5079,7 @@ Hook.prototype = Object.create(Core);
 
 Hook.prototype._fork = function Hook$fork(rej, res){
 
-  var ref = this;
-  var _acquire = ref._acquire;
-  var _dispose = ref._dispose;
-  var _consume = ref._consume;
+  var _acquire = this._acquire, _dispose = this._dispose, _consume = this._consume;
   var cancel, cancelAcquire = noop, cancelConsume = noop, resource, value, cont = noop;
 
   function Hook$done(){
@@ -4819,28 +5127,30 @@ Hook.prototype._fork = function Hook$fork(rej, res){
 };
 
 Hook.prototype.toString = function Hook$toString(){
-  var ref = this;
-  var _acquire = ref._acquire;
-  var _dispose = ref._dispose;
-  var _consume = ref._consume;
-  return ("Future.hook(" + (_acquire.toString()) + ", " + (showf(_dispose)) + ", " + (showf(_consume)) + ")");
+  return 'Future.hook('
+       + this._acquire.toString()
+       + ', '
+       + showf(this._dispose)
+       + ', '
+       + showf(this._consume)
+       + ')';
 };
 
 function hook$acquire$cleanup(acquire, cleanup, consume){
-  if(!isFunction(consume)) { invalidArgument('Future.hook', 2, 'be a Future', consume); }
+  if(!isFunction(consume)) invalidArgument('Future.hook', 2, 'be a Future', consume);
   return new Hook(acquire, cleanup, consume);
 }
 
 function hook$acquire(acquire, cleanup, consume){
-  if(!isFunction(cleanup)) { invalidArgument('Future.hook', 1, 'be a function', cleanup); }
-  if(arguments.length === 2) { return partial2(hook$acquire$cleanup, acquire, cleanup); }
+  if(!isFunction(cleanup)) invalidArgument('Future.hook', 1, 'be a function', cleanup);
+  if(arguments.length === 2) return partial2(hook$acquire$cleanup, acquire, cleanup);
   return hook$acquire$cleanup(acquire, cleanup, consume);
 }
 
 function hook(acquire, cleanup, consume){
-  if(!isFuture(acquire)) { invalidFuture('Future.hook', 0, acquire); }
-  if(arguments.length === 1) { return partial1(hook$acquire, acquire); }
-  if(arguments.length === 2) { return hook$acquire(acquire, cleanup); }
+  if(!isFuture(acquire)) invalidFuture('Future.hook', 0, acquire);
+  if(arguments.length === 1) return partial1(hook$acquire, acquire);
+  if(arguments.length === 2) return hook$acquire(acquire, cleanup);
   return hook$acquire(acquire, cleanup, consume);
 }
 
@@ -4862,13 +5172,11 @@ Node.prototype._fork = function Node$fork(rej, res){
 };
 
 Node.prototype.toString = function Node$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  return ("Future.node(" + (showf(_fn)) + ")");
+  return 'Future.node(' + showf(this._fn) + ')';
 };
 
 function node(f){
-  if(!isFunction(f)) { invalidArgument('Future.node', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.node', 0, 'be a function', f);
   return new Node(f);
 }
 
@@ -4970,16 +5278,16 @@ var concurrify = createCommonjsModule(function (module) {
     }
 
     function construct(x){
-      if(!isInner(x)) { invalidArgument(OUTERNAME, 0, 'be of type "' + INNERNAME + '"', x); }
+      if(!isInner(x)) invalidArgument(OUTERNAME, 0, 'be of type "' + INNERNAME + '"', x);
       return new Concurrently(x);
     }
 
-    if(!isApplicativeRepr(Repr)) { invalidArgument('concurrify', 0, 'represent an Applicative', Repr); }
-    if(!isInner(zero)) { invalidArgument('concurrify', 1, 'be of type "' + INNERNAME + '"', zero); }
-    if(!isFunction(alt)) { invalidArgument('concurrify', 2, 'be a function', alt); }
-    if(!isBinary(alt)) { invalidArgument('concurrify', 2, 'be binary', alt); }
-    if(!isFunction(ap)) { invalidArgument('concurrify', 3, 'be a function', ap); }
-    if(!isBinary(ap)) { invalidArgument('concurrify', 3, 'be binary', ap); }
+    if(!isApplicativeRepr(Repr)) invalidArgument('concurrify', 0, 'represent an Applicative', Repr);
+    if(!isInner(zero)) invalidArgument('concurrify', 1, 'be of type "' + INNERNAME + '"', zero);
+    if(!isFunction(alt)) invalidArgument('concurrify', 2, 'be a function', alt);
+    if(!isBinary(alt)) invalidArgument('concurrify', 2, 'be binary', alt);
+    if(!isFunction(ap)) invalidArgument('concurrify', 3, 'be a function', ap);
+    if(!isBinary(ap)) invalidArgument('concurrify', 3, 'be binary', ap);
 
     var proto = Concurrently.prototype = construct.prototype = {constructor: construct};
 
@@ -4995,25 +5303,25 @@ var concurrify = createCommonjsModule(function (module) {
     };
 
     proto[$map] = function Concurrently$map(mapper){
-      if(!isOuter(this)) { invalidContext(OUTERNAME + '#map', this, OUTERNAME); }
-      if(!isFunction(mapper)) { invalidArgument(OUTERNAME + '#map', 0, 'be a function', mapper); }
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#map', this, OUTERNAME);
+      if(!isFunction(mapper)) invalidArgument(OUTERNAME + '#map', 0, 'be a function', mapper);
       return new Concurrently(Z.map(mapper, this.sequential));
     };
 
     proto[$ap] = function Concurrently$ap(m){
-      if(!isOuter(this)) { invalidContext(OUTERNAME + '#ap', this, OUTERNAME); }
-      if(!isOuter(m)) { invalidArgument(OUTERNAME + '#ap', 0, 'be a ' + OUTERNAME, m); }
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#ap', this, OUTERNAME);
+      if(!isOuter(m)) invalidArgument(OUTERNAME + '#ap', 0, 'be a ' + OUTERNAME, m);
       return new Concurrently(ap(this.sequential, m.sequential));
     };
 
     proto[$alt] = function Concurrently$alt(m){
-      if(!isOuter(this)) { invalidContext(OUTERNAME + '#alt', this, OUTERNAME); }
-      if(!isOuter(m)) { invalidArgument(OUTERNAME + '#alt', 0, 'be a ' + OUTERNAME, m); }
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#alt', this, OUTERNAME);
+      if(!isOuter(m)) invalidArgument(OUTERNAME + '#alt', 0, 'be a ' + OUTERNAME, m);
       return new Concurrently(alt(this.sequential, m.sequential));
     };
 
     proto.toString = function Concurrently$toString(){
-      if(!isOuter(this)) { invalidContext(OUTERNAME + '#toString', this, OUTERNAME); }
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#toString', this, OUTERNAME);
       return OUTERNAME + '(' + Z.toString(this.sequential) + ')';
     };
 
@@ -5025,10 +5333,10 @@ var concurrify = createCommonjsModule(function (module) {
 });
 
 function check$ap$f(f){
-  if(!isFunction(f)) { typeError(
+  if(!isFunction(f)) typeError(
     'Future#ap expects its first argument to be a Future of a Function'
-    + "\n  Actual: Future.of(" + (show(f)) + ")"
-  ); }
+    + '\n  Actual: Future.of(' + show(f) + ')'
+  );
 }
 
 function ParallelAp(mval, mfunc){
@@ -5050,13 +5358,13 @@ ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
 
   c1 = this._mval._fork(ParallelAp$rej, function ParallelAp$fork$resVal(x){
     c1 = noop;
-    if(!okval) { return void (okfunc = true, val = x); }
+    if(!okval) return void (okfunc = true, val = x);
     res(func(x));
   });
   c2 = this._mfunc._fork(ParallelAp$rej, function ParallelAp$fork$resFunc(f){
     c2 = noop;
     check$ap$f(f);
-    if(!okfunc) { return void (okval = true, func = f); }
+    if(!okfunc) return void (okval = true, func = f);
     res(f(val));
   });
 
@@ -5067,7 +5375,7 @@ ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
 };
 
 ParallelAp.prototype.toString = function ParallelAp$toString(){
-  return ("new ParallelAp(" + (this._mval.toString()) + ", " + (this._mfunc.toString()) + ")");
+  return 'new ParallelAp(' + this._mval.toString() + ', ' + this._mfunc.toString() + ')';
 };
 
 var Par = concurrify(Future$1, never, race, function pap(mval, mfunc){
@@ -5085,16 +5393,18 @@ function isParallel(x){
 }
 
 function seq(par){
-  if(!isParallel(par)) { invalidArgument('Future.seq', 0, 'to be a Par', par); }
+  if(!isParallel(par)) invalidArgument('Future.seq', 0, 'to be a Par', par);
   return par.sequential;
 }
 
-var check$parallel = function (m, i) { return isFuture(m) ? m : invalidFuture(
-  'Future.parallel',
-  'its second argument to be an array of valid Futures. '
-+ "The value at position " + i + " in the array is not a Future",
-  m
-); };
+function check$parallel(m, i){
+  return isFuture(m) ? m : invalidFuture(
+    'Future.parallel',
+    'its second argument to be an array of valid Futures. '
+  + 'The value at position ' + i + ' in the array is not a Future',
+    m
+  );
+}
 
 function Parallel(max, futures){
   this._futures = futures;
@@ -5106,15 +5416,12 @@ Parallel.prototype = Object.create(Core);
 
 Parallel.prototype._fork = function Parallel$_fork(rej, res){
 
-  var ref = this;
-  var _futures = ref._futures;
-  var _length = ref._length;
-  var _max = ref._max;
+  var _futures = this._futures, _length = this._length, _max = this._max;
   var cancels = new Array(_length), out = new Array(_length);
   var cursor = 0, running = 0, blocked = false;
 
   function Parallel$cancel(){
-    for(var n = 0; n < _length; n++) { cancels[n] && cancels[n](); }
+    for(var n = 0; n < _length; n++) cancels[n] && cancels[n]();
   }
 
   function Parallel$run(idx){
@@ -5127,14 +5434,14 @@ Parallel.prototype._fork = function Parallel$_fork(rej, res){
       cancels[idx] = noop;
       out[idx] = value;
       running--;
-      if(cursor === _length && running === 0) { res(out); }
-      else if(blocked) { Parallel$drain(); }
+      if(cursor === _length && running === 0) res(out);
+      else if(blocked) Parallel$drain();
     });
   }
 
   function Parallel$drain(){
     blocked = false;
-    while(cursor < _length && running < _max) { Parallel$run(cursor++); }
+    while(cursor < _length && running < _max) Parallel$run(cursor++);
     blocked = true;
   }
 
@@ -5145,27 +5452,27 @@ Parallel.prototype._fork = function Parallel$_fork(rej, res){
 };
 
 Parallel.prototype.toString = function Parallel$toString(){
-  return ("Future.parallel(" + (this._max) + ", " + (show(this._futures)) + ")");
+  return 'Future.parallel(' + this._max + ', ' + show(this._futures) + ')';
 };
 
 var emptyArray = new Resolved([]);
 
 function parallel$max(max, xs){
-  if(!isArray(xs)) { invalidArgument('Future.parallel', 1, 'be an array', xs); }
+  if(!isArray(xs)) invalidArgument('Future.parallel', 1, 'be an array', xs);
   var futures = mapArray(xs, check$parallel);
   return futures.length === 0 ? emptyArray : new Parallel(max, futures);
 }
 
 function parallel(max, xs){
-  if(!isUnsigned(max)) { invalidArgument('Future.parallel', 0, 'be a positive integer', max); }
-  if(arguments.length === 1) { return partial1(parallel$max, max); }
+  if(!isUnsigned(max)) invalidArgument('Future.parallel', 0, 'be a positive integer', max);
+  if(arguments.length === 1) return partial1(parallel$max, max);
   return parallel$max(max, xs);
 }
 
 function check$promise$3(p, f){
   return isThenable(p) ? p : typeError(
     'Future.tryP expects the function it\'s given to return a Promise/Thenable'
-    + "\n  Actual: " + (show(p)) + "\n  From calling: " + (showf(f))
+    + '\n  Actual: ' + show(p) + '\n  From calling: ' + showf(f)
   );
 }
 
@@ -5176,10 +5483,8 @@ function TryP(fn){
 TryP.prototype = Object.create(Core);
 
 TryP.prototype._fork = function TryP$fork(rej, res){
-  var ref = this;
-  var _fn = ref._fn;
   var open = true;
-  check$promise$3(_fn(), _fn).then(immediately(function TryP$res(x){
+  check$promise$3(this._fn(), this._fn).then(immediately(function TryP$res(x){
     if(open){
       open = false;
       res(x);
@@ -5194,51 +5499,76 @@ TryP.prototype._fork = function TryP$fork(rej, res){
 };
 
 TryP.prototype.toString = function TryP$toString(){
-  var ref = this;
-  var _fn = ref._fn;
-  return ("Future.tryP(" + (show(_fn)) + ")");
+  return `Future.tryP(${show(this._fn)})`;
 };
 
 function tryP(f){
-  if(!isFunction(f)) { invalidArgument('Future.tryP', 0, 'be a function', f); }
+  if(!isFunction(f)) invalidArgument('Future.tryP', 0, 'be a function', f);
   return new TryP(f);
 }
 
-if(typeof Object.create !== 'function') { error('Please polyfill Object.create to use Fluture'); }
-if(typeof Object.assign !== 'function') { error('Please polyfill Object.assign to use Fluture'); }
-if(typeof Array.isArray !== 'function') { error('Please polyfill Array.isArray to use Fluture'); }
+if(typeof Object.create !== 'function') error('Please polyfill Object.create to use Fluture');
+if(typeof Object.assign !== 'function') error('Please polyfill Object.assign to use Fluture');
+if(typeof Array.isArray !== 'function') error('Please polyfill Array.isArray to use Fluture');
 
-var index = Object.assign(Future$1, dispatchers, {
-  Future: Future$1,
-  after: after,
-  attempt: attempt,
-  cache: cache,
-  do: go,
-  encase: encase,
-  encase2: encase2,
-  encase3: encase3,
-  encaseN: encaseN,
-  encaseN2: encaseN2,
-  encaseN3: encaseN3,
-  encaseP: encaseP,
-  encaseP2: encaseP2,
-  encaseP3: encaseP3,
-  go: go,
-  hook: hook,
-  isFuture: isFuture,
-  isNever: isNever,
-  never: never,
-  node: node,
-  of: of,
-  Par: Par,
-  parallel: parallel,
-  reject: reject,
-  rejectAfter: rejectAfter,
-  seq: seq,
-  try: attempt,
-  tryP: tryP,
+
+
+
+var Fluture = Object.freeze({
+	default: Future$1,
+	Future: Future$1,
+	isFuture: isFuture,
+	reject: reject,
+	of: of,
+	never: never,
+	isNever: isNever,
+	after: after,
+	rejectAfter: rejectAfter,
+	attempt: attempt,
+	try: attempt,
+	cache: cache,
+	encase: encase,
+	encase2: encase2,
+	encase3: encase3,
+	encaseN: encaseN,
+	encaseN2: encaseN2,
+	encaseN3: encaseN3,
+	encaseP: encaseP,
+	encaseP2: encaseP2,
+	encaseP3: encaseP3,
+	go: go,
+	do: go,
+	hook: hook,
+	node: node,
+	Par: Par,
+	seq: seq,
+	parallel: parallel,
+	tryP: tryP,
+	ap: ap,
+	alt: alt,
+	map: map,
+	bimap: bimap,
+	chain: chain,
+	mapRej: mapRej,
+	chainRej: chainRej,
+	lastly: lastly,
+	finally: lastly,
+	and: and,
+	both: both,
+	or: or,
+	race: race,
+	swap: swap,
+	fold: fold,
+	done: done,
+	fork: fork,
+	promise: promise,
+	value: value,
+	extractLeft: extractLeft,
+	extractRight: extractRight
 });
 
-return index;
+var index_cjs = Object.assign(Future$1, Fluture);
+
+return index_cjs;
 
 }());
