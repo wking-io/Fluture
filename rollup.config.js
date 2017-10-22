@@ -9,10 +9,9 @@ var dependencies = {
 };
 
 export default {
-  entry: 'index.cjs.js',
+  input: 'index.cjs.js',
   external: Object.keys(dependencies),
   globals: dependencies,
-  format: 'umd',
-  moduleName: 'Fluture',
-  dest: pkg.main
+  name: 'Fluture',
+  output: {format: 'umd', file: pkg.main}
 };

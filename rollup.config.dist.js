@@ -11,10 +11,9 @@ var banner = `/**
 `;
 
 export default {
-  entry: 'index.cjs.js',
+  input: 'index.cjs.js',
   plugins: [node(), commonjs({include: 'node_modules/**'})],
   banner: banner,
-  format: 'iife',
-  moduleName: 'Fluture',
-  dest: 'dist/bundle.js'
+  name: 'Fluture',
+  output: {format: 'iife', file: 'dist/bundle.js'}
 };
