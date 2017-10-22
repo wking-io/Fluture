@@ -10,7 +10,7 @@ import {FL} from './internal/const';
 function check$ap$f(f){
   if(!isFunction(f)) typeError(
     'Future#ap expects its first argument to be a Future of a Function'
-    + `\n  Actual: Future.of(${show(f)})`
+    + '\n  Actual: Future.of(' + show(f) + ')'
   );
 }
 
@@ -22,7 +22,7 @@ export function ParallelAp(mval, mfunc){
 ParallelAp.prototype = Object.create(Core);
 
 ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
-  let func, val, okval = false, okfunc = false, rejected = false, c1, c2;
+  var func, val, okval = false, okfunc = false, rejected = false, c1, c2;
 
   function ParallelAp$rej(x){
     if(!rejected){
@@ -50,10 +50,10 @@ ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
 };
 
 ParallelAp.prototype.toString = function ParallelAp$toString(){
-  return `new ParallelAp(${this._mval.toString()}, ${this._mfunc.toString()})`;
+  return 'new ParallelAp(' + this._mval.toString() + ', ' + this._mfunc.toString() + ')';
 };
 
-export const Par = concurrify(Future, never, race, function pap(mval, mfunc){
+export var Par = concurrify(Future, never, race, function pap(mval, mfunc){
   return new ParallelAp(mval, mfunc);
 });
 

@@ -6,9 +6,9 @@ import {invalidArgument, typeError} from './internal/throw';
 function check$promise(p, f, a, b){
   return isThenable(p) ? p : typeError(
     'Future.encaseP2 expects the function it\'s given to return a Promise/Thenable'
-    + `\n  Actual: ${show(p)}\n  From calling: ${showf(f)}`
-    + `\n  With 1: ${show(a)}`
-    + `\n  With 2: ${show(b)}`
+    + '\n  Actual: ' + (show(p)) + '\n  From calling: ' + (showf(f))
+    + '\n  With 1: ' + (show(a))
+    + '\n  With 2: ' + (show(b))
   );
 }
 
@@ -21,8 +21,10 @@ export function EncaseP2(fn, a, b){
 EncaseP2.prototype = Object.create(Core);
 
 EncaseP2.prototype._fork = function EncaseP2$fork(rej, res){
-  const {_fn, _a, _b} = this;
-  let open = true;
+  var _fn = this._fn;
+  var _a = this._a;
+  var _b = this._b;
+  var open = true;
   check$promise(_fn(_a, _b), _fn, _a, _b).then(immediately(function EncaseP2$res(x){
     if(open){
       open = false;
@@ -38,8 +40,7 @@ EncaseP2.prototype._fork = function EncaseP2$fork(rej, res){
 };
 
 EncaseP2.prototype.toString = function EncaseP2$toString(){
-  const {_fn, _a, _b} = this;
-  return `Future.encaseP2(${showf(_fn)}, ${show(_a)}, ${show(_b)})`;
+  return 'Future.encaseP2(' + showf(this._fn) + ', ' + show(this._a) + ', ' + show(this._b) + ')';
 };
 
 export function encaseP2(f, x, y){

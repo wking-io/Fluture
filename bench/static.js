@@ -1,10 +1,10 @@
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const Future = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var Future = require('..');
 
-const f = x => x + 1;
-const m1 = Future.of(1);
-const mf = Future.of(f);
+var f = x => x + 1;
+var m1 = Future.of(1);
+var mf = Future.of(f);
 
 suite.add('ap(m1)', () => {
   Future.ap(m1);

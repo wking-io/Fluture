@@ -1,3 +1,3 @@
-export const Undetermined = 0;
-export const Synchronous = 1;
-export const Asynchronous = 2;
+export var Undetermined = 0;
+export var Synchronous = 1;
+export var Asynchronous = 2;

@@ -11,15 +11,14 @@ export function Encase(fn, a){
 Encase.prototype = Object.create(Core);
 
 Encase.prototype._fork = function Encase$fork(rej, res){
-  let r;
+  var r;
   try{ r = this._fn(this._a) }catch(e){ rej(e); return noop }
   res(r);
   return noop;
 };
 
 Encase.prototype.toString = function Encase$toString(){
-  const {_fn, _a} = this;
-  return `Future.encase(${showf(_fn)}, ${show(_a)})`;
+  return 'Future.encase(' + showf(this._fn) + ', ' + show(this._a) + ')';
 };
 
 export function encase(f, x){

@@ -1,9 +1,9 @@
-const benchmark = require('benchmark');
-const suite = new benchmark.Suite();
-const curry = require('lodash.curry');
-const {util} = require('..');
+var benchmark = require('benchmark');
+var suite = new benchmark.Suite();
+var curry = require('lodash.curry');
+var {util} = require('..');
 
-const lodash = curry(function(a, b){
+var lodash = curry(function(a, b){
   return a + b;
 });
 

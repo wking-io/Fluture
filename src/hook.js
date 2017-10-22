@@ -8,7 +8,7 @@ function check$dispose(m, f, x){
     'Future.hook',
     'the first function it\'s given to return a Future',
     m,
-    `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
   );
 }
 
@@ -17,7 +17,7 @@ function check$consume(m, f, x){
     'Future.hook',
     'the second function it\'s given to return a Future',
     m,
-    `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
   );
 }
 
@@ -31,15 +31,15 @@ Hook.prototype = Object.create(Core);
 
 Hook.prototype._fork = function Hook$fork(rej, res){
 
-  const {_acquire, _dispose, _consume} = this;
-  let cancel, cancelAcquire = noop, cancelConsume = noop, resource, value, cont = noop;
+  var _acquire = this._acquire, _dispose = this._dispose, _consume = this._consume;
+  var cancel, cancelAcquire = noop, cancelConsume = noop, resource, value, cont = noop;
 
   function Hook$done(){
     cont(value);
   }
 
   function Hook$dispose(){
-    const disposal = _dispose(resource);
+    var disposal = _dispose(resource);
     check$dispose(disposal, _dispose, resource);
     cancel = disposal._fork(rej, Hook$done);
     return cancel;
@@ -64,7 +64,7 @@ Hook.prototype._fork = function Hook$fork(rej, res){
 
   function Hook$acquireResolved(x){
     resource = x;
-    const consumption = _consume(resource);
+    var consumption = _consume(resource);
     check$consume(consumption, _consume, resource);
     cancel = Hook$cancelConsuption;
     cancelConsume = consumption._fork(Hook$consumptionRejected, Hook$consumptionResolved);
@@ -79,8 +79,13 @@ Hook.prototype._fork = function Hook$fork(rej, res){
 };
 
 Hook.prototype.toString = function Hook$toString(){
-  const {_acquire, _dispose, _consume} = this;
-  return `Future.hook(${_acquire.toString()}, ${showf(_dispose)}, ${showf(_consume)})`;
+  return 'Future.hook('
+       + this._acquire.toString()
+       + ', '
+       + showf(this._dispose)
+       + ', '
+       + showf(this._consume)
+       + ')';
 };
 
 function hook$acquire$cleanup(acquire, cleanup, consume){

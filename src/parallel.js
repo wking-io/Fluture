@@ -3,12 +3,14 @@ import {invalidArgument, invalidFuture} from './internal/throw';
 import {noop, show, mapArray, partial1} from './internal/fn';
 import {isUnsigned, isArray} from './internal/is';
 
-const check$parallel = (m, i) => isFuture(m) ? m : invalidFuture(
-  'Future.parallel',
-  'its second argument to be an array of valid Futures. '
-+ `The value at position ${i} in the array is not a Future`,
-  m
-);
+function check$parallel(m, i){
+  return isFuture(m) ? m : invalidFuture(
+    'Future.parallel',
+    'its second argument to be an array of valid Futures. '
+  + 'The value at position ' + i + ' in the array is not a Future',
+    m
+  );
+}
 
 export function Parallel(max, futures){
   this._futures = futures;
@@ -20,12 +22,12 @@ Parallel.prototype = Object.create(Core);
 
 Parallel.prototype._fork = function Parallel$_fork(rej, res){
 
-  const {_futures, _length, _max} = this;
-  const cancels = new Array(_length), out = new Array(_length);
-  let cursor = 0, running = 0, blocked = false;
+  var _futures = this._futures, _length = this._length, _max = this._max;
+  var cancels = new Array(_length), out = new Array(_length);
+  var cursor = 0, running = 0, blocked = false;
 
   function Parallel$cancel(){
-    for(let n = 0; n < _length; n++) cancels[n] && cancels[n]();
+    for(var n = 0; n < _length; n++) cancels[n] && cancels[n]();
   }
 
   function Parallel$run(idx){
@@ -56,14 +58,14 @@ Parallel.prototype._fork = function Parallel$_fork(rej, res){
 };
 
 Parallel.prototype.toString = function Parallel$toString(){
-  return `Future.parallel(${this._max}, ${show(this._futures)})`;
+  return 'Future.parallel(' + this._max + ', ' + show(this._futures) + ')';
 };
 
-const emptyArray = new Resolved([]);
+var emptyArray = new Resolved([]);
 
 function parallel$max(max, xs){
   if(!isArray(xs)) invalidArgument('Future.parallel', 1, 'be an array', xs);
-  const futures = mapArray(xs, check$parallel);
+  var futures = mapArray(xs, check$parallel);
   return futures.length === 0 ? emptyArray : new Parallel(max, futures);
 }
 

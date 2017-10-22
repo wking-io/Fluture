@@ -2,10 +2,10 @@ import {Core, isFuture} from './core';
 import {noop} from './internal/fn';
 import {invalidFuture} from './internal/throw';
 
-const Cold = Cached.Cold = 0;
-const Pending = Cached.Pending = 1;
-const Rejected = Cached.Rejected = 2;
-const Resolved = Cached.Resolved = 3;
+var Cold = Cached.Cold = 0;
+var Pending = Cached.Pending = 1;
+var Rejected = Cached.Rejected = 2;
+var Resolved = Cached.Resolved = 3;
 
 export function Queued(rej, res){
   this[Rejected] = rej;
@@ -36,9 +36,9 @@ Cached.prototype.extractRight = function Cached$extractRight(){
 };
 
 Cached.prototype._addToQueue = function Cached$addToQueue(rej, res){
-  const _this = this;
+  var _this = this;
   if(_this._state > Pending) return noop;
-  const i = _this._queue.push(new Queued(rej, res)) - 1;
+  var i = _this._queue.push(new Queued(rej, res)) - 1;
   _this._queued = _this._queued + 1;
 
   return function Cached$removeFromQueue(){
@@ -52,12 +52,12 @@ Cached.prototype._addToQueue = function Cached$addToQueue(rej, res){
 Cached.prototype._drainQueue = function Cached$drainQueue(){
   if(this._state <= Pending) return;
   if(this._queued === 0) return;
-  const queue = this._queue;
-  const length = queue.length;
-  const state = this._state;
-  const value = this._value;
+  var queue = this._queue;
+  var length = queue.length;
+  var state = this._state;
+  var value = this._value;
 
-  for(let i = 0; i < length; i++){
+  for(var i = 0; i < length; i++){
     queue[i] && queue[i][state](value);
     queue[i] = undefined;
   }
@@ -81,7 +81,7 @@ Cached.prototype.resolve = function Cached$resolve(value){
 };
 
 Cached.prototype.run = function Cached$run(){
-  const _this = this;
+  var _this = this;
   if(_this._state > Cold) return;
   _this._state = Pending;
   _this._cancel = _this._pure._fork(
@@ -101,7 +101,7 @@ Cached.prototype.reset = function Cached$reset(){
 };
 
 Cached.prototype._fork = function Cached$_fork(rej, res){
-  let cancel = noop;
+  var cancel = noop;
 
   switch(this._state){
     case Pending: cancel = this._addToQueue(rej, res); break;
@@ -114,7 +114,7 @@ Cached.prototype._fork = function Cached$_fork(rej, res){
 };
 
 Cached.prototype.toString = function Cached$toString(){
-  return `Future.cache(${this._pure.toString()})`;
+  return 'Future.cache(' + this._pure.toString() + ')';
 };
 
 export function cache(m){

@@ -1,12 +1,12 @@
 import * as U from './util';
-import {of, reject, after, rejectAfter} from '../index.es.js';
+import {of, reject, after, rejectAfter} from '../index.mjs.js';
 import {Core} from '../src/core';
 
-export const mock = Object.create(Core);
+export var mock = Object.create(Core);
 mock._fork = U.noop;
-mock.toString = () => '(util.mock)';
+mock.toString = function(){ return '(util.mock)' };
 
-export const resolved = of('resolved');
-export const rejected = reject('rejected');
-export const resolvedSlow = after(20, 'resolvedSlow');
-export const rejectedSlow = rejectAfter(20, 'rejectedSlow');
+export var resolved = of('resolved');
+export var rejected = reject('rejected');
+export var resolvedSlow = after(20, 'resolvedSlow');
+export var rejectedSlow = rejectAfter(20, 'rejectedSlow');

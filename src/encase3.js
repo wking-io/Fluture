@@ -13,15 +13,22 @@ export function Encase3(fn, a, b, c){
 Encase3.prototype = Object.create(Core);
 
 Encase3.prototype._fork = function Encase3$fork(rej, res){
-  let r;
+  var r;
   try{ r = this._fn(this._a, this._b, this._c) }catch(e){ rej(e); return noop }
   res(r);
   return noop;
 };
 
 Encase3.prototype.toString = function Encase3$toString(){
-  const {_fn, _a, _b, _c} = this;
-  return `Future.encase3(${showf(_fn)}, ${show(_a)}, ${show(_b)}, ${show(_c)})`;
+  return 'Future.encase3('
+       + showf(this._fn)
+       + ', '
+       + show(this._a)
+       + ', '
+       + show(this._b)
+       + ', '
+       + show(this._c)
+       + ')';
 };
 
 export function encase3(f, x, y, z){

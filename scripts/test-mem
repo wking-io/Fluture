@@ -2,17 +2,17 @@
 
 /* global process setImmediate */
 
-const Future = require('..');
-const {log} = require('util');
+var Future = require('..');
+var {log} = require('util');
 
-const start = Date.now();
-let batch = 0;
-let stamp = Date.now();
+var start = Date.now();
+var batch = 0;
+var stamp = Date.now();
 
-const report = () => {
-  const memMB = process.memoryUsage().rss / 1048576;
-  const now = Date.now();
-  const passed = now - stamp;
+function report(){
+  var memMB = process.memoryUsage().rss / 1048576;
+  var now = Date.now();
+  var passed = now - stamp;
   batch = batch + 1;
   if(passed >= 5000){
     log(
@@ -22,12 +22,15 @@ const report = () => {
     );
     stamp = now;
   }
-};
+}
 
-const sync = Future.of;
-const async = x => Future((l, r) => void setImmediate(r, x));
+var sync = Future.of;
 
-const cases = Object.create(null);
+function async(x){
+  return Future(function(l, r){ setImmediate(r, x) });
+}
+
+var cases = Object.create(null);
 
 //Should infinitely run until finally running out of memory.
 cases.syncHeadRecursion = function recur(){
@@ -65,19 +68,19 @@ cases.asyncTailRecursion = function recur(){
   return async('l').race(async('r')).chain(recur);
 };
 
-const f = cases[process.argv[2]];
+var f = cases[process.argv[2]];
 
 if(typeof f !== 'function'){
   console.log('Usage:\n\n  test-mem <case>\n\nPossible cases:\n');
-  Object.keys(cases).forEach(k => console.log(`  ${k}`));
+  Object.keys(cases).forEach(function(k){console.log(`  ${k}`)});
   process.exit(1);
 }
 
 log('PID', process.pid);
 
-const cancel = f().fork(
-  e => {console.error(e.stack); process.exit(1)},
-  v => {log('resolved', v); process.exit(2)}
+var cancel = f().fork(
+  function(e){console.error(e.stack); process.exit(1)},
+  function(v){log('resolved', v); process.exit(2)}
 );
 
 process.once('SIGINT', () => {

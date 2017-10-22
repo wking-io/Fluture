@@ -27,8 +27,8 @@ After.prototype._swap = function After$swap(){
 };
 
 After.prototype._fork = function After$_fork(rej, res){
-  const id = setTimeout(res, this._time, this._value);
-  return () => { clearTimeout(id) };
+  var id = setTimeout(res, this._time, this._value);
+  return function After$cancel(){ clearTimeout(id) };
 };
 
 After.prototype.extractRight = function After$extractRight(){
@@ -36,7 +36,7 @@ After.prototype.extractRight = function After$extractRight(){
 };
 
 After.prototype.toString = function After$toString(){
-  return `Future.after(${show(this._time)}, ${show(this._value)})`;
+  return 'Future.after(' + show(this._time) + ', ' + show(this._value) + ')';
 };
 
 export function RejectAfter(time, value){
@@ -53,8 +53,8 @@ RejectAfter.prototype._swap = function RejectAfter$swap(){
 };
 
 RejectAfter.prototype._fork = function RejectAfter$_fork(rej){
-  const id = setTimeout(rej, this._time, this._value);
-  return () => { clearTimeout(id) };
+  var id = setTimeout(rej, this._time, this._value);
+  return function RejectAfter$cancel(){ clearTimeout(id) };
 };
 
 RejectAfter.prototype.extractLeft = function RejectAfter$extractLeft(){
@@ -62,7 +62,7 @@ RejectAfter.prototype.extractLeft = function RejectAfter$extractLeft(){
 };
 
 RejectAfter.prototype.toString = function RejectAfter$toString(){
-  return `Future.rejectAfter(${show(this._time)}, ${show(this._value)})`;
+  return 'Future.rejectAfter(' + show(this._time) + ', ' + show(this._value) + ')';
 };
 
 function after$time(time, value){

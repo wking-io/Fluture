@@ -258,7 +258,7 @@ declare module 'fluture' {
   export function mapRej<LA, LB, R>(mapper: (reason: LA) => LB): (source: Future<LA, R>) => Future<LB, R>
 
   /** A Future that never settles. See https://github.com/fluture-js/Fluture#never */
-  export const never: Future<never, never>
+  export var never: Future<never, never>
 
   /** Create a Future using a provided Node-style callback. See https://github.com/fluture-js/Fluture#node */
   export function node<L, R>(fn: (done: Nodeback<L, R>) => void): Future<L, R>
@@ -329,7 +329,7 @@ declare module 'fluture' {
 
   }
 
-  export const Future: Fluture
+  export var Future: Fluture
   export default {} as Fluture
 
   export interface Par {
@@ -348,6 +348,6 @@ declare module 'fluture' {
 
   }
 
-  export const Par: Par
+  export var Par: Par
 
 }

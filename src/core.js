@@ -6,9 +6,9 @@ import interpreter from './internal/interpreter';
 import {empty as emptyList, cons} from './internal/list';
 import type from 'sanctuary-type-identifiers';
 
-const throwRejection = x => error(
-  `Future#value was called on a rejected Future\n  Actual: Future.reject(${show(x)})`
-);
+function throwRejection(x){
+  error('Future#value was called on a rejected Future\n  Actual: Future.reject(' + show(x) + ')');
+}
 
 export function Future(computation){
   if(!isFunction(computation)) invalidArgument('Future', 0, 'be a Function', computation);
@@ -125,7 +125,10 @@ Future.prototype.done = function Future$done(callback){
 };
 
 Future.prototype.promise = function Future$promise(){
-  return new Promise((res, rej) => this._fork(rej, res));
+  var _this = this;
+  return new Promise(function Future$promise$computation(res, rej){
+    _this._fork(rej, res);
+  });
 };
 
 Future.prototype.isRejected = function Future$isRejected(){
@@ -148,7 +151,7 @@ Future.prototype.extractRight = function Future$extractRight(){
   return [];
 };
 
-export const Core = Object.create(Future.prototype);
+export var Core = Object.create(Future.prototype);
 
 Core._ap = function Core$ap(other){
   return new Sequence(this)._ap(other);
@@ -205,7 +208,7 @@ Core._finally = function Core$finally(other){
 function check$fork(f, c){
   if(!(f === undefined || (isFunction(f) && f.length === 0))) typeError(
     'Future expected its computation to return a nullary function or void'
-    + `\n  Actual: ${show(f)}\n  From calling: ${showf(c)}`
+    + '\n  Actual: ' + show(f) + '\n  From calling: ' + showf(c)
   );
 }
 
@@ -216,8 +219,8 @@ export function Computation(computation){
 Computation.prototype = Object.create(Core);
 
 Computation.prototype._fork = function Computation$_fork(rej, res){
-  let open = true;
-  const f = this._computation(function Computation$rej(x){
+  var open = true;
+  var f = this._computation(function Computation$rej(x){
     if(open){
       open = false;
       rej(x);
@@ -237,7 +240,7 @@ Computation.prototype._fork = function Computation$_fork(rej, res){
 };
 
 Computation.prototype.toString = function Computation$toString(){
-  return `Future(${showf(this._computation)})`;
+  return 'Future(' + showf(this._computation) + ')';
 };
 
 export function Rejected(value){
@@ -279,10 +282,12 @@ Rejected.prototype.extractLeft = function Rejected$extractLeft(){
 };
 
 Rejected.prototype.toString = function Rejected$toString(){
-  return `Future.reject(${show(this._value)})`;
+  return 'Future.reject(' + show(this._value) + ')';
 };
 
-export const reject = x => new Rejected(x);
+export function reject(x){
+  return new Rejected(x);
+}
 
 export function Resolved(value){
   this._value = value;
@@ -299,7 +304,10 @@ Resolved.prototype._and = function Resolved$and(other){
 };
 
 Resolved.prototype._both = function Resolved$both(other){
-  return other._map(x => [this._value, x]);
+  var left = this._value;
+  return other._map(function Resolved$both$mapper(right){
+    return [left, right];
+  });
 };
 
 Resolved.prototype._swap = function Resolved$swap(){
@@ -307,7 +315,10 @@ Resolved.prototype._swap = function Resolved$swap(){
 };
 
 Resolved.prototype._finally = function Resolved$finally(other){
-  return other._map(() => this._value);
+  var value = this._value;
+  return other._map(function Resolved$finally$mapper(){
+    return value;
+  });
 };
 
 Resolved.prototype._fork = function _fork(rej, res){
@@ -324,10 +335,12 @@ Resolved.prototype.extractRight = function Resolved$extractRight(){
 };
 
 Resolved.prototype.toString = function Resolved$toString(){
-  return `Future.of(${show(this._value)})`;
+  return 'Future.of(' + show(this._value) + ')';
 };
 
-export const of = x => new Resolved(x);
+export function of(x){
+  return new Resolved(x);
+}
 
 function Never(){
   this._isNever = true;
@@ -359,25 +372,29 @@ Never.prototype.toString = function Never$toString(){
   return 'Future.never';
 };
 
-export const never = new Never();
-export const isNever = x => isFuture(x) && x._isNever === true;
+export var never = new Never();
+
+export function isNever(x){
+  return isFuture(x) && x._isNever === true;
+}
 
 function Eager(future){
-  this.rej = noop;
-  this.res = noop;
-  this.rejected = false;
-  this.resolved = false;
-  this.value = null;
-  this.cancel = future._fork(x => {
-    this.value = x;
-    this.rejected = true;
-    this.cancel = noop;
-    this.rej(x);
-  }, x => {
-    this.value = x;
-    this.resolved = true;
-    this.cancel = noop;
-    this.res(x);
+  var _this = this;
+  _this.rej = noop;
+  _this.res = noop;
+  _this.rejected = false;
+  _this.resolved = false;
+  _this.value = null;
+  _this.cancel = future._fork(function Eager$reject(x){
+    _this.value = x;
+    _this.rejected = true;
+    _this.cancel = noop;
+    _this.rej(x);
+  }, function Eager$resolve(x){
+    _this.value = x;
+    _this.resolved = true;
+    _this.cancel = noop;
+    _this.res(x);
   });
 }
 
@@ -390,119 +407,234 @@ Eager.prototype._fork = function Eager$_fork(rej, res){
     this.rej = rej;
     this.res = res;
   }
-
   return this.cancel;
 };
 
-export class Action{
-  rejected(x){ this.cancel(); return new Rejected(x) }
-  resolved(x){ this.cancel(); return new Resolved(x) }
-  run(){ return this }
-  cancel(){}
-}
-const check$ap = f => isFunction(f) ? f : typeError(
-  'Future#ap expects its first argument to be a Future of a Function'
-  + `\n  Actual: Future.of(${show(f)})`
-);
-export class ApAction extends Action{
-  constructor(other){ super(); this.other = other }
-  resolved(f){ check$ap(f); return this.other._map(x => f(x)) }
-  toString(){ return `ap(${this.other.toString()})` }
-}
-export class MapAction extends Action{
-  constructor(mapper){ super(); this.mapper = mapper }
-  resolved(x){ return new Resolved(this.mapper(x)) }
-  toString(){ return `map(${showf(this.mapper)})` }
-}
-export class BimapAction extends Action{
-  constructor(lmapper, rmapper){ super(); this.lmapper = lmapper; this.rmapper = rmapper }
-  rejected(x){ return new Rejected(this.lmapper(x)) }
-  resolved(x){ return new Resolved(this.rmapper(x)) }
-  toString(){ return `bimap(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
-}
-const check$chain = (m, f, x) => isFuture(m) ? m : invalidFuture(
-  'Future#chain',
-  'the function it\'s given to return a Future',
-  m,
-  `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
-);
-export class ChainAction extends Action{
-  constructor(mapper){ super(); this.mapper = mapper }
-  resolved(x){ return check$chain(this.mapper(x), this.mapper, x) }
-  toString(){ return `chain(${showf(this.mapper)})` }
-}
-export class MapRejAction extends Action{
-  constructor(mapper){ super(); this.mapper = mapper }
-  rejected(x){ return new Rejected(this.mapper(x)) }
-  toString(){ return `mapRej(${showf(this.mapper)})` }
-}
-const check$chainRej = (m, f, x) => isFuture(m) ? m : invalidFuture(
-  'Future#chainRej',
-  'the function it\'s given to return a Future',
-  m,
-  `\n  From calling: ${showf(f)}\n  With: ${show(x)}`
-);
-export class ChainRejAction extends Action{
-  constructor(mapper){ super(); this.mapper = mapper }
-  rejected(x){ return check$chainRej(this.mapper(x), this.mapper, x) }
-  toString(){ return `chainRej(${showf(this.mapper)})` }
-}
-export class SwapAction extends Action{
-  constructor(){ super(); return SwapAction.instance || (SwapAction.instance = this) }
-  rejected(x){ return new Resolved(x) }
-  resolved(x){ return new Rejected(x) }
-  toString(){ return 'swap()' }
-}
-export class FoldAction extends Action{
-  constructor(lmapper, rmapper){ super(); this.lmapper = lmapper; this.rmapper = rmapper }
-  rejected(x){ return new Resolved(this.lmapper(x)) }
-  resolved(x){ return new Resolved(this.rmapper(x)) }
-  toString(){ return `fold(${showf(this.lmapper)}, ${showf(this.rmapper)})` }
-}
-export class FinallyAction extends Action{
-  constructor(other){ super(); this.other = other }
-  cancel(){ this.other._fork(noop, noop)() }
-  rejected(x){ return this.other._and(new Rejected(x)) }
-  resolved(x){ return this.other._map(() => x) }
-  toString(){ return `finally(${this.other.toString()})` }
-}
-export class AndAction extends Action{
-  constructor(other){ super(); this.other = other }
-  resolved(){ return this.other }
-  toString(){ return `and(${this.other.toString()})` }
-}
-export class OrAction extends Action{
-  constructor(other){ super(); this.other = other }
-  rejected(){ return this.other }
-  toString(){ return `or(${this.other.toString()})` }
-}
-export class RaceAction extends Action{
-  constructor(other){ super(); this.other = other }
-  run(early){ return new RaceActionState(early, new Eager(this.other)) }
-  toString(){ return `race(${this.other.toString()})` }
-}
-export class RaceActionState extends RaceAction{
-  constructor(early, other){
-    super(other);
-    this.cancel = other._fork(x => early(new Rejected(x), this), x => early(new Resolved(x), this));
-  }
-}
-export class BothAction extends Action{
-  constructor(other){ super(); this.other = other }
-  run(early){ return new BothActionState(early, new Eager(this.other)) }
-  resolved(x){ return this.other._map(y => [x, y]) }
-  toString(){ return `both(${this.other.toString()})` }
-}
-export class BothActionState extends BothAction{
-  constructor(early, other){
-    super(other);
-    this.cancel = this.other.fork(x => early(new Rejected(x), this), noop);
-  }
+function check$ap(f){
+  return isFunction(f) ? f : typeError(
+    'Future#ap expects its first argument to be a Future of a Function'
+    + '\n  Actual: Future.of(' + show(f) + ')'
+  );
 }
 
-export function Sequence(spawn, actions = emptyList){
+function check$chain(m, f, x){
+  return isFuture(m) ? m : invalidFuture(
+    'Future#chain',
+    'the function it\'s given to return a Future',
+    m,
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
+  );
+}
+
+function check$chainRej(m, f, x){
+  return isFuture(m) ? m : invalidFuture(
+    'Future#chainRej',
+    'the function it\'s given to return a Future',
+    m,
+    '\n  From calling: ' + showf(f) + '\n  With: ' + show(x)
+  );
+}
+
+export var Action = {
+  rejected: function Action$rejected(x){ this.cancel(); return new Rejected(x) },
+  resolved: function Action$resolved(x){ this.cancel(); return new Resolved(x) },
+  run: function Action$run(){ return this },
+  cancel: function Action$cancel(){}
+};
+
+export function ApAction(other){ this.other = other }
+ApAction.prototype = Object.create(Action);
+
+ApAction.prototype.resolved = function ApAction$resolved(f){
+  check$ap(f);
+  return this.other._map(function ApAction$resolved$mapper(x){ return f(x) });
+};
+
+ApAction.prototype.toString = function ApAction$toString(){
+  return 'ap(' + this.other.toString() + ')';
+};
+
+export function MapAction(mapper){ this.mapper = mapper }
+MapAction.prototype = Object.create(Action);
+
+MapAction.prototype.resolved = function MapAction$resolved(x){
+  return new Resolved(this.mapper(x));
+};
+
+MapAction.prototype.toString = function MapAction$toString(){
+  return 'map(' + showf(this.mapper) + ')';
+};
+
+export function BimapAction(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper }
+BimapAction.prototype = Object.create(Action);
+
+BimapAction.prototype.rejected = function BimapAction$rejected(x){
+  return new Rejected(this.lmapper(x));
+};
+
+BimapAction.prototype.resolved = function BimapAction$resolved(x){
+  return new Resolved(this.rmapper(x));
+};
+
+BimapAction.prototype.toString = function BimapAction$toString(){
+  return 'bimap(' + showf(this.lmapper) + ', ' + showf(this.rmapper) + ')';
+};
+
+export function ChainAction(mapper){ this.mapper = mapper }
+ChainAction.prototype = Object.create(Action);
+
+ChainAction.prototype.resolved = function ChainAction$resolved(x){
+  return check$chain(this.mapper(x), this.mapper, x);
+};
+
+ChainAction.prototype.toString = function ChainAction$toString(){
+  return 'chain(' + showf(this.mapper) + ')';
+};
+
+export function MapRejAction(mapper){ this.mapper = mapper }
+MapRejAction.prototype = Object.create(Action);
+
+MapRejAction.prototype.rejected = function MapRejAction$rejected(x){
+  return new Rejected(this.mapper(x));
+};
+
+MapRejAction.prototype.toString = function MapRejAction$toString(){
+  return 'mapRej(' + showf(this.mapper) + ')';
+};
+
+export function ChainRejAction(mapper){ this.mapper = mapper }
+ChainRejAction.prototype = Object.create(Action);
+
+ChainRejAction.prototype.rejected = function ChainRejAction$rejected(x){
+  return check$chainRej(this.mapper(x), this.mapper, x);
+};
+
+ChainRejAction.prototype.toString = function ChainRejAction$toString(){
+  return 'chainRej(' + showf(this.mapper) + ')';
+};
+
+export function SwapAction(){}
+SwapAction.prototype = Object.create(Action);
+
+SwapAction.prototype.rejected = function SwapAction$rejected(x){
+  return new Resolved(x);
+};
+
+SwapAction.prototype.resolved = function SwapAction$resolved(x){
+  return new Rejected(x);
+};
+
+SwapAction.prototype.toString = function SwapAction$toString(){
+  return 'swap()';
+};
+
+export function FoldAction(lmapper, rmapper){ this.lmapper = lmapper; this.rmapper = rmapper }
+FoldAction.prototype = Object.create(Action);
+
+FoldAction.prototype.rejected = function FoldAction$rejected(x){
+  return new Resolved(this.lmapper(x));
+};
+
+FoldAction.prototype.resolved = function FoldAction$resolved(x){
+  return new Resolved(this.rmapper(x));
+};
+
+FoldAction.prototype.toString = function FoldAction$toString(){
+  return 'fold(' + showf(this.lmapper) + ', ' + showf(this.rmapper) + ')';
+};
+
+export function FinallyAction(other){ this.other = other }
+FinallyAction.prototype = Object.create(Action);
+
+FinallyAction.prototype.rejected = function FinallyAction$rejected(x){
+  return this.other._and(new Rejected(x));
+};
+
+FinallyAction.prototype.resolved = function FinallyAction$resolved(x){
+  return this.other._map(function FoldAction$resolved$mapper(){ return x });
+};
+
+FinallyAction.prototype.cancel = function FinallyAction$cancel(){
+  this.other._fork(noop, noop)();
+};
+
+FinallyAction.prototype.toString = function FinallyAction$toString(){
+  return 'finally(' + this.other.toString() + ')';
+};
+
+export function AndAction(other){ this.other = other }
+AndAction.prototype = Object.create(Action);
+
+AndAction.prototype.resolved = function AndAction$resolved(){
+  return this.other;
+};
+
+AndAction.prototype.toString = function AndAction$toString(){
+  return 'and(' + this.other.toString() + ')';
+};
+
+export function OrAction(other){ this.other = other }
+OrAction.prototype = Object.create(Action);
+
+OrAction.prototype.rejected = function OrAction$rejected(){
+  return this.other;
+};
+
+OrAction.prototype.toString = function OrAction$toString(){
+  return 'or(' + this.other.toString() + ')';
+};
+
+export function RaceAction(other){ this.other = other }
+RaceAction.prototype = Object.create(Action);
+
+RaceAction.prototype.run = function RaceAction$run(early){
+  return new RaceActionState(early, new Eager(this.other));
+};
+
+RaceAction.prototype.toString = function RaceAction$toString(){
+  return 'race(' + this.other.toString() + ')';
+};
+
+export function BothAction(other){ this.other = other }
+BothAction.prototype = Object.create(Action);
+
+BothAction.prototype.resolved = function BothAction$resolved(x){
+  return this.other._map(function BothAction$resolved$mapper(y){ return [x, y] });
+};
+
+BothAction.prototype.run = function BothAction$run(early){
+  return new BothActionState(early, new Eager(this.other));
+};
+
+BothAction.prototype.toString = function BothAction$toString(){
+  return 'both(' + this.other.toString() + ')';
+};
+
+export function RaceActionState(early, other){
+  var _this = this;
+  _this.other = other;
+  _this.cancel = other._fork(
+    function RaceActionState$rej(x){ early(new Rejected(x), _this) },
+    function RaceActionState$res(x){ early(new Resolved(x), _this) }
+  );
+}
+
+RaceActionState.prototype = Object.create(RaceAction.prototype);
+
+export function BothActionState(early, other){
+  var _this = this;
+  _this.other = other;
+  _this.cancel = other._fork(
+    function BothActionState$rej(x){ early(new Rejected(x), _this) },
+    noop
+  );
+}
+
+BothActionState.prototype = Object.create(BothAction.prototype);
+
+export function Sequence(spawn, actions){
   this._spawn = spawn;
-  this._actions = actions;
+  this._actions = actions || emptyList;
 }
 
 Sequence.prototype = Object.create(Future.prototype);
@@ -566,12 +698,12 @@ Sequence.prototype._finally = function Sequence$finally(other){
 Sequence.prototype._fork = interpreter;
 
 Sequence.prototype.toString = function Sequence$toString(){
-  let str = '', tail = this._actions;
+  var str = '', tail = this._actions;
 
   while(!tail.isEmpty){
-    str = `.${tail.head.toString()}${str}`;
+    str = '.' + tail.head.toString() + str;
     tail = tail.tail;
   }
 
-  return `${this._spawn.toString()}${str}`;
+  return this._spawn.toString() + str;
 };

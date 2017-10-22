@@ -12,15 +12,14 @@ export function Encase2(fn, a, b){
 Encase2.prototype = Object.create(Core);
 
 Encase2.prototype._fork = function Encase2$fork(rej, res){
-  let r;
+  var r;
   try{ r = this._fn(this._a, this._b) }catch(e){ rej(e); return noop }
   res(r);
   return noop;
 };
 
 Encase2.prototype.toString = function Encase2$toString(){
-  const {_fn, _a, _b} = this;
-  return `Future.encase2(${showf(_fn)}, ${show(_a)}, ${show(_b)})`;
+  return 'Future.encase2(' + showf(this._fn) + ', ' + show(this._a) + ', ' + show(this._b) + ')';
 };
 
 export function encase2(f, x, y){

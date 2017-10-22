@@ -12,8 +12,9 @@ ChainRec.prototype = Object.create(Core);
 
 ChainRec.prototype._fork = function ChainRec$_fork(rej, res){
 
-  const {_step, _init} = this;
-  let timing = Undetermined, cancel = noop, state = Next(_init);
+  var _step = this._step;
+  var _init = this._init;
+  var timing = Undetermined, cancel = noop, state = Next(_init);
 
   function resolved(it){
     state = it;
@@ -23,7 +24,7 @@ ChainRec.prototype._fork = function ChainRec$_fork(rej, res){
   function drain(){
     while(!state.done){
       timing = Undetermined;
-      const m = _step(Next, Done, state.value);
+      var m = _step(Next, Done, state.value);
       cancel = m._fork(rej, resolved);
 
       if(timing !== Synchronous){
@@ -42,7 +43,7 @@ ChainRec.prototype._fork = function ChainRec$_fork(rej, res){
 };
 
 ChainRec.prototype.toString = function ChainRec$toString(){
-  return `Future.chainRec(${showf(this._step)}, ${show(this._init)})`;
+  return 'Future.chainRec(' + showf(this._step) + ', ' + show(this._init) + ')';
 };
 
 export function chainRec(step, init){

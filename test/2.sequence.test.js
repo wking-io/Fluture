@@ -1,30 +1,30 @@
-import {Future, of, never, after} from '../index.es.js';
+import {Future, of, never, after} from '../index.mjs.js';
 import {expect} from 'chai';
 import {add, bang, noop, error, assertResolved, assertRejected} from './util';
 import {resolved, rejected, resolvedSlow} from './futures';
 import {Sequence, Core} from '../src/core';
 import {StateT} from 'fantasy-states';
 
-describe('Sequence', () => {
+describe('Sequence', function(){
 
-  const dummy = new Sequence(resolved);
+  var dummy = new Sequence(resolved);
 
-  describe('ap', () => {
+  describe('ap', function(){
 
-    const seq = of(bang).ap(dummy);
+    var seq = of(bang).ap(dummy);
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved!');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
-        const expected = 'Future.of(s => `${s}!`).ap(Future.of("resolved")).map(s => `${s}!`)';
+      it('returns code to create the same data-structure', function(){
+        var expected = 'Future.of(' + bang.toString() + ').ap(Future.of("resolved")).map(' + bang.toString() + ')';
         expect(seq.map(bang).toString()).to.equal(expected);
       });
 
@@ -32,135 +32,135 @@ describe('Sequence', () => {
 
   });
 
-  describe('map', () => {
+  describe('map', function(){
 
-    const seq = dummy.map(bang);
+    var seq = dummy.map(bang);
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved!');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of("resolved").map(s => `${s}!`)');
+      it('returns code to create the same data-structure', function(){
+        expect(seq.toString()).to.equal('Future.of("resolved").map(' + bang.toString() + ')');
       });
 
     });
 
   });
 
-  describe('bimap', () => {
+  describe('bimap', function(){
 
-    const seq = dummy.bimap(add(1), bang);
+    var seq = dummy.bimap(add(1), bang);
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved!');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of("resolved").bimap(b => a + b, s => `${s}!`)');
+      it('returns code to create the same data-structure', function(){
+        expect(seq.toString()).to.equal('Future.of("resolved").bimap(' + add(1).toString() + ', ' + bang.toString() + ')');
       });
 
     });
 
   });
 
-  describe('chain', () => {
+  describe('chain', function(){
 
-    const seq = dummy.chain(x => of(bang(x)));
+    var seq = dummy.chain(function(x){ return of(bang(x)) });
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved!');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of("resolved").chain(x => of(bang(x)))');
+      it('returns code to create the same data-structure', function(){
+        expect(seq.toString()).to.equal('Future.of("resolved").chain(function (x){ return of(bang(x)) })');
       });
 
     });
 
   });
 
-  describe('mapRej', () => {
+  describe('mapRej', function(){
 
-    const seq = dummy.mapRej(add(1));
+    var seq = dummy.mapRej(add(1));
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of("resolved").mapRej(b => a + b)');
+      it('returns code to create the same data-structure', function(){
+        expect(seq.toString()).to.equal('Future.of("resolved").mapRej(' + add(1).toString() + ')');
       });
 
     });
 
   });
 
-  describe('chainRej', () => {
+  describe('chainRej', function(){
 
-    const seq = dummy.chainRej(_ => of(1));
+    var seq = dummy.chainRej(function(){ return of(1) });
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of("resolved").chainRej(_ => of(1))');
+      it('returns code to create the same data-structure', function(){
+        expect(seq.toString()).to.equal('Future.of("resolved").chainRej(function (){ return of(1) })');
       });
 
     });
 
   });
 
-  describe('race', () => {
+  describe('race', function(){
 
-    const seq = dummy.race(dummy);
+    var seq = dummy.race(dummy);
 
-    it('returns itself when racing Never', () => {
+    it('returns itself when racing Never', function(){
       expect(dummy.race(never)).to.equal(dummy);
     });
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
+      it('returns code to create the same data-structure', function(){
         expect(seq.toString()).to.equal('Future.of("resolved").race(Future.of("resolved"))');
       });
 
@@ -168,21 +168,21 @@ describe('Sequence', () => {
 
   });
 
-  describe('both', () => {
+  describe('both', function(){
 
-    const seq = dummy.both(dummy);
+    var seq = dummy.both(dummy);
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, ['resolved', 'resolved']);
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
+      it('returns code to create the same data-structure', function(){
         expect(seq.toString()).to.equal('Future.of("resolved").both(Future.of("resolved"))');
       });
 
@@ -190,21 +190,21 @@ describe('Sequence', () => {
 
   });
 
-  describe('and', () => {
+  describe('and', function(){
 
-    const seq = dummy.and(dummy);
+    var seq = dummy.and(dummy);
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
+      it('returns code to create the same data-structure', function(){
         expect(seq.toString()).to.equal('Future.of("resolved").and(Future.of("resolved"))');
       });
 
@@ -212,21 +212,21 @@ describe('Sequence', () => {
 
   });
 
-  describe('or', () => {
+  describe('or', function(){
 
-    const seq = dummy.or(dummy);
+    var seq = dummy.or(dummy);
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
+      it('returns code to create the same data-structure', function(){
         expect(seq.toString()).to.equal('Future.of("resolved").or(Future.of("resolved"))');
       });
 
@@ -234,26 +234,26 @@ describe('Sequence', () => {
 
   });
 
-  describe('swap', () => {
+  describe('swap', function(){
 
-    const seq = dummy.swap();
-    const nseq = new Sequence(rejected).swap();
+    var seq = dummy.swap();
+    var nseq = new Sequence(rejected).swap();
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('swaps from right to left', () => {
+      it('swaps from right to left', function(){
         return assertRejected(seq, 'resolved');
       });
 
-      it('swaps from left to right', () => {
+      it('swaps from left to right', function(){
         return assertResolved(nseq, 'rejected');
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
+      it('returns code to create the same data-structure', function(){
         expect(seq.toString()).to.equal('Future.of("resolved").swap()');
       });
 
@@ -261,49 +261,49 @@ describe('Sequence', () => {
 
   });
 
-  describe('fold', () => {
+  describe('fold', function(){
 
-    const seq = dummy.fold(_ => 0, _ => 1);
+    var seq = dummy.fold(function(){ return 0 }, function(){ return 1 });
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 1);
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
-        expect(seq.toString()).to.equal('Future.of("resolved").fold(_ => 0, _ => 1)');
+      it('returns code to create the same data-structure', function(){
+        expect(seq.toString()).to.equal('Future.of("resolved").fold(function (){ return 0 }, function (){ return 1 })');
       });
 
     });
 
   });
 
-  describe('finally', () => {
+  describe('finally', function(){
 
-    const seq = dummy.finally(dummy);
+    var seq = dummy.finally(dummy);
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('runs the action', () => {
+      it('runs the action', function(){
         return assertResolved(seq, 'resolved');
       });
 
-      it('runs the other if the left rejects', done => {
-        const other = Future(() => {done()});
-        const m = new Sequence(rejected).finally(other);
+      it('runs the other if the left rejects', function(done){
+        var other = Future(function(){done()});
+        var m = new Sequence(rejected).finally(other);
         m.fork(noop, noop);
       });
 
     });
 
-    describe('#toString()', () => {
+    describe('#toString()', function(){
 
-      it('returns code to create the same data-structure', () => {
+      it('returns code to create the same data-structure', function(){
         expect(seq.toString()).to.equal('Future.of("resolved").finally(Future.of("resolved"))');
       });
 
@@ -311,79 +311,79 @@ describe('Sequence', () => {
 
   });
 
-  describe('in general', () => {
+  describe('in general', function(){
 
-    describe('#fork()', () => {
+    describe('#fork()', function(){
 
-      it('is capable of joining', () => {
-        const m = new Sequence(of('a'))
+      it('is capable of joining', function(){
+        var m = new Sequence(of('a'))
         //eslint-disable-next-line max-nested-callbacks
-        .chain(x => after(5, `${x}b`).chain(x => after(5, `${x}c`)))
-        .chain(x => after(5, `${x}d`))
-        .chain(x => of(`${x}e`))
-        .chain(x => after(5, `${x}f`));
+        .chain(function(x){ return after(5, (x + 'b')).chain(function(x){ return after(5, (x + 'c')) }) })
+        .chain(function(x){ return after(5, (x + 'd')) })
+        .chain(function(x){ return of((x + 'e')) })
+        .chain(function(x){ return after(5, (x + 'f')) });
         return assertResolved(m, 'abcdef');
       });
 
-      it('is capable of early termination', done => {
-        const slow = new Sequence(Future(() => {
-          const id = setTimeout(done, 20, new Error('Not terminated'));
-          return () => clearTimeout(id);
+      it('is capable of early termination', function(done){
+        var slow = new Sequence(Future(function(){
+          var id = setTimeout(done, 20, new Error('Not terminated'));
+          return function(){ return clearTimeout(id) };
         }));
-        const m = slow.race(slow).race(slow).race(slow).race(resolved);
+        var m = slow.race(slow).race(slow).race(slow).race(resolved);
         m.fork(noop, noop);
         setTimeout(done, 40, null);
       });
 
-      it('cancels running actions when one early-terminates asynchronously', done => {
-        const slow = new Sequence(Future(() => {
-          const id = setTimeout(done, 50, new Error('Not terminated'));
-          return () => clearTimeout(id);
+      it('cancels running actions when one early-terminates asynchronously', function(done){
+        var slow = new Sequence(Future(function(){
+          var id = setTimeout(done, 50, new Error('Not terminated'));
+          return function(){ return clearTimeout(id) };
         }));
-        const m = slow.race(slow).race(slow).race(slow).race(resolvedSlow);
+        var m = slow.race(slow).race(slow).race(slow).race(resolvedSlow);
         m.fork(noop, noop);
         setTimeout(done, 100, null);
       });
 
-      it('does not run actions unnecessarily when one early-terminates synchronously', done => {
-        const broken = new Sequence(Future(_ => { console.log('broken'); done(error) }));
-        const m = resolvedSlow.race(broken).race(broken).race(resolved);
-        m.fork(noop, _ => done());
+      it('does not run actions unnecessarily when one early-terminates synchronously', function(done){
+        var broken = new Sequence(Future(function(){ console.log('broken'); done(error) }));
+        var m = resolvedSlow.race(broken).race(broken).race(resolved);
+        m.fork(noop, function(){ return done() });
       });
 
-      it('resolves the left-hand side first when running actions in parallel', () => {
-        const m = new Sequence(of(1)).map(x => x).chain(x => of(x));
+      it('resolves the left-hand side first when running actions in parallel', function(){
+        var m = new Sequence(of(1)).map(function(x){ return x }).chain(function(x){ return of(x) });
         return assertResolved(m.race(of(2)), 1);
       });
 
-      it('does not forget about actions to run after early termination', () => {
-        const m = new Sequence(after(30, 'a'))
+      it('does not forget about actions to run after early termination', function(){
+        var m = new Sequence(after(30, 'a'))
                   .race(new Sequence(after(20, 'b')))
-                  .map(x => `${x}c`);
+                  .map(function(x){ return (x + 'c') });
         return assertResolved(m, 'bc');
       });
 
-      it('does not run early terminating actions twice, or cancel them', done => {
-        const mock = Object.create(Core);
-        mock._fork = (l, r) => r(done()) || (() => done(error));
-        const m = new Sequence(after(30, 'a')).map(x => `${x}b`).race(mock);
+      it('does not run early terminating actions twice, or cancel them', function(done){
+        var mock = Object.create(Core);
+        mock._fork = function(l, r){ return r(done()) || (function(){ return done(error) }) };
+        var m = new Sequence(after(30, 'a')).map(function(x){ return (x + 'b') }).race(mock);
         m.fork(noop, noop);
       });
 
-      it('does not run run concurrent computations twice', done => {
-        let ran = false;
-        const mock = Future(_ => { ran ? done(error) : (ran = true) });
-        const m = new Sequence(resolvedSlow).chain(_ => resolvedSlow).race(mock);
-        m.fork(done, _ => done());
+      it('does not run run concurrent computations twice', function(done){
+        var ran = false;
+        var mock = Future(function(){ ran ? done(error) : (ran = true) });
+        var m = new Sequence(resolvedSlow).chain(function(){ return resolvedSlow }).race(mock);
+        m.fork(done, function(){ return done() });
       });
 
-      it('returns a cancel function which cancels all running actions', done => {
-        let i = 0;
-        const started = _ => void i++;
-        const cancelled = _ => --i < 1 && done();
-        const slow = Future(() => started() || (() => cancelled()));
-        const m = slow.race(slow).race(slow).race(slow).race(slow);
-        const cancel = m.fork(noop, noop);
+      it('returns a cancel function which cancels all running actions', function(done){
+        var i = 0;
+        var started = function(){ return void i++ };
+        var cancelled = function(){ return --i < 1 && done() };
+        var slow = Future(function(){ return started() || (function(){ return cancelled() }) });
+        var m = slow.race(slow).race(slow).race(slow).race(slow);
+        var cancel = m.fork(noop, noop);
         expect(i).to.equal(5);
         cancel();
       });
@@ -392,14 +392,14 @@ describe('Sequence', () => {
 
   });
 
-  describe('Bug 2017-06-02, reported by @d3vilroot', () => {
+  describe('Bug 2017-06-02, reported by @d3vilroot', function(){
 
-    const Middleware = StateT(Future);
-    const slow = Middleware.lift(after(10, null));
-    const program = slow.chain(_ => slow.chain(_ => slow)).evalState(null);
+    var Middleware = StateT(Future);
+    var slow = Middleware.lift(after(10, null));
+    var program = slow.chain(function(){ return slow.chain(function(){ return slow }) }).evalState(null);
 
-    it('does not occur', done => {
-      program.fork(done, _ => done());
+    it('does not occur', function(done){
+      program.fork(done, function(){ return done() });
     });
 
   });
