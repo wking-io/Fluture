@@ -22,7 +22,7 @@
     "lint:readme": "remark --no-stdout --frail -u remark-validate-links README.md",
     "release": "npm outdated --long; xyz --edit --repo git@github.com:fluture-js/Fluture.git --tag 'X.Y.Z' --script scripts/distribute --increment",
     "test": "npm run lint && npm run lint:readme && npm run test:unit",
-    "test:unit": "npm run build && nyc mocha --require @std/esm --ui bdd --reporter list --check-leaks --full-trace test/**.test.js",
+    "test:unit": "npm run build && nyc --include src mocha --require @std/esm --ui bdd --reporter list --check-leaks --full-trace test/**.test.js",
     "test:coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov"
   },
   "author": "Aldwin Vlasblom <aldwin.vlasblom@gmail.com> (https://github.com/Avaq)",
