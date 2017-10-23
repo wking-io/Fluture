@@ -1,5 +1,5 @@
 /**
- * Fluture bundled; version 7.2.0
+ * Fluture bundled; version 7.2.1
  */
 
 var Fluture = (function () {
@@ -2773,6 +2773,160 @@ function invalidFuture(it, at, m, s){
   );
 }
 
+var concurrify = createCommonjsModule(function (module) {
+(function(global, f){
+
+  'use strict';
+
+  /*istanbul ignore next*/
+  if(module && 'object' !== 'undefined'){
+    module.exports = f(sanctuaryTypeClasses, sanctuaryTypeIdentifiers$2);
+  }else{
+    global.concurrify = f(global.sanctuaryTypeClasses, global.sanctuaryTypeIdentifiers);
+  }
+
+}(/*istanbul ignore next*/(commonjsGlobal || window || commonjsGlobal), function(Z, type){
+
+  'use strict';
+
+  var $alt = 'fantasy-land/alt';
+  var $ap = 'fantasy-land/ap';
+  var $map = 'fantasy-land/map';
+  var $of = 'fantasy-land/of';
+  var $zero = 'fantasy-land/zero';
+  var $$type = '@@type';
+
+  var ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
+
+  function isFunction(f){
+    return typeof f === 'function';
+  }
+
+  function isBinary(f){
+    return f.length >= 2;
+  }
+
+  function isApplicativeRepr(Repr){
+    try{
+      return Z.Applicative.test(Z.of(Repr));
+    }catch(e){
+      console.log(e);
+      console.log(Repr, Object.keys(Repr));
+      return false;
+    }
+  }
+
+  function invalidArgument(it, at, expected, actual){
+    throw new TypeError(
+      it
+      + ' expects its '
+      + ordinal[at]
+      + ' argument to '
+      + expected
+      + '\n  Actual: '
+      + Z.toString(actual)
+    );
+  }
+
+  function invalidContext(it, actual, an){
+    throw new TypeError(
+      it + ' was invoked outside the context of a ' + an + '. \n  Called on: ' + Z.toString(actual)
+    );
+  }
+
+  //       getTypeIdentifier :: TypeRepresentative -> TypeIdentifier
+  function getTypeIdentifier(Repr){
+    return Repr[$$type] || Repr.name || 'Anonymous';
+  }
+
+  //       generateTypeIdentifier :: TypeIdentifier -> TypeIdentifier
+  function generateTypeIdentifier(identifier){
+    var o = type.parse(identifier);
+    return (o.namespace || 'concurrify') + '/Concurrent' + o.name + '@' + o.version;
+  }
+
+  //concurrify :: Applicative m
+  //           => (TypeRep m, m a, (m a, m a) -> m a, (m a, m (a -> b)) -> m b)
+  //           -> Concurrently m
+  return function concurrify(Repr, zero, alt, ap){
+
+    var INNERTYPE = getTypeIdentifier(Repr);
+    var OUTERTYPE = generateTypeIdentifier(INNERTYPE);
+
+    var INNERNAME = type.parse(INNERTYPE).name;
+    var OUTERNAME = type.parse(OUTERTYPE).name;
+
+    function Concurrently(sequential){
+      this.sequential = sequential;
+    }
+
+    function isInner(x){
+      return x instanceof Repr
+      || (Boolean(x) && x.constructor === Repr)
+      || type(x) === Repr[$$type];
+    }
+
+    function isOuter(x){
+      return x instanceof Concurrently
+      || (Boolean(x) && x.constructor === Concurrently)
+      || type(x) === OUTERTYPE;
+    }
+
+    function construct(x){
+      if(!isInner(x)) invalidArgument(OUTERNAME, 0, 'be of type "' + INNERNAME + '"', x);
+      return new Concurrently(x);
+    }
+
+    if(!isApplicativeRepr(Repr)) invalidArgument('concurrify', 0, 'represent an Applicative', Repr);
+    if(!isInner(zero)) invalidArgument('concurrify', 1, 'be of type "' + INNERNAME + '"', zero);
+    if(!isFunction(alt)) invalidArgument('concurrify', 2, 'be a function', alt);
+    if(!isBinary(alt)) invalidArgument('concurrify', 2, 'be binary', alt);
+    if(!isFunction(ap)) invalidArgument('concurrify', 3, 'be a function', ap);
+    if(!isBinary(ap)) invalidArgument('concurrify', 3, 'be binary', ap);
+
+    var proto = Concurrently.prototype = construct.prototype = {constructor: construct};
+
+    construct[$$type] = OUTERTYPE;
+
+    var mzero = new Concurrently(zero);
+    construct[$zero] = function Concurrently$zero(){
+      return mzero;
+    };
+
+    construct[$of] = function Concurrently$of(value){
+      return new Concurrently(Z.of(Repr, value));
+    };
+
+    proto[$map] = function Concurrently$map(mapper){
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#map', this, OUTERNAME);
+      if(!isFunction(mapper)) invalidArgument(OUTERNAME + '#map', 0, 'be a function', mapper);
+      return new Concurrently(Z.map(mapper, this.sequential));
+    };
+
+    proto[$ap] = function Concurrently$ap(m){
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#ap', this, OUTERNAME);
+      if(!isOuter(m)) invalidArgument(OUTERNAME + '#ap', 0, 'be a ' + OUTERNAME, m);
+      return new Concurrently(ap(this.sequential, m.sequential));
+    };
+
+    proto[$alt] = function Concurrently$alt(m){
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#alt', this, OUTERNAME);
+      if(!isOuter(m)) invalidArgument(OUTERNAME + '#alt', 0, 'be a ' + OUTERNAME, m);
+      return new Concurrently(alt(this.sequential, m.sequential));
+    };
+
+    proto.toString = function Concurrently$toString(){
+      if(!isOuter(this)) invalidContext(OUTERNAME + '#toString', this, OUTERNAME);
+      return OUTERNAME + '(' + Z.toString(this.sequential) + ')';
+    };
+
+    return construct;
+
+  };
+
+}));
+});
+
 function isFunction(f){
   return typeof f === 'function';
 }
@@ -3396,148 +3550,166 @@ function throwRejection(x){
   error('Future#value was called on a rejected Future\n  Actual: Future.reject(' + show(x) + ')');
 }
 
-function Future$1(computation){
+function Future(computation){
   if(!isFunction(computation)) invalidArgument('Future', 0, 'be a Function', computation);
   return new Computation(computation);
 }
 
 function isFuture(x){
-  return x instanceof Future$1 || sanctuaryTypeIdentifiers$2(x) === $$type;
+  return x instanceof Future || sanctuaryTypeIdentifiers$2(x) === $$type;
 }
 
-Future$1.prototype.ap = function Future$ap(other){
+Future['@@type'] = $$type;
+
+Future.prototype[FL.ap] = function Future$FL$ap(other){
+  return other._ap(this);
+};
+
+Future.prototype[FL.map] = function Future$FL$map(mapper){
+  return this._map(mapper);
+};
+
+Future.prototype[FL.bimap] = function Future$FL$bimap(lmapper, rmapper){
+  return this._bimap(lmapper, rmapper);
+};
+
+Future.prototype[FL.chain] = function Future$FL$chain(mapper){
+  return this._chain(mapper);
+};
+
+Future.prototype.ap = function Future$ap(other){
   if(!isFuture(this)) invalidContext('Future#ap', this);
   if(!isFuture(other)) invalidFuture('Future#ap', 0, other);
   return this._ap(other);
 };
 
-Future$1.prototype.map = function Future$map(mapper){
+Future.prototype.map = function Future$map(mapper){
   if(!isFuture(this)) invalidContext('Future#map', this);
   if(!isFunction(mapper)) invalidArgument('Future#map', 0, 'to be a Function', mapper);
   return this._map(mapper);
 };
 
-Future$1.prototype.bimap = function Future$bimap(lmapper, rmapper){
+Future.prototype.bimap = function Future$bimap(lmapper, rmapper){
   if(!isFuture(this)) invalidContext('Future#bimap', this);
   if(!isFunction(lmapper)) invalidArgument('Future#bimap', 0, 'to be a Function', lmapper);
   if(!isFunction(rmapper)) invalidArgument('Future#bimap', 1, 'to be a Function', rmapper);
   return this._bimap(lmapper, rmapper);
 };
 
-Future$1.prototype.chain = function Future$chain(mapper){
+Future.prototype.chain = function Future$chain(mapper){
   if(!isFuture(this)) invalidContext('Future#chain', this);
   if(!isFunction(mapper)) invalidArgument('Future#chain', 0, 'to be a Function', mapper);
   return this._chain(mapper);
 };
 
-Future$1.prototype.mapRej = function Future$mapRej(mapper){
+Future.prototype.mapRej = function Future$mapRej(mapper){
   if(!isFuture(this)) invalidContext('Future#mapRej', this);
   if(!isFunction(mapper)) invalidArgument('Future#mapRej', 0, 'to be a Function', mapper);
   return this._mapRej(mapper);
 };
 
-Future$1.prototype.chainRej = function Future$chainRej(mapper){
+Future.prototype.chainRej = function Future$chainRej(mapper){
   if(!isFuture(this)) invalidContext('Future#chainRej', this);
   if(!isFunction(mapper)) invalidArgument('Future#chainRej', 0, 'to be a Function', mapper);
   return this._chainRej(mapper);
 };
 
-Future$1.prototype.race = function Future$race(other){
+Future.prototype.race = function Future$race(other){
   if(!isFuture(this)) invalidContext('Future#race', this);
   if(!isFuture(other)) invalidFuture('Future#race', 0, other);
   return this._race(other);
 };
 
-Future$1.prototype.both = function Future$both(other){
+Future.prototype.both = function Future$both(other){
   if(!isFuture(this)) invalidContext('Future#both', this);
   if(!isFuture(other)) invalidFuture('Future#both', 0, other);
   return this._both(other);
 };
 
-Future$1.prototype.and = function Future$and(other){
+Future.prototype.and = function Future$and(other){
   if(!isFuture(this)) invalidContext('Future#and', this);
   if(!isFuture(other)) invalidFuture('Future#and', 0, other);
   return this._and(other);
 };
 
-Future$1.prototype.or = function Future$or(other){
+Future.prototype.or = function Future$or(other){
   if(!isFuture(this)) invalidContext('Future#or', this);
   if(!isFuture(other)) invalidFuture('Future#or', 0, other);
   return this._or(other);
 };
 
-Future$1.prototype.swap = function Future$swap(){
+Future.prototype.swap = function Future$swap(){
   if(!isFuture(this)) invalidContext('Future#ap', this);
   return this._swap();
 };
 
-Future$1.prototype.fold = function Future$fold(lmapper, rmapper){
+Future.prototype.fold = function Future$fold(lmapper, rmapper){
   if(!isFuture(this)) invalidContext('Future#ap', this);
   if(!isFunction(lmapper)) invalidArgument('Future#fold', 0, 'to be a Function', lmapper);
   if(!isFunction(rmapper)) invalidArgument('Future#fold', 1, 'to be a Function', rmapper);
   return this._fold(lmapper, rmapper);
 };
 
-Future$1.prototype.finally = function Future$finally(other){
+Future.prototype.finally = function Future$finally(other){
   if(!isFuture(this)) invalidContext('Future#finally', this);
   if(!isFuture(other)) invalidFuture('Future#finally', 0, other);
   return this._finally(other);
 };
 
-Future$1.prototype.lastly = function Future$lastly(other){
+Future.prototype.lastly = function Future$lastly(other){
   if(!isFuture(this)) invalidContext('Future#lastly', this);
   if(!isFuture(other)) invalidFuture('Future#lastly', 0, other);
   return this._finally(other);
 };
 
-Future$1.prototype.fork = function Future$fork(rej, res){
+Future.prototype.fork = function Future$fork(rej, res){
   if(!isFuture(this)) invalidContext('Future#fork', this);
   if(!isFunction(rej)) invalidArgument('Future#fork', 0, 'to be a Function', rej);
   if(!isFunction(res)) invalidArgument('Future#fork', 0, 'to be a Function', res);
   return this._fork(rej, res);
 };
 
-Future$1.prototype.value = function Future$value(res){
+Future.prototype.value = function Future$value(res){
   if(!isFuture(this)) invalidContext('Future#value', this);
   if(!isFunction(res)) invalidArgument('Future#value', 0, 'to be a Function', res);
   return this._fork(throwRejection, res);
 };
 
-Future$1.prototype.done = function Future$done(callback){
+Future.prototype.done = function Future$done(callback){
   if(!isFuture(this)) invalidContext('Future#done', this);
   if(!isFunction(callback)) invalidArgument('Future#done', 0, 'to be a Function', callback);
   return this._fork(function Future$done$rej(x){ callback(x); },
                     function Future$done$res(x){ callback(null, x); });
 };
 
-Future$1.prototype.promise = function Future$promise(){
+Future.prototype.promise = function Future$promise(){
   var _this = this;
   return new Promise(function Future$promise$computation(res, rej){
     _this._fork(rej, res);
   });
 };
 
-Future$1.prototype.isRejected = function Future$isRejected(){
+Future.prototype.isRejected = function Future$isRejected(){
   return false;
 };
 
-Future$1.prototype.isResolved = function Future$isResolved(){
+Future.prototype.isResolved = function Future$isResolved(){
   return false;
 };
 
-Future$1.prototype.isSettled = function Future$isSettled(){
+Future.prototype.isSettled = function Future$isSettled(){
   return this.isRejected() || this.isResolved();
 };
 
-Future$1.prototype.extractLeft = function Future$extractLeft(){
+Future.prototype.extractLeft = function Future$extractLeft(){
   return [];
 };
 
-Future$1.prototype.extractRight = function Future$extractRight(){
+Future.prototype.extractRight = function Future$extractRight(){
   return [];
 };
 
-var Core = Object.create(Future$1.prototype);
+var Core = Object.create(Future.prototype);
 
 Core._ap = function Core$ap(other){
   return new Sequence(this)._ap(other);
@@ -3732,7 +3904,7 @@ function Never(){
   this._isNever = true;
 }
 
-Never.prototype = Object.create(Future$1.prototype);
+Never.prototype = Object.create(Future.prototype);
 
 Never.prototype._ap = moop;
 Never.prototype._map = moop;
@@ -4023,7 +4195,7 @@ function Sequence(spawn, actions){
   this._actions = actions || empty;
 }
 
-Sequence.prototype = Object.create(Future$1.prototype);
+Sequence.prototype = Object.create(Future.prototype);
 
 Sequence.prototype._transform = function Sequence$_transform(action){
   return new Sequence(this._spawn, cons(action, this._actions));
@@ -4374,34 +4546,55 @@ function extractRight(m){
   return m.extractRight();
 }
 
-Future$1['@@type'] = $$type;
-Future$1[FL.of] = Future$1.of = of;
-Future$1[FL.chainRec] = Future$1.chainRec = chainRec;
-Future$1.reject = reject;
+function check$ap$f(f){
+  if(!isFunction(f)) typeError(
+    'Future#ap expects its first argument to be a Future of a Function'
+    + '\n  Actual: Future.of(' + show(f) + ')'
+  );
+}
 
-Future$1.ap = ap;
+function ParallelAp(mval, mfunc){
+  this._mval = mval;
+  this._mfunc = mfunc;
+}
 
-Future$1.prototype[FL.ap] = function Future$FL$ap(other){
-  return other._ap(this);
+ParallelAp.prototype = Object.create(Core);
+
+ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
+  var func, val, okval = false, okfunc = false, rejected = false, c1, c2;
+
+  function ParallelAp$rej(x){
+    if(!rejected){
+      rejected = true;
+      rej(x);
+    }
+  }
+
+  c1 = this._mval._fork(ParallelAp$rej, function ParallelAp$fork$resVal(x){
+    c1 = noop;
+    if(!okval) return void (okfunc = true, val = x);
+    res(func(x));
+  });
+  c2 = this._mfunc._fork(ParallelAp$rej, function ParallelAp$fork$resFunc(f){
+    c2 = noop;
+    check$ap$f(f);
+    if(!okfunc) return void (okval = true, func = f);
+    res(f(val));
+  });
+
+  return function ParallelAp$fork$cancel(){
+    c1();
+    c2();
+  };
 };
 
-Future$1.map = map;
-
-Future$1.prototype[FL.map] = function Future$FL$map(mapper){
-  return this._map(mapper);
+ParallelAp.prototype.toString = function ParallelAp$toString(){
+  return 'new ParallelAp(' + this._mval.toString() + ', ' + this._mfunc.toString() + ')';
 };
 
-Future$1.bimap = bimap;
-
-Future$1.prototype[FL.bimap] = function Future$FL$bimap(lmapper, rmapper){
-  return this._bimap(lmapper, rmapper);
-};
-
-Future$1.chain = chain;
-
-Future$1.prototype[FL.chain] = function Future$FL$chain(mapper){
-  return this._chain(mapper);
-};
+function parallelAp(mval, mfunc){
+  return new ParallelAp(mval, mfunc);
+}
 
 function After$race(other){
   return other.isSettled()
@@ -5043,7 +5236,7 @@ Go.prototype._fork = function Go$_fork(rej, res){
 };
 
 Go.prototype.toString = function Go$toString(){
-  return `Future.do(${showf(this._generator)})`;
+  return 'Future.do(' + showf(this._generator) + ')';
 };
 
 function go(generator){
@@ -5180,223 +5373,6 @@ function node(f){
   return new Node(f);
 }
 
-var concurrify = createCommonjsModule(function (module) {
-(function(global, f){
-
-  'use strict';
-
-  /*istanbul ignore next*/
-  if(module && 'object' !== 'undefined'){
-    module.exports = f(sanctuaryTypeClasses, sanctuaryTypeIdentifiers$2);
-  }else{
-    global.concurrify = f(global.sanctuaryTypeClasses, global.sanctuaryTypeIdentifiers);
-  }
-
-}(/*istanbul ignore next*/(commonjsGlobal || window || commonjsGlobal), function(Z, type){
-
-  'use strict';
-
-  var $alt = 'fantasy-land/alt';
-  var $ap = 'fantasy-land/ap';
-  var $map = 'fantasy-land/map';
-  var $of = 'fantasy-land/of';
-  var $zero = 'fantasy-land/zero';
-  var $$type = '@@type';
-
-  var ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
-
-  function isFunction(f){
-    return typeof f === 'function';
-  }
-
-  function isBinary(f){
-    return f.length >= 2;
-  }
-
-  function isApplicativeRepr(Repr){
-    try{
-      return Z.Applicative.test(Z.of(Repr));
-    }catch(_){
-      return false;
-    }
-  }
-
-  function invalidArgument(it, at, expected, actual){
-    throw new TypeError(
-      it
-      + ' expects its '
-      + ordinal[at]
-      + ' argument to '
-      + expected
-      + '\n  Actual: '
-      + Z.toString(actual)
-    );
-  }
-
-  function invalidContext(it, actual, an){
-    throw new TypeError(
-      it + ' was invoked outside the context of a ' + an + '. \n  Called on: ' + Z.toString(actual)
-    );
-  }
-
-  //       getTypeIdentifier :: TypeRepresentative -> TypeIdentifier
-  function getTypeIdentifier(Repr){
-    return Repr[$$type] || Repr.name || 'Anonymous';
-  }
-
-  //       generateTypeIdentifier :: TypeIdentifier -> TypeIdentifier
-  function generateTypeIdentifier(identifier){
-    var o = type.parse(identifier);
-    return (o.namespace || 'concurrify') + '/Concurrent' + o.name + '@' + o.version;
-  }
-
-  //concurrify :: Applicative m
-  //           => (TypeRep m, m a, (m a, m a) -> m a, (m a, m (a -> b)) -> m b)
-  //           -> Concurrently m
-  return function concurrify(Repr, zero, alt, ap){
-
-    var INNERTYPE = getTypeIdentifier(Repr);
-    var OUTERTYPE = generateTypeIdentifier(INNERTYPE);
-
-    var INNERNAME = type.parse(INNERTYPE).name;
-    var OUTERNAME = type.parse(OUTERTYPE).name;
-
-    function Concurrently(sequential){
-      this.sequential = sequential;
-    }
-
-    function isInner(x){
-      return x instanceof Repr
-      || (Boolean(x) && x.constructor === Repr)
-      || type(x) === Repr[$$type];
-    }
-
-    function isOuter(x){
-      return x instanceof Concurrently
-      || (Boolean(x) && x.constructor === Concurrently)
-      || type(x) === OUTERTYPE;
-    }
-
-    function construct(x){
-      if(!isInner(x)) invalidArgument(OUTERNAME, 0, 'be of type "' + INNERNAME + '"', x);
-      return new Concurrently(x);
-    }
-
-    if(!isApplicativeRepr(Repr)) invalidArgument('concurrify', 0, 'represent an Applicative', Repr);
-    if(!isInner(zero)) invalidArgument('concurrify', 1, 'be of type "' + INNERNAME + '"', zero);
-    if(!isFunction(alt)) invalidArgument('concurrify', 2, 'be a function', alt);
-    if(!isBinary(alt)) invalidArgument('concurrify', 2, 'be binary', alt);
-    if(!isFunction(ap)) invalidArgument('concurrify', 3, 'be a function', ap);
-    if(!isBinary(ap)) invalidArgument('concurrify', 3, 'be binary', ap);
-
-    var proto = Concurrently.prototype = construct.prototype = {constructor: construct};
-
-    construct[$$type] = OUTERTYPE;
-
-    var mzero = new Concurrently(zero);
-    construct[$zero] = function Concurrently$zero(){
-      return mzero;
-    };
-
-    construct[$of] = function Concurrently$of(value){
-      return new Concurrently(Z.of(Repr, value));
-    };
-
-    proto[$map] = function Concurrently$map(mapper){
-      if(!isOuter(this)) invalidContext(OUTERNAME + '#map', this, OUTERNAME);
-      if(!isFunction(mapper)) invalidArgument(OUTERNAME + '#map', 0, 'be a function', mapper);
-      return new Concurrently(Z.map(mapper, this.sequential));
-    };
-
-    proto[$ap] = function Concurrently$ap(m){
-      if(!isOuter(this)) invalidContext(OUTERNAME + '#ap', this, OUTERNAME);
-      if(!isOuter(m)) invalidArgument(OUTERNAME + '#ap', 0, 'be a ' + OUTERNAME, m);
-      return new Concurrently(ap(this.sequential, m.sequential));
-    };
-
-    proto[$alt] = function Concurrently$alt(m){
-      if(!isOuter(this)) invalidContext(OUTERNAME + '#alt', this, OUTERNAME);
-      if(!isOuter(m)) invalidArgument(OUTERNAME + '#alt', 0, 'be a ' + OUTERNAME, m);
-      return new Concurrently(alt(this.sequential, m.sequential));
-    };
-
-    proto.toString = function Concurrently$toString(){
-      if(!isOuter(this)) invalidContext(OUTERNAME + '#toString', this, OUTERNAME);
-      return OUTERNAME + '(' + Z.toString(this.sequential) + ')';
-    };
-
-    return construct;
-
-  };
-
-}));
-});
-
-function check$ap$f(f){
-  if(!isFunction(f)) typeError(
-    'Future#ap expects its first argument to be a Future of a Function'
-    + '\n  Actual: Future.of(' + show(f) + ')'
-  );
-}
-
-function ParallelAp(mval, mfunc){
-  this._mval = mval;
-  this._mfunc = mfunc;
-}
-
-ParallelAp.prototype = Object.create(Core);
-
-ParallelAp.prototype._fork = function ParallelAp$fork(rej, res){
-  var func, val, okval = false, okfunc = false, rejected = false, c1, c2;
-
-  function ParallelAp$rej(x){
-    if(!rejected){
-      rejected = true;
-      rej(x);
-    }
-  }
-
-  c1 = this._mval._fork(ParallelAp$rej, function ParallelAp$fork$resVal(x){
-    c1 = noop;
-    if(!okval) return void (okfunc = true, val = x);
-    res(func(x));
-  });
-  c2 = this._mfunc._fork(ParallelAp$rej, function ParallelAp$fork$resFunc(f){
-    c2 = noop;
-    check$ap$f(f);
-    if(!okfunc) return void (okval = true, func = f);
-    res(f(val));
-  });
-
-  return function ParallelAp$fork$cancel(){
-    c1();
-    c2();
-  };
-};
-
-ParallelAp.prototype.toString = function ParallelAp$toString(){
-  return 'new ParallelAp(' + this._mval.toString() + ', ' + this._mfunc.toString() + ')';
-};
-
-var Par = concurrify(Future$1, never, race, function pap(mval, mfunc){
-  return new ParallelAp(mval, mfunc);
-});
-
-Par.of = Par[FL.of];
-Par.zero = Par[FL.zero];
-Par.map = map;
-Par.ap = ap;
-Par.alt = alt;
-
-function isParallel(x){
-  return x instanceof Par || sanctuaryTypeIdentifiers$2(x) === Par['@@type'];
-}
-
-function seq(par){
-  if(!isParallel(par)) invalidArgument('Future.seq', 0, 'to be a Par', par);
-  return par.sequential;
-}
-
 function check$parallel(m, i){
   return isFuture(m) ? m : invalidFuture(
     'Future.parallel',
@@ -5499,7 +5475,7 @@ TryP.prototype._fork = function TryP$fork(rej, res){
 };
 
 TryP.prototype.toString = function TryP$toString(){
-  return `Future.tryP(${show(this._fn)})`;
+  return 'Future.tryP(' + show(this._fn) + ')';
 };
 
 function tryP(f){
@@ -5511,12 +5487,39 @@ if(typeof Object.create !== 'function') error('Please polyfill Object.create to 
 if(typeof Object.assign !== 'function') error('Please polyfill Object.assign to use Fluture');
 if(typeof Array.isArray !== 'function') error('Please polyfill Array.isArray to use Fluture');
 
+Future.of = Future[FL.of] = of;
+Future.chainRec = Future[FL.chainRec] = chainRec;
+Future.reject = reject;
+Future.ap = ap;
+Future.map = map;
+Future.bimap = bimap;
+Future.chain = chain;
+
+var Par = concurrify(Future, never, race, parallelAp);
+Par.of = Par[FL.of];
+Par.zero = Par[FL.zero];
+Par.map = map;
+Par.ap = ap;
+Par.alt = alt;
+
+function isParallel(x){
+  return x instanceof Par || sanctuaryTypeIdentifiers$2(x) === Par['@@type'];
+}
+
+function seq(par){
+  if(!isParallel(par)) invalidArgument('Future.seq', 0, 'to be a Par', par);
+  return par.sequential;
+}
+
 
 
 
 var Fluture = Object.freeze({
-	default: Future$1,
-	Future: Future$1,
+	Future: Future,
+	default: Future,
+	Par: Par,
+	isParallel: isParallel,
+	seq: seq,
 	isFuture: isFuture,
 	reject: reject,
 	of: of,
@@ -5540,8 +5543,6 @@ var Fluture = Object.freeze({
 	do: go,
 	hook: hook,
 	node: node,
-	Par: Par,
-	seq: seq,
 	parallel: parallel,
 	tryP: tryP,
 	ap: ap,
@@ -5567,7 +5568,7 @@ var Fluture = Object.freeze({
 	extractRight: extractRight
 });
 
-var index_cjs = Object.assign(Future$1, Fluture);
+var index_cjs = Object.assign(Future, Fluture);
 
 return index_cjs;
 
