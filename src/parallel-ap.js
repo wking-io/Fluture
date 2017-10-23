@@ -1,11 +1,7 @@
-import concurrify from 'concurrify';
-import type from 'sanctuary-type-identifiers';
-import {Core, Future, never} from './core';
-import {race, ap, map, alt} from './dispatchers';
+import {Core} from './core';
 import {noop, show} from './internal/fn';
 import {isFunction} from './internal/is';
-import {typeError, invalidArgument} from './internal/throw';
-import {FL} from './internal/const';
+import {typeError} from './internal/throw';
 
 function check$ap$f(f){
   if(!isFunction(f)) typeError(
@@ -53,21 +49,6 @@ ParallelAp.prototype.toString = function ParallelAp$toString(){
   return 'new ParallelAp(' + this._mval.toString() + ', ' + this._mfunc.toString() + ')';
 };
 
-export var Par = concurrify(Future, never, race, function pap(mval, mfunc){
+export function parallelAp(mval, mfunc){
   return new ParallelAp(mval, mfunc);
-});
-
-Par.of = Par[FL.of];
-Par.zero = Par[FL.zero];
-Par.map = map;
-Par.ap = ap;
-Par.alt = alt;
-
-export function isParallel(x){
-  return x instanceof Par || type(x) === Par['@@type'];
-}
-
-export function seq(par){
-  if(!isParallel(par)) invalidArgument('Future.seq', 0, 'to be a Par', par);
-  return par.sequential;
 }
