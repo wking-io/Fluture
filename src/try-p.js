@@ -33,7 +33,7 @@ TryP.prototype._fork = function TryP$fork(rej, res){
 };
 
 TryP.prototype.toString = function TryP$toString(){
-  return `Future.tryP(${show(this._fn)})`;
+  return 'Future.tryP(' + show(this._fn) + ')';
 };
 
 export function tryP(f){

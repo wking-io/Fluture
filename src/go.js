@@ -70,7 +70,7 @@ Go.prototype._fork = function Go$_fork(rej, res){
 };
 
 Go.prototype.toString = function Go$toString(){
-  return `Future.do(${showf(this._generator)})`;
+  return 'Future.do(' + showf(this._generator) + ')';
 };
 
 export function go(generator){
