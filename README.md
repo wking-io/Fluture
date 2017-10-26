@@ -741,7 +741,7 @@ Future.of(1)
 ```hs
 bimap                  :: Bifunctor m => (a -> c) -> (b -> d) -> m a b -> m      c d
 Future.bimap           :: Bifunctor m => (a -> c) -> (b -> d) -> m a b -> m      c d
-Future.prototype.bimap :: Future a b  ~> (a -> c) -> (b -> d)          -> Future c d
+Future.prototype.bimap :: Future a b  ~> (a -> c,     b -> d)          -> Future c d
 ```
 
 </details>
