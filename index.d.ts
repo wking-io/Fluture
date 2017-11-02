@@ -330,7 +330,7 @@ declare module 'fluture' {
   }
 
   export var Future: Fluture
-  export default {} as Fluture
+  export default Future
 
   export interface Par {
 
