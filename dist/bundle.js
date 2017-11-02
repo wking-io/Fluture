@@ -1,5 +1,5 @@
 /**
- * Fluture bundled; version 7.2.1
+ * Fluture bundled; version 7.2.2
  */
 
 var Fluture = (function () {
@@ -2809,9 +2809,7 @@ var concurrify = createCommonjsModule(function (module) {
   function isApplicativeRepr(Repr){
     try{
       return Z.Applicative.test(Z.of(Repr));
-    }catch(e){
-      console.log(e);
-      console.log(Repr, Object.keys(Repr));
+    }catch(_){
       return false;
     }
   }
