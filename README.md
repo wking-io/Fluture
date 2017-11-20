@@ -1129,6 +1129,8 @@ first([
 //! "nope"
 ```
 
+When one Future settles, the other gets cancelled automatically.
+
 #### both
 
 <details><summary><code>both :: Future a b -> Future a c -> Future a (Pair b c)</code></summary>
@@ -1150,6 +1152,8 @@ var b = Future.of('b');
 Future.both(a, b).fork(console.error, console.log);
 //> ['a', 'b']
 ```
+
+When one Future rejects, the other gets cancelled automatically.
 
 #### parallel
 
@@ -1196,6 +1200,8 @@ var stabalizedFutures = unstableFutures.map(Future.fold(S.Left, S.Right));
 Future.parallel(Infinity, stabalizedFutures).fork(console.error, console.log);
 //> [ Right(0), Left("failed"), Right(2), Right(3) ]
 ```
+
+When one Future rejects, all currently running Futures will be cancelled automatically.
 
 #### ConcurrentFuture
 
