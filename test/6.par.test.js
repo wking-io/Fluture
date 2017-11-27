@@ -140,14 +140,14 @@ describe('Par()', function(){
   describe('#alt', function(){
 
     it('rejects when the first one rejects', function(){
-      var m1 = Par(Future(function(rej, res){ return void setTimeout(res, 15, 1) }));
+      var m1 = Par(Future(function(rej, res){ return void setTimeout(res, 50, 1) }));
       var m2 = Par(Future(function(rej){ return void setTimeout(rej, 5, U.error) }));
       return U.assertRejected(seq(alt(m1, m2)), U.error);
     });
 
     it('resolves when the first one resolves', function(){
       var m1 = Par(Future(function(rej, res){ return void setTimeout(res, 5, 1) }));
-      var m2 = Par(Future(function(rej){ return void setTimeout(rej, 15, U.error) }));
+      var m2 = Par(Future(function(rej){ return void setTimeout(rej, 50, U.error) }));
       return U.assertResolved(seq(alt(m1, m2)), 1);
     });
 
