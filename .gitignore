@@ -5,7 +5,3 @@
 /.nyc_output/
 
 /index.js
-/index.test.js
-
-*.heapsnapshot
-*.lcov
