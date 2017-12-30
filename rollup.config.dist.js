@@ -14,6 +14,9 @@ export default {
   input: 'index.cjs.js',
   plugins: [node(), commonjs({include: 'node_modules/**'})],
   banner: banner,
-  name: 'Fluture',
-  output: {format: 'iife', file: 'dist/bundle.js'}
+  output: {
+    format: 'iife',
+    name: 'Fluture',
+    file: 'dist/bundle.js'
+  }
 };
