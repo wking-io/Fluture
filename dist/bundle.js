@@ -1,5 +1,5 @@
 /**
- * Fluture bundled; version 7.2.2
+ * Fluture bundled; version 8.0.0
  */
 
 var Fluture = (function () {
@@ -120,17 +120,12 @@ var sanctuaryTypeIdentifiers = createCommonjsModule(function (module) {
 
 (function(f) {
 
-  'use strict';
-
   {
     module.exports = f();
   }
 
 }(function() {
 
-  'use strict';
-
-  //  $$type :: String
   var $$type = '@@type';
 
   //  type :: Any -> String
@@ -181,56 +176,52 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 //.
 //. ## Type-class hierarchy
 //.
+/* eslint-disable max-len */
 //. <pre>
-//:  Setoid   Semigroupoid  Semigroup   Foldable        Functor      Contravariant
-//: (equals)    (compose)    (concat)   (reduce)         (map)        (contramap)
-//:     |           |           |           \         / | | | | \
-//:     |           |           |            \       /  | | | |  \
-//:     |           |           |             \     /   | | | |   \
-//:     |           |           |              \   /    | | | |    \
-//:     |           |           |               \ /     | | | |     \
-//:    Ord      Category     Monoid         Traversable | | | |      \
-//:   (lte)       (id)       (empty)        (traverse)  / | | \       \
-//:                                                    /  | |  \       \
-//:                                                   /   / \   \       \
-//:                                           Profunctor /   \ Bifunctor \
-//:                                            (promap) /     \ (bimap)   \
-//:                                                    /       \           \
-//:                                                   /         \           \
-//:                                                 Alt        Apply      Extend
-//:                                                (alt)        (ap)     (extend)
-//:                                                 /           / \           \
-//:                                                /           /   \           \
-//:                                               /           /     \           \
-//:                                              /           /       \           \
-//:                                             /           /         \           \
-//:                                           Plus    Applicative    Chain      Comonad
-//:                                          (zero)       (of)      (chain)    (extract)
-//:                                             \         / \         / \
-//:                                              \       /   \       /   \
-//:                                               \     /     \     /     \
-//:                                                \   /       \   /       \
-//:                                                 \ /         \ /         \
-//:                                             Alternative    Monad     ChainRec
-//:                                                                     (chainRec)
+//.  Setoid   Semigroupoid  Semigroup   Foldable        Functor      Contravariant
+//. (equals)    (compose)    (concat)   (reduce)         (map)        (contramap)
+//.     |           |           |           \         / | | | | \
+//.     |           |           |            \       /  | | | |  \
+//.     |           |           |             \     /   | | | |   \
+//.     |           |           |              \   /    | | | |    \
+//.     |           |           |               \ /     | | | |     \
+//.    Ord      Category     Monoid         Traversable | | | |      \
+//.   (lte)       (id)       (empty)        (traverse)  / | | \       \
+//.                             |                      /  | |  \       \
+//.                             |                     /   / \   \       \
+//.                             |             Profunctor /   \ Bifunctor \
+//.                             |              (promap) /     \ (bimap)   \
+//.                             |                      /       \           \
+//.                           Group                   /         \           \
+//.                          (invert)               Alt        Apply      Extend
+//.                                                (alt)        (ap)     (extend)
+//.                                                 /           / \           \
+//.                                                /           /   \           \
+//.                                               /           /     \           \
+//.                                              /           /       \           \
+//.                                             /           /         \           \
+//.                                           Plus    Applicative    Chain      Comonad
+//.                                          (zero)       (of)      (chain)    (extract)
+//.                                             \         / \         / \
+//.                                              \       /   \       /   \
+//.                                               \     /     \     /     \
+//.                                                \   /       \   /       \
+//.                                                 \ /         \ /         \
+//.                                             Alternative    Monad     ChainRec
+//.                                                                     (chainRec)
 //. </pre>
+/* eslint-enable max-len */
 //.
 //. ## API
 
 (function(f) {
 
-  'use strict';
-
-  /* istanbul ignore else */
   {
     module.exports = f(sanctuaryTypeIdentifiers);
   }
 
 }(function(type) {
 
-  'use strict';
-
-  //  concat_ :: Array a -> Array a -> Array a
   function concat_(xs) {
     return function(ys) {
       return xs.concat(ys);
@@ -242,6 +233,11 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     return function(y) {
       return x;
     };
+  }
+
+  //  forEachKey :: (StrMap a, StrMap a ~> String -> Undefined) -> Undefined
+  function forEachKey(strMap, f) {
+    Object.keys(strMap).forEach(f, strMap);
   }
 
   //  has :: (String, Object) -> Boolean
@@ -361,7 +357,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   }
 
   //  functionName :: Function -> String
-  var functionName = 'name' in function f() {} ?
+  var functionName = has('name', function f() {}) ?
     function functionName(f) { return f.name; } :
     /* istanbul ignore next */
     function functionName(f) {
@@ -391,7 +387,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
         };
     }
 
-    var version = '6.1.0';  // updated programmatically
+    var version = '7.1.1';  // updated programmatically
     var keys = Object.keys(requirements);
 
     var typeClass = TypeClass(
@@ -489,6 +485,19 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //. false
   //. ```
   var Monoid = $('Monoid', [Semigroup], {empty: Constructor});
+
+  //# Group :: TypeClass
+  //.
+  //. `TypeClass` value for [Group][].
+  //.
+  //. ```javascript
+  //. > Group.test(Sum(0))
+  //. true
+  //.
+  //. > Group.test('')
+  //. false
+  //. ```
+  var Group = $('Group', [Monoid], {invert: Value});
 
   //# Functor :: TypeClass
   //.
@@ -1020,22 +1029,25 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //  Object$prototype$concat :: StrMap a ~> StrMap a -> StrMap a
   function Object$prototype$concat(other) {
     var result = {};
-    for (var k in this) result[k] = this[k];
-    for (k in other) result[k] = other[k];
+    function assign(k) { result[k] = this[k]; }
+    forEachKey(this, assign);
+    forEachKey(other, assign);
     return result;
   }
 
   //  Object$prototype$map :: StrMap a ~> (a -> b) -> StrMap b
   function Object$prototype$map(f) {
     var result = {};
-    for (var k in this) result[k] = f(this[k]);
+    forEachKey(this, function(k) { result[k] = f(this[k]); });
     return result;
   }
 
   //  Object$prototype$ap :: StrMap a ~> StrMap (a -> b) -> StrMap b
   function Object$prototype$ap(other) {
     var result = {};
-    for (var k in this) if (k in other) result[k] = other[k](this[k]);
+    forEachKey(this, function(k) {
+      if (has(k, other)) result[k] = other[k](this[k]);
+    });
     return result;
   }
 
@@ -1053,7 +1065,12 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   function Object$prototype$traverse(typeRep, f) {
     var self = this;
     return Object.keys(this).reduce(function(applicative, k) {
-      function set(o) { return function(v) { o[k] = v; return o; }; }
+      function set(o) {
+        return function(v) {
+          var singleton = {}; singleton[k] = v;
+          return Object$prototype$concat.call(o, singleton);
+        };
+      }
       return lift2(set, applicative, f(self[k]));
     }, of(typeRep, {}));
   }
@@ -1572,6 +1589,18 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
   //. ```
   function empty(typeRep) {
     return Monoid.methods.empty(typeRep)();
+  }
+
+  //# invert :: Group g => g -> g
+  //.
+  //. Function wrapper for [`fantasy-land/invert`][].
+  //.
+  //. ```javascript
+  //. invert(Sum(5))
+  //. Sum(-5)
+  //. ```
+  function invert(group) {
+    return Group.methods.invert(group)();
   }
 
   //# map :: Functor f => (a -> b, f a) -> f b
@@ -2267,6 +2296,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     Category: Category,
     Semigroup: Semigroup,
     Monoid: Monoid,
+    Group: Group,
     Functor: Functor,
     Bifunctor: Bifunctor,
     Profunctor: Profunctor,
@@ -2295,6 +2325,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
     id: id,
     concat: concat,
     empty: empty,
+    invert: invert,
     map: map,
     bimap: bimap,
     promap: promap,
@@ -2344,6 +2375,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 //. [FL]:                       https://github.com/fantasyland/fantasy-land
 //. [Foldable]:                 https://github.com/fantasyland/fantasy-land#foldable
 //. [Functor]:                  https://github.com/fantasyland/fantasy-land#functor
+//. [Group]:                    https://github.com/fantasyland/fantasy-land#group
 //. [Monad]:                    https://github.com/fantasyland/fantasy-land#monad
 //. [Monoid]:                   https://github.com/fantasyland/fantasy-land#monoid
 //. [Ord]:                      https://github.com/fantasyland/fantasy-land#ord
@@ -2366,6 +2398,7 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 //. [`fantasy-land/extend`]:    https://github.com/fantasyland/fantasy-land#extend-method
 //. [`fantasy-land/extract`]:   https://github.com/fantasyland/fantasy-land#extract-method
 //. [`fantasy-land/id`]:        https://github.com/fantasyland/fantasy-land#id-method
+//. [`fantasy-land/invert`]:    https://github.com/fantasyland/fantasy-land#invert-method
 //. [`fantasy-land/lte`]:       https://github.com/fantasyland/fantasy-land#lte-method
 //. [`fantasy-land/map`]:       https://github.com/fantasyland/fantasy-land#map-method
 //. [`fantasy-land/of`]:        https://github.com/fantasyland/fantasy-land#of-method
@@ -2380,16 +2413,11 @@ var sanctuaryTypeClasses = createCommonjsModule(function (module) {
 var inspectF = createCommonjsModule(function (module) {
 (function(global, f) {
 
-  'use strict';
-
-  /*istanbul ignore next*/
   {
     module.exports = f();
   }
 
 }(/*istanbul ignore next*/(commonjsGlobal || window || commonjsGlobal), function() {
-
-  'use strict';
 
   function checkn(n) {
     if(typeof n !== 'number') {
@@ -2617,17 +2645,12 @@ var sanctuaryTypeIdentifiers$2 = createCommonjsModule(function (module) {
 
 (function(f) {
 
-  'use strict';
-
   {
     module.exports = f();
   }
 
 }(function() {
 
-  'use strict';
-
-  //  $$type :: String
   var $$type = '@@type';
 
   //  pattern :: RegExp
@@ -2776,9 +2799,6 @@ function invalidFuture(it, at, m, s){
 var concurrify = createCommonjsModule(function (module) {
 (function(global, f){
 
-  'use strict';
-
-  /*istanbul ignore next*/
   if(module && 'object' !== 'undefined'){
     module.exports = f(sanctuaryTypeClasses, sanctuaryTypeIdentifiers$2);
   }else{
@@ -2787,15 +2807,12 @@ var concurrify = createCommonjsModule(function (module) {
 
 }(/*istanbul ignore next*/(commonjsGlobal || window || commonjsGlobal), function(Z, type){
 
-  'use strict';
-
   var $alt = 'fantasy-land/alt';
   var $ap = 'fantasy-land/ap';
   var $map = 'fantasy-land/map';
   var $of = 'fantasy-land/of';
   var $zero = 'fantasy-land/zero';
   var $$type = '@@type';
-
   var ordinal = ['first', 'second', 'third', 'fourth', 'fifth'];
 
   function isFunction(f){
@@ -2850,7 +2867,6 @@ var concurrify = createCommonjsModule(function (module) {
 
     var INNERTYPE = getTypeIdentifier(Repr);
     var OUTERTYPE = generateTypeIdentifier(INNERTYPE);
-
     var INNERNAME = type.parse(INNERTYPE).name;
     var OUTERNAME = type.parse(OUTERTYPE).name;
 
@@ -2887,6 +2903,7 @@ var concurrify = createCommonjsModule(function (module) {
     construct[$$type] = OUTERTYPE;
 
     var mzero = new Concurrently(zero);
+
     construct[$zero] = function Concurrently$zero(){
       return mzero;
     };
@@ -2956,8 +2973,6 @@ function isIterator(i){
 function isArray(x){
   return Array.isArray(x);
 }
-
-'use strict';
 
 /**
  * Custom implementation of a double ended queue.
