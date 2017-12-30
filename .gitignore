@@ -6,7 +6,6 @@
 
 /index.js
 /index.test.js
-/package-lock.json
 
 *.heapsnapshot
 *.lcov
