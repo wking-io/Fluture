@@ -12,5 +12,5 @@ compares to what it was at version 5.x:
 cd bench
 npm i fluture@5.x
 cd ..
-npm run bench -- --benchmark fluture --match **/parallel/**
+npm run bench -- --benchmark fluture --match *.parallel.*
 ```

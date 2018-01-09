@@ -11,10 +11,7 @@ const createFuture = x => Future((rej, res) => res(x));
 const consumeTask = m => m.run().listen({onCancelled: noop, onRejected: noop, onResolved: noop});
 const consumeFuture = m => m.fork(noop, noop);
 
-const headers = {
-  left: 'Folktale',
-  right: 'Fluture'
-};
+const config = {leftHeader: 'Folktale', rightHeader: 'Fluture'};
 
 const left = {
   create: createTask,
@@ -28,11 +25,30 @@ const right = {
   one: createFuture(1)
 };
 
-module.exports = require('sanctuary-benchmark')(left, right, headers, {
-  'create/construct': ({create}) => create(1),
-  'create/map': ({one}) => one.map(plus1),
-  'create/chain': ({one}) => one.chain(plus1),
-  'consume/noop': ({one, consume}) => consume(one),
-  'consume/map': ({one, consume}) => consume(one.map(plus1)),
-  'consume/chain': ({create, consume, one}) => consume(one.chain(x => create(x + 1)))
+module.exports = require('sanctuary-benchmark')(left, right, config, {
+
+  'create.construct': [
+    {}, ({create}) => create(1)
+  ],
+
+  'create.map': [
+    {}, ({one}) => one.map(plus1)
+  ],
+
+  'create.chain': [
+    {}, ({one}) => one.chain(plus1)
+  ],
+
+  'consume.noop': [
+    {}, ({one, consume}) => consume(one)
+  ],
+
+  'consume.map': [
+    {}, ({one, consume}) => consume(one.map(plus1))
+  ],
+
+  'consume.chain': [
+    {}, ({create, consume, one}) => consume(one.chain(x => create(x + 1)))
+  ],
+
 });
